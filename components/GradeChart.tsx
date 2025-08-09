@@ -18,7 +18,17 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { GradebookData } from "@/types/gradebook"
+import { GradebookData, Mark } from "@/types/gradebook"
+
+// Helper function to get the current mark from Mark or Mark[]
+function getCurrentMark(marks: Mark | Mark[]): Mark | null {
+  if (Array.isArray(marks)) {
+    // If it's an array, return the last mark (most recent)
+    return marks[marks.length - 1] || null;
+  }
+  // If it's a single mark, return it
+  return marks;
+}
 
 interface GradeChartProps {
   gradebookData: GradebookData;
@@ -45,8 +55,9 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
 
     courses.forEach((course) => {
       // Only get assignments from the current marking period
-      const currentMark = course.Marks.Mark;
-      const assignments = currentMark.Assignments?.Assignment || [];
+      const marks = course.Marks.Mark;
+      const currentMark = getCurrentMark(marks);
+      const assignments = currentMark?.Assignments?.Assignment || [];
       
       assignments.forEach((assignment) => {
         if (assignment["@Score"] >= 0 && assignment["@PointPossible"] > 0) {
