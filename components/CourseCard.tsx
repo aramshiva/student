@@ -1,16 +1,25 @@
 "use client";
 
-import { Course } from "@/types/gradebook";
+import { Course, Mark, AssignmentGradeCalc } from "@/types/gradebook";
 import { getGradeColor, getCourseIcon } from "@/utils/gradebook";
 import {
   Card,
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+
+// Helper function to get the current mark from Mark or Mark[]
+function getCurrentMark(marks: Mark | Mark[]): Mark | null {
+  if (Array.isArray(marks)) {
+    // If it's an array, return the last mark (most recent)
+    return marks[marks.length - 1] || null;
+  }
+  // If it's a single mark, return it
+  return marks;
+}
 
 interface CourseCardProps {
   course: Course;
@@ -18,8 +27,9 @@ interface CourseCardProps {
 }
 
 export default function CourseCard({ course, onClick }: CourseCardProps) {
-  const mark = course.Marks.Mark;
-  const gradeColorClass = getGradeColor(mark["@CalculatedScoreString"]);
+  const marks = course.Marks.Mark;
+  const currentMark = getCurrentMark(marks);
+  const gradeColorClass = getGradeColor(currentMark?.["@CalculatedScoreString"] || "");
   const icon = getCourseIcon(course["@ImageType"]);
 
   return (
@@ -39,7 +49,7 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
                 </div>
                 <CardAction>
                     <div className={`px-3 py-1 rounded-lg text-2xl font-bold ${gradeColorClass}`}>
-                        {mark["@CalculatedScoreString"]}
+                        {currentMark?.["@CalculatedScoreString"] || "N/A"}
                     </div>
                 </CardAction>
         </div>
@@ -53,18 +63,18 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Current Score:</span>
             <span className="text-sm font-bold text-gray-900 font-mono">
-              {mark["@CalculatedScoreRaw"]}%
+              {currentMark?.["@CalculatedScoreRaw"] || "N/A"}%
             </span>
           </div>
         </div>
 
-        {mark.GradeCalculationSummary?.AssignmentGradeCalc && (
+        {currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
           <div className="mt-4 pt-4 border-t border-gray-100">
             <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
               Grade Breakdown
             </h4>
             <div className="space-y-1">
-              {mark.GradeCalculationSummary.AssignmentGradeCalc.map((calc, index) => (
+              {currentMark.GradeCalculationSummary.AssignmentGradeCalc.map((calc: AssignmentGradeCalc, index: number) => (
                 <div key={index} className="flex justify-between items-center text-xs">
                   <span className="text-gray-600">
                     {calc["@Type"]} ({calc["@Weight"]})

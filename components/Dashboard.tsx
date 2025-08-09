@@ -1,7 +1,17 @@
 "use client";
 
-import { GradebookData, Course } from "@/types/gradebook";
+import { GradebookData, Course, Mark } from "@/types/gradebook";
 import Link from "next/link";
+
+// Helper function to get the current mark from Mark or Mark[]
+function getCurrentMark(marks: Mark | Mark[]): Mark | null {
+  if (Array.isArray(marks)) {
+    // If it's an array, return the last mark (most recent)
+    return marks[marks.length - 1] || null;
+  }
+  // If it's a single mark, return it
+  return marks;
+}
 
 interface DashboardProps {
   gradebookData: GradebookData;
@@ -16,12 +26,14 @@ export default function Dashboard({
   const courses = gradebookData.data.Gradebook.Courses.Course;
 
   const validCourses = courses.filter((course) => {
-    const rawScore = course.Marks.Mark["@CalculatedScoreRaw"];
+    const currentMark = getCurrentMark(course.Marks.Mark);
+    const rawScore = currentMark?.["@CalculatedScoreRaw"] || 0;
     return rawScore > 0;
   });
 
   const totalPoints = validCourses.reduce((sum, course) => {
-    const rawScore = course.Marks.Mark["@CalculatedScoreRaw"];
+    const currentMark = getCurrentMark(course.Marks.Mark);
+    const rawScore = currentMark?.["@CalculatedScoreRaw"] || 0;
     let points = 0;
 
     if (rawScore >= 93) points = 4.0;
@@ -76,9 +88,9 @@ export default function Dashboard({
           </h2>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             {courses.map((course, index) => {
-              const rawScore = course.Marks.Mark["@CalculatedScoreRaw"];
-              const calculatedScore =
-                course.Marks.Mark["@CalculatedScoreString"];
+              const currentMark = getCurrentMark(course.Marks.Mark);
+              const rawScore = currentMark?.["@CalculatedScoreRaw"] || 0;
+              const calculatedScore = currentMark?.["@CalculatedScoreString"] || "N/A";
 
               return (
                 <div

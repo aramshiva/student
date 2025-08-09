@@ -1,7 +1,17 @@
 'use client';
 
-import { Course } from '@/types/gradebook';
+import { Course, Mark, AssignmentGradeCalc } from '@/types/gradebook';
 import { formatDate, getGradeColor, getCourseIcon, calculatePercentage } from '@/utils/gradebook';
+
+// Helper function to get the current mark from Mark or Mark[]
+function getCurrentMark(marks: Mark | Mark[]): Mark | null {
+  if (Array.isArray(marks)) {
+    // If it's an array, return the last mark (most recent)
+    return marks[marks.length - 1] || null;
+  }
+  // If it's a single mark, return it
+  return marks;
+}
 
 interface CourseDetailProps {
   course: Course;
@@ -9,9 +19,10 @@ interface CourseDetailProps {
 }
 
 export default function CourseDetail({ course, onBack }: CourseDetailProps) {
-  const mark = course.Marks.Mark;
-  const assignments = mark.Assignments.Assignment || [];
-  const gradeColorClass = getGradeColor(mark["@CalculatedScoreString"]);
+  const marks = course.Marks.Mark;
+  const currentMark = getCurrentMark(marks);
+  const assignments = currentMark?.Assignments?.Assignment || [];
+  const gradeColorClass = getGradeColor(currentMark?.["@CalculatedScoreString"] || "");
   const icon = getCourseIcon(course["@ImageType"]);
 
   // Sort assignments by date (newest first)
@@ -63,10 +74,10 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
               
               <div className="text-right">
                 <div className={`inline-flex px-4 py-2 rounded-lg text-lg font-bold ${gradeColorClass}`}>
-                  {mark["@CalculatedScoreString"]}
+                  {currentMark?.["@CalculatedScoreString"] || "N/A"}
                 </div>
                 <p className="text-sm text-gray-600 mt-1 font-mono">
-                  {mark["@CalculatedScoreRaw"]}%
+                  {currentMark?.["@CalculatedScoreRaw"] || "N/A"}%
                 </p>
               </div>
             </div>
@@ -76,14 +87,14 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Grade Breakdown */}
-        {mark.GradeCalculationSummary?.AssignmentGradeCalc && (
+        {currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
           <div className="bg-white rounded-lg shadow-sm mb-8 overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b">
               <h2 className="text-lg font-semibold text-gray-900">Grade Breakdown</h2>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {mark.GradeCalculationSummary.AssignmentGradeCalc.map((calc, index) => (
+                {currentMark.GradeCalculationSummary.AssignmentGradeCalc.map((calc: AssignmentGradeCalc, index: number) => (
                   <div key={index} className="bg-gray-50 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-medium text-gray-900">{calc["@Type"]}</h3>
