@@ -32,8 +32,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
     const [credentials, setCredentials] = useState<LoginCredentials>({
         username: "",
         password: "",
-        district_url: "https://wa-nor-psv.edupoint.com",
-        reporting_period: "S2FM"
+        district_url: "https://wa-nor-psv.edupoint.com"
     });
 
     const handleSubmit = (e: React.FormEvent) => {

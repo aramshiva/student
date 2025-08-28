@@ -3,13 +3,10 @@
 import { Course, Mark, AssignmentGradeCalc } from '@/types/gradebook';
 import { formatDate, getGradeColor, getCourseIcon, calculatePercentage } from '@/utils/gradebook';
 
-// Helper function to get the current mark from Mark or Mark[]
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
-    // If it's an array, return the last mark (most recent)
     return marks[marks.length - 1] || null;
   }
-  // If it's a single mark, return it
   return marks;
 }
 
@@ -25,7 +22,6 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const gradeColorClass = getGradeColor(currentMark?.["@CalculatedScoreString"] || "");
   const icon = getCourseIcon(course["@ImageType"]);
 
-  // Sort assignments by date (newest first)
   const sortedAssignments = [...assignments].sort((a, b) => 
     new Date(b["@Date"]).getTime() - new Date(a["@Date"]).getTime()
   );

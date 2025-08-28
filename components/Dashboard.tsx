@@ -1,28 +1,72 @@
 "use client";
 
-import { GradebookData, Course, Mark } from "@/types/gradebook";
+import { useEffect, useState } from "react";
+import { GradebookData, Course, Mark, LoginCredentials } from "@/types/gradebook";
 import Link from "next/link";
 
-// Helper function to get the current mark from Mark or Mark[]
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
-    // If it's an array, return the last mark (most recent)
     return marks[marks.length - 1] || null;
   }
-  // If it's a single mark, return it
   return marks;
 }
 
 interface DashboardProps {
-  gradebookData: GradebookData;
   onCourseSelect: (course: Course) => void;
   onLogout: () => void;
 }
 
-export default function Dashboard({
-  gradebookData,
-  onCourseSelect,
-}: DashboardProps) {
+export default function Dashboard({ onCourseSelect, onLogout }: DashboardProps) {
+  const [gradebookData, setGradebookData] = useState<GradebookData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const credsString = sessionStorage.getItem('gradebookCredentials');
+        if (!credsString) {
+          setError('No credentials found. Please log in again.');
+          setLoading(false);
+          return;
+        }
+        const credentials: LoginCredentials = JSON.parse(credsString);
+        const response = await fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/gradebook`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(credentials),
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: GradebookData = await response.json();
+        if (data.data.Gradebook["@ErrorMessage"]) {
+          throw new Error(data.data.Gradebook["@ErrorMessage"]);
+        }
+        setGradebookData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch gradebook data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div className="p-10 text-center text-lg">Loading gradebook...</div>;
+  }
+  if (error) {
+    return <div className="p-10 text-center text-red-600">{error}</div>;
+  }
+  if (!gradebookData) {
+    return <div className="p-10 text-center text-red-600">No gradebook data found.</div>;
+  }
+
   const courses = gradebookData.data.Gradebook.Courses.Course;
 
   const validCourses = courses.filter((course) => {
@@ -70,6 +114,7 @@ export default function Dashboard({
               : new Date().getHours() < 17 
               ? "Good Afternoon" 
               : "Good Evening"}
+              {" "}
             </p>
           </div>
           <div className="flex items-center space-x-4">
