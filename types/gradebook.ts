@@ -62,7 +62,7 @@ export interface Course {
   "@Title": string;
   "@UsesRichContent": boolean;
   Marks: {
-    Mark: Mark | Mark[];
+    Mark: Mark | Mark[]; // Can be either a single Mark or an array of Marks
   };
 }
 
@@ -88,4 +88,5 @@ export interface LoginCredentials {
   username: string;
   password: string;
   district_url: string;
+  reporting_period: string;
 }

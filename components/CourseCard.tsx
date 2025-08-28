@@ -11,10 +11,13 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+// Helper function to get the current mark from Mark or Mark[]
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
+    // If it's an array, return the last mark (most recent)
     return marks[marks.length - 1] || null;
   }
+  // If it's a single mark, return it
   return marks;
 }
 
