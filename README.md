@@ -1,4 +1,7 @@
 
+> [!WARNING]  
+> Student is a work in progress; use at your own risk. Not recommended by StudentVUE or any school district using StudentVUE
+
 <img width="5068" height="3540" alt="image" src="https://github.com/user-attachments/assets/6fb0f523-8423-4ed1-872d-c4dc04d57555" />
 
 # 📚 Student
