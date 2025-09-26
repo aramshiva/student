@@ -3,13 +3,10 @@
 import { Course, Mark, AssignmentGradeCalc } from '@/types/gradebook';
 import { formatDate, getGradeColor, getCourseIcon, calculatePercentage } from '@/utils/gradebook';
 
-// Helper function to get the current mark from Mark or Mark[]
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
-    // If it's an array, return the last mark (most recent)
     return marks[marks.length - 1] || null;
   }
-  // If it's a single mark, return it
   return marks;
 }
 
@@ -25,7 +22,6 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const gradeColorClass = getGradeColor(currentMark?.["@CalculatedScoreString"] || "");
   const icon = getCourseIcon(course["@ImageType"]);
 
-  // Sort assignments by date (newest first)
   const sortedAssignments = [...assignments].sort((a, b) => 
     new Date(b["@Date"]).getTime() - new Date(a["@Date"]).getTime()
   );
@@ -45,7 +41,6 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
@@ -86,7 +81,6 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Grade Breakdown */}
         {currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
           <div className="bg-white rounded-lg shadow-sm mb-8 overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b">
@@ -121,7 +115,6 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
           </div>
         )}
 
-        {/* Assignments Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="px-6 py-4 bg-gray-50 border-b">
             <h2 className="text-lg font-semibold text-gray-900">

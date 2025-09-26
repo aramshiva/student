@@ -20,13 +20,10 @@ import {
 } from "@/components/ui/chart"
 import { GradebookData, Mark } from "@/types/gradebook"
 
-// Helper function to get the current mark from Mark or Mark[]
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
-    // If it's an array, return the last mark (most recent)
     return marks[marks.length - 1] || null;
   }
-  // If it's a single mark, return it
   return marks;
 }
 
@@ -44,7 +41,6 @@ const chartConfig = {
 export function GradeChart({ gradebookData }: GradeChartProps) {
   const courses = gradebookData.data.Gradebook.Courses.Course;
 
-  // Create chart data from assignments across all courses
   const chartData = React.useMemo(() => {
     const allAssignments: Array<{
       date: string;
@@ -54,7 +50,6 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
     }> = [];
 
     courses.forEach((course) => {
-      // Only get assignments from the current marking period
       const marks = course.Marks.Mark;
       const currentMark = getCurrentMark(marks);
       const assignments = currentMark?.Assignments?.Assignment || [];
@@ -72,16 +67,14 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
       });
     });
 
-    // Sort by date and group by week to reduce noise
     allAssignments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    // Group by week and calculate average
     const weeklyData: Record<string, { grades: number[], date: string }> = {};
     
     allAssignments.forEach((assignment) => {
       const date = new Date(assignment.date);
       const weekStart = new Date(date);
-      weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+      weekStart.setDate(date.getDate() - date.getDay());
       const weekKey = weekStart.toISOString().split('T')[0];
       
       if (!weeklyData[weekKey]) {
@@ -90,7 +83,6 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
       weeklyData[weekKey].grades.push(assignment.grade);
     });
 
-    // Convert to chart format with running average
     const result = Object.values(weeklyData)
       .map((week) => ({
         date: new Date(week.date).toLocaleDateString('en-US', { 
@@ -104,7 +96,6 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
     return result;
   }, [courses]);
 
-  // Calculate trend
   const trend = React.useMemo(() => {
     if (chartData.length < 2) return { direction: 'neutral', percentage: 0 };
     

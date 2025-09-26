@@ -3,13 +3,10 @@
 import { GradebookData, Course, Mark } from "@/types/gradebook";
 import Link from "next/link";
 
-// Helper function to get the current mark from Mark or Mark[]
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
-    // If it's an array, return the last mark (most recent)
     return marks[marks.length - 1] || null;
   }
-  // If it's a single mark, return it
   return marks;
 }
 
@@ -74,8 +71,8 @@ export default function Dashboard({
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
-              <div className="text-sm text-gray-600">Current GPA</div>
-              <div className="text-2xl font-bold text-blue-600 font-mono">
+              <div className="text-sm text-gray-600">GPA</div>
+              <div className="text-2xl font-bold font-mono">
                 {gpa}
               </div>
             </div>
