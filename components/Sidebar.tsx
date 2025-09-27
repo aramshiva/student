@@ -1,9 +1,7 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
-  const pathname = usePathname();
   const navItems = [
     { name: "Gradebook", href: "/gradebook" },
     { name: "Schedule", href: "/schedule" },

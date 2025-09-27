@@ -16,7 +16,7 @@ interface ClassListing {
   "@RoomName": string;
   "@Teacher": string;
   "@TeacherEmail"?: string;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 }
 
 export default function SchedulePage() {
@@ -47,15 +47,15 @@ export default function SchedulePage() {
         setClasses(Array.isArray(classList) ? classList : [classList]);
         const termList = sched.TermLists?.TermListing || [];
         setTerms(
-          (Array.isArray(termList) ? termList : [termList]).map((t: any) => ({
-            termIndex: Number(t["@TermIndex"]),
-            termName: t["@TermName"],
-            beginDate: t["@BeginDate"],
-            endDate: t["@EndDate"],
+          (Array.isArray(termList) ? termList : [termList]).map((t) => ({
+            termIndex: Number((t as { [key: string]: unknown })["@TermIndex"] as string),
+            termName: (t as { [key: string]: unknown })["@TermName"] as string,
+            beginDate: (t as { [key: string]: unknown })["@BeginDate"] as string,
+            endDate: (t as { [key: string]: unknown })["@EndDate"] as string,
           }))
         );
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => setError((err as Error).message))
       .finally(() => setIsLoading(false));
   }, [selectedTerm]);
 
@@ -95,11 +95,11 @@ export default function SchedulePage() {
         <tbody>
           {classes.map((course, i) => (
             <tr key={i} className="even:bg-gray-50">
-              <td className="p-2 border">{course["@Period"]}</td>
-              <td className="p-2 border">{course["@CourseTitle"]}</td>
-              <td className="p-2 border">{course["@RoomName"]}</td>
-              <td className="p-2 border">{course["@Teacher"]}</td>
-              <td className="p-2 border">{course["@TeacherEmail"] || ""}</td>
+              <td className="p-2 border">{(course as { [key: string]: unknown })["@Period"] as string}</td>
+              <td className="p-2 border">{(course as { [key: string]: unknown })["@CourseTitle"] as string}</td>
+              <td className="p-2 border">{(course as { [key: string]: unknown })["@RoomName"] as string}</td>
+              <td className="p-2 border">{(course as { [key: string]: unknown })["@Teacher"] as string}</td>
+              <td className="p-2 border">{(course as { [key: string]: unknown })["@TeacherEmail"] as string || ""}</td>
             </tr>
           ))}
         </tbody>

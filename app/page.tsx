@@ -29,8 +29,12 @@ export default function Home() {
       // saves creds in LOCAL STORAGE (not cloud)
       // redirects to gradebook
       window.location.href = '/gradebook';
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message || 'Login failed');
+      } else {
+        setError('Login failed');
+      }
     } finally {
       setIsLoading(false);
     }

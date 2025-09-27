@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Dashboard from "@/components/Dashboard";
 import CourseDetail from "@/components/CourseDetail";
-import Loading from "@/components/Loading";
+import Loading from "@/components/loading";
 import { GradebookData, Course } from "@/types/gradebook";
 
 export default function GradebookPage() {
