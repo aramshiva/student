@@ -1,7 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
+import React, { useEffect, useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Term {
   termIndex: number;
@@ -61,49 +76,57 @@ export default function SchedulePage() {
 
   if (isLoading) return <div className="p-8">Loading schedule...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
-  if (!classes.length) return <div className="p-8">No schedule found.</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-8 bg-white rounded shadow mt-8">
-      <h1 className="text-2xl font-bold mb-4">Class Schedule</h1>
+    <div className="p-8">
+      <p className="text-xl font-medium pb-3">Class Schedule</p>
       {terms.length > 1 && (
         <div className="mb-4">
           <label className="font-semibold mr-2">Term:</label>
-          <select
-            value={selectedTerm}
-            onChange={e => setSelectedTerm(Number(e.target.value))}
-            className="border rounded px-2 py-1"
+          <Select
+            value={selectedTerm.toString()}
+            onValueChange={val => setSelectedTerm(Number(val))}
           >
-            {terms.map(term => (
-              <option key={term.termIndex} value={term.termIndex}>
-                {term.termName} ({term.beginDate} - {term.endDate})
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Select term" />
+            </SelectTrigger>
+            <SelectContent>
+              {terms.map((term: Term) => (
+                <SelectItem key={term.termIndex} value={term.termIndex.toString()}>
+                  {term.termName} ({term.beginDate} - {term.endDate})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2 border">Period</th>
-            <th className="p-2 border">Course</th>
-            <th className="p-2 border">Room</th>
-            <th className="p-2 border">Teacher</th>
-            <th className="p-2 border">Teacher Email</th>
-          </tr>
-        </thead>
-        <tbody>
-          {classes.map((course, i) => (
-            <tr key={i} className="even:bg-gray-50">
-              <td className="p-2 border">{(course as { [key: string]: unknown })["@Period"] as string}</td>
-              <td className="p-2 border">{(course as { [key: string]: unknown })["@CourseTitle"] as string}</td>
-              <td className="p-2 border">{(course as { [key: string]: unknown })["@RoomName"] as string}</td>
-              <td className="p-2 border">{(course as { [key: string]: unknown })["@Teacher"] as string}</td>
-              <td className="p-2 border">{(course as { [key: string]: unknown })["@TeacherEmail"] as string || ""}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {!classes.length ? (
+        <div className="p-8">No schedule found.</div>
+      ) : (
+        <Table>
+          <TableCaption>Your current class schedule.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[80px]">Period</TableHead>
+              <TableHead>Course</TableHead>
+              <TableHead>Room</TableHead>
+              <TableHead>Teacher</TableHead>
+              <TableHead>Teacher Email</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {classes.map((course: ClassListing, i: number) => (
+              <TableRow key={i}>
+                <TableCell>{course["@Period"]}</TableCell>
+                <TableCell>{course["@CourseTitle"]}</TableCell>
+                <TableCell>{course["@RoomName"]}</TableCell>
+                <TableCell>{course["@Teacher"]}</TableCell>
+                <TableCell>{course["@TeacherEmail"] || ""}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }
