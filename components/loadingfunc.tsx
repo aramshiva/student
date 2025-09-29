@@ -1,7 +1,7 @@
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-        <p>Fetching data from StudentVUE...</p>
+    <div className="p-8">
+    <p>Loading gradebook...</p>
     </div>
   );
 }

@@ -39,7 +39,7 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
                         <CardTitle className="text-lg leading-tight">
                             {course["@CourseName"]}
                         </CardTitle>
-                        <CardDescription className="font-mono">
+                        <CardDescription>
                             {course["@CourseID"]} • Period {course["@Period"]} • Room {course["@Room"]}
                         </CardDescription>
                     </div>
@@ -59,7 +59,7 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Current Score:</span>
-            <span className="text-sm font-bold text-gray-900 font-mono">
+            <span className="text-sm font-bold text-gray-900">
               {currentMark?.["@CalculatedScoreRaw"] || "N/A"}%
             </span>
           </div>
@@ -76,7 +76,7 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
                   <span className="text-gray-600">
                     {calc["@Type"]} ({calc["@Weight"]})
                   </span>
-                  <span className="font-mono font-medium">
+                  <span className="font-medium">
                     {calc["@CalculatedMark"]} ({calc["@WeightedPct"]})
                   </span>
                 </div>

@@ -62,7 +62,7 @@ export interface Course {
   "@Title": string;
   "@UsesRichContent": boolean;
   Marks: {
-    Mark: Mark | Mark[]; // can be one or multiple marks
+    Mark: Mark | Mark[];
   };
 }
 

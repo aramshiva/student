@@ -58,21 +58,19 @@ export default function Dashboard({
       <div className="min-h-screen bg-white p-9">
         <div className="flex justify-between items-center py-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Gradebook
-            </h1>
+      <p className="text-xl font-medium pb-3">Gradebook</p>
             <p className="text-gray-600 mt-1">
               {new Date().getHours() < 12 
               ? "Good Morning" 
               : new Date().getHours() < 17 
               ? "Good Afternoon" 
-              : "Good Evening"}
+              : "Good Evening"}! Here are your courses:
             </p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <div className="text-sm text-gray-600">GPA</div>
-              <div className="text-2xl font-bold font-mono">
+              <div className="text-2xl font-bold">
                 {gpa}
               </div>
             </div>
@@ -80,9 +78,6 @@ export default function Dashboard({
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
-            My Courses
-          </h2>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             {courses.map((course, index) => {
               const currentMark = getCurrentMark(course.Marks.Mark);
