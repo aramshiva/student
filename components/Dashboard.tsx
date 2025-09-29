@@ -1,6 +1,6 @@
 "use client";
 
-import { GradebookData, Course, Mark } from "@/types/gradebook";
+import { Course, Mark } from "@/types/gradebook";
 import Link from "next/link";
 
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
@@ -11,7 +11,7 @@ function getCurrentMark(marks: Mark | Mark[]): Mark | null {
 }
 
 interface DashboardProps {
-  gradebookData: GradebookData;
+  gradebookData: { data: any };
   onCourseSelect: (course: Course) => void;
   onLogout: () => void;
 }
@@ -20,17 +20,17 @@ export default function Dashboard({
   gradebookData,
   onCourseSelect,
 }: DashboardProps) {
-  const courses = gradebookData.data.Gradebook.Courses.Course;
+  const courses: Course[] = gradebookData.data.Courses?.Course || [];
 
-  const validCourses = courses.filter((course) => {
+  const validCourses = courses.filter((course: Course) => {
     const currentMark = getCurrentMark(course.Marks.Mark);
-    const rawScore = currentMark?.["@CalculatedScoreRaw"] || 0;
+    const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
     return rawScore > 0;
   });
 
-  const totalPoints = validCourses.reduce((sum, course) => {
+  const totalPoints = validCourses.reduce((sum: number, course: Course) => {
     const currentMark = getCurrentMark(course.Marks.Mark);
-    const rawScore = currentMark?.["@CalculatedScoreRaw"] || 0;
+    const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
     let points = 0;
 
     if (rawScore >= 93) points = 4.0;
@@ -75,14 +75,14 @@ export default function Dashboard({
 
         <div>
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            {courses.map((course, index) => {
+            {courses.map((course: Course, index: number) => {
               const currentMark = getCurrentMark(course.Marks.Mark);
-              const rawScore = currentMark?.["@CalculatedScoreRaw"] || 0;
-              const calculatedScore = currentMark?.["@CalculatedScoreString"] || "N/A";
+              const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
+              const calculatedScore = currentMark?._CalculatedScoreString || "N/A";
 
               return (
                 <div
-                  key={course["@CourseID"]}
+                  key={course._CourseID}
                   className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
                     index !== courses.length - 1
                       ? "border-b border-gray-200"
@@ -93,10 +93,10 @@ export default function Dashboard({
                   <div className="flex items-center justify-between">
                     <div className="flex flex-row space-x-5">
                       <span className="font-semibold text-gray-900 text-lg">
-                        {course["@Period"]}: {course["@Title"]}
+                        {course._Period}: {course._Title}
                       </span>
                       <span className="text-gray-600 text-sm mt-1">
-                        {course["@Staff"]} • Room {course["@Room"]}
+                        {course._Staff} • Room {course._Room}
                       </span>
                     </div>
                   </div>
@@ -125,9 +125,11 @@ export default function Dashboard({
                 Source Code
               </Link>
             </p>
-            <p className="mt-1">
-              Data refreshed from: {new Date().toLocaleString()}
-            </p>
+            {typeof window !== "undefined" && (
+              <p className="mt-1">
+                Data refreshed from: {new Date().toLocaleString()}
+              </p>
+            )}
           </div>
         </footer>
       </div>

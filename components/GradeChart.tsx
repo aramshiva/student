@@ -49,19 +49,22 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
       course: string;
     }> = [];
 
-    courses.forEach((course) => {
+    courses.forEach((course: import("@/types/gradebook").Course) => {
       const marks = course.Marks.Mark;
       const currentMark = getCurrentMark(marks);
       const assignments = currentMark?.Assignments?.Assignment || [];
       
-      assignments.forEach((assignment) => {
-        if (assignment["@Score"] >= 0 && assignment["@PointPossible"] > 0) {
-          const gradePercentage = (assignment["@Score"] / assignment["@PointPossible"]) * 100;
+      assignments.forEach((assignment: import("@/types/gradebook").Assignment) => {
+        // Defensive: _Score and _PointPossible are optional and string, so parseFloat
+        const score = assignment._Score ? parseFloat(assignment._Score) : -1;
+        const possible = assignment._PointPossible ? parseFloat(assignment._PointPossible) : -1;
+        if (score >= 0 && possible > 0) {
+          const gradePercentage = (score / possible) * 100;
           allAssignments.push({
-            date: assignment["@Date"],
+            date: assignment._Date,
             grade: Math.round(gradePercentage * 10) / 10,
-            assignment: assignment["@Measure"],
-            course: course["@Title"],
+            assignment: assignment._Measure,
+            course: course._Title,
           });
         }
       });

@@ -89,7 +89,6 @@ export default function DocumentsPage() {
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const ct = res.headers.get("content-type") || "";
     if (ct.includes("application/pdf")) {
-      // Get raw blob -> convert to base64 for reuse
       const blob = await res.blob();
       return { base64: await blobToBase64(blob), fileName: `${guid}.pdf` };
     }
@@ -174,7 +173,6 @@ export default function DocumentsPage() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      // If object URL (blob), let browser manage or revoke later (optional)
       if (objectUrl.startsWith('blob:')) {
         setTimeout(()=> URL.revokeObjectURL(objectUrl), 5000);
       }

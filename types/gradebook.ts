@@ -1,44 +1,44 @@
 export interface Assignment {
-  "@Date": string;
-  "@DisplayScore": string;
-  "@DropEndDate": string;
-  "@DropStartDate": string;
-  "@DueDate": string;
-  "@GradebookID": number;
-  "@HasDropBox": boolean;
-  "@Measure": string;
-  "@MeasureDescription": string;
-  "@Notes": string;
-  "@Point": number;
-  "@PointPossible": number;
-  "@Points": string;
-  "@Score": number;
-  "@ScoreCalValue": number;
-  "@ScoreMaxValue": number;
-  "@ScoreType": string;
-  "@StudentID": number;
-  "@TeacherID": number;
-  "@TimeSincePost": string;
-  "@TotalSecondsSincePost": number;
-  "@Type": string;
+  "_Date": string;
+  "_DisplayScore": string;
+  "_DropEndDate": string;
+  "_DropStartDate": string;
+  "_DueDate": string;
+  "_GradebookID": string;
+  "_HasDropBox": string;
+  "_Measure": string;
+  "_MeasureDescription": string;
+  "_Notes": string;
+  "_Point"?: string;
+  "_PointPossible"?: string;
+  "_Points": string;
+  "_Score"?: string;
+  "_ScoreCalValue"?: string;
+  "_ScoreMaxValue"?: string;
+  "_ScoreType": string;
+  "_StudentID": string;
+  "_TeacherID": string;
+  "_TimeSincePost": string;
+  "_TotalSecondsSincePost": string;
+  "_Type": string;
   Resources: Record<string, unknown>;
   Standards: Record<string, unknown>;
 }
 
 export interface AssignmentGradeCalc {
-  "@CalculatedMark": string;
-  "@Points": number;
-  "@PointsPossible": number;
-  "@Type": string;
-  "@Weight": string;
-  "@WeightedPct": string;
+  "_CalculatedMark": string;
+  "_Points": string;
+  "_PointsPossible": string;
+  "_Type": string;
+  "_Weight": string;
+  "_WeightedPct": string;
 }
 
 export interface Mark {
-  "@CalculatedScoreRaw": number;
-  "@CalculatedScoreString": string;
-  "@MarkName": string;
-  "@ShortMarkName": string;
+  "_CalculatedScoreRaw": string;
+  "_CalculatedScoreString": string;
+  "_MarkName": string;
+  "_ShortMarkName": string;
   Assignments: {
     Assignment: Assignment[];
   };
@@ -50,17 +50,17 @@ export interface Mark {
 }
 
 export interface Course {
-  "@CourseID": string;
-  "@CourseName": string;
-  "@HighlightPercentageCutOffForProgressBar": number;
-  "@ImageType": string;
-  "@Period": number;
-  "@Room": string | number;
-  "@Staff": string;
-  "@StaffEMail": string;
-  "@StaffGU": string;
-  "@Title": string;
-  "@UsesRichContent": boolean;
+  "_CourseID": string;
+  "_CourseName": string;
+  "_HighlightPercentageCutOffForProgressBar": string;
+  "_ImageType": string;
+  "_Period": string;
+  "_Room": string;
+  "_Staff": string;
+  "_StaffEMail": string;
+  "_StaffGU": string;
+  "_Title": string;
+  "_UsesRichContent": string;
   Marks: {
     Mark: Mark | Mark[];
   };

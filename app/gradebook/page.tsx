@@ -19,7 +19,7 @@ export default function GradebookPage() {
       return;
     }
     const credentials = JSON.parse(creds);
-    fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/gradebook`, {
+  fetch('/api/synergy/gradebook', {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
@@ -29,10 +29,10 @@ export default function GradebookPage() {
         return res.json();
       })
       .then((data) => {
-        if (data.data.Gradebook["@ErrorMessage"]) {
-          throw new Error(data.data.Gradebook["@ErrorMessage"]);
+        if (data["@ErrorMessage"]) {
+          throw new Error(data["@ErrorMessage"]);
         }
-        setGradebookData(data);
+          setGradebookData({ data });
       })
       .catch((err) => setError(err.message))
       .finally(() => setIsLoading(false));

@@ -24,9 +24,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const currentMark = getCurrentMark(marks);
   const assignments = currentMark?.Assignments?.Assignment || [];
   const gradeColorClass = getGradeColor(
-    currentMark?.["@CalculatedScoreString"] || ""
+    currentMark?._CalculatedScoreString || ""
   );
-  const icon = getCourseIcon(course["@ImageType"]);
+  const icon = getCourseIcon(course._ImageType);
 
   const getAssignmentTypeColor = (type: string) => {
     if (
@@ -65,14 +65,13 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                 <span className="text-3xl">{icon}</span>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
-                    {course["@CourseName"]}
+                    {course._CourseName}
                   </h1>
                   <p className="text-gray-600">
-                    {course["@CourseID"]} • Period {course["@Period"]} • Room{" "}
-                    {course["@Room"]}
+                    {course._CourseID} • Period {course._Period} • Room {course._Room}
                   </p>
                   <p className="text-gray-600">
-                    {course["@Staff"]} • {course["@StaffEMail"]}
+                    {course._Staff} • {course._StaffEMail}
                   </p>
                 </div>
               </div>
@@ -81,10 +80,10 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                 <div
                   className={`inline-flex px-4 py-2 rounded-lg text-lg font-bold ${gradeColorClass}`}
                 >
-                  {currentMark?.["@CalculatedScoreString"] || "N/A"}
+                  {currentMark?._CalculatedScoreString || "N/A"}
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
-                  {currentMark?.["@CalculatedScoreRaw"] || "N/A"}%
+                  {currentMark?._CalculatedScoreRaw || "N/A"}%
                 </p>
               </div>
             </div>

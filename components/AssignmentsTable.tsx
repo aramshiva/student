@@ -41,144 +41,156 @@ interface AssignmentsTableProps {
   getTypeColor: (type: string) => string;
 }
 
-export function AssignmentsTable({
-  assignments,
-  getTypeColor,
-}: AssignmentsTableProps) {
+export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTableProps) {
+  const columns: ColumnDef<Assignment>[] = [
+    {
+      id: "measure",
+  accessorFn: (row) => row._Measure,
+      header: ({ column }: { column: any }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Assignment <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+  cell: ({ row }) => {
+        const a = row.original;
+        return (
+          <div className="max-w-[260px] md:max-w-[340px] xl:max-w-[420px] space-y-1 pl-5">
+            <div className="font-medium text-gray-900 break-words whitespace-normal leading-snug">
+              {a._Measure}
+            </div>
+            {a._MeasureDescription && (
+              <div className="text-sm text-gray-500 break-words whitespace-normal leading-snug">
+                {a._MeasureDescription}
+              </div>
+            )}
+            {a._Notes && (
+              <div className="text-sm text-blue-600 italic break-words whitespace-normal leading-snug">
+                Note: {a._Notes}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: "type",
+  accessorFn: (row) => row._Type,
+      header: "Type",
+  cell: ({ row }) => (
+        <Badge className={`${getTypeColor(row.original._Type)}`}>
+          {row.original._Type}
+        </Badge>
+      ),
+    },
+    {
+      id: "date",
+  accessorFn: (row) => row._Date,
+  header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Date <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      sortingFn: (a, b, columnId) => {
+        const av = new Date(a.getValue<string>(columnId)).getTime();
+        const bv = new Date(b.getValue<string>(columnId)).getTime();
+        return av === bv ? 0 : av < bv ? -1 : 1;
+      },
+  cell: ({ row }) => (
+        <span className="text-sm text-gray-900">
+          {formatDate(row.original._Date)}
+        </span>
+      ),
+    },
+    {
+      id: "score",
+      header: "Score",
+      enableSorting: false,
+  cell: ({ row }) => {
+        const a = row.original;
+        return (
+          <div className="text-sm">
+            <div className="font-medium text-gray-900">
+              {a._DisplayScore}
+            </div>
+            <div className="text-gray-500">{a._Points}</div>
+          </div>
+        );
+      },
+    },
+    {
+      id: "percentage",
+      header: "Percentage",
+      sortingFn: (a, b) => {
+        const pctA = calculatePercentage(
+          Number(a.original._Score),
+          Number(a.original._ScoreMaxValue)
+        );
+        const pctB = calculatePercentage(
+          Number(b.original._Score),
+          Number(b.original._ScoreMaxValue)
+        );
+        return pctA === pctB ? 0 : pctA < pctB ? -1 : 1;
+      },
+  cell: ({ row }) => {
+        const a = row.original;
+        const pct = calculatePercentage(Number(a._Score), Number(a._ScoreMaxValue));
+        return (
+          <div className="flex items-center space-x-2">
+            <div className="flex-1 bg-gray-200 rounded-full h-2">
+              <div
+                className={`h-2 rounded-full ${
+                  pct >= 90
+                    ? "bg-green-500"
+                    : pct >= 80
+                    ? "bg-blue-500"
+                    : pct >= 70
+                    ? "bg-yellow-500"
+                    : pct >= 60
+                    ? "bg-orange-500"
+                    : "bg-red-500"
+                }`}
+                style={{ width: `${Math.min(pct, 100)}%` }}
+              />
+            </div>
+            <span className="text-sm font-medium text-gray-900 min-w-[3rem]">
+              {pct}%
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "dueDate",
+  accessorFn: (row) => row._DueDate,
+      header: "Due Date",
+  cell: ({ row }) => (
+        <span className="text-sm text-gray-900">
+          {formatDate(row.original._DueDate)}
+        </span>
+      ),
+    },
+    {
+      id: "notes",
+  accessorFn: (row) => row._Notes,
+      header: "Notes",
+  cell: ({ row }) => (
+        <span className="text-sm text-gray-900">
+          {row.original._Notes}
+        </span>
+      ),
+    },
+  ];
+
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "date", desc: true },
   ]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-
-  const columns = React.useMemo<ColumnDef<Assignment>[]>(
-    () => [
-      {
-        id: "measure",
-        accessorFn: (row) => row["@Measure"],
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Assignment <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => {
-          const a = row.original;
-          return (
-            <div className="max-w-[260px] md:max-w-[340px] xl:max-w-[420px] space-y-1 pl-5">
-              <div className="font-medium text-gray-900 break-words whitespace-normal leading-snug">
-                {a["@Measure"]}
-              </div>
-              {a["@MeasureDescription"] && (
-                <div className="text-sm text-gray-500 break-words whitespace-normal leading-snug">
-                  {a["@MeasureDescription"]}
-                </div>
-              )}
-              {a["@Notes"] && (
-                <div className="text-sm text-blue-600 italic break-words whitespace-normal leading-snug">
-                  Note: {a["@Notes"]}
-                </div>
-              )}
-            </div>
-          );
-        },
-      },
-      {
-        id: "type",
-        accessorFn: (row) => row["@Type"],
-        header: "Type",
-        cell: ({ row }) => (
-          <Badge className={`${getTypeColor(row.original["@Type"])}`}>
-            {row.original["@Type"]}
-          </Badge>
-        ),
-      },
-      {
-        id: "date",
-        accessorFn: (row) => row["@Date"],
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Date <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        sortingFn: (a, b, columnId) => {
-          const av = new Date(a.getValue<string>(columnId)).getTime();
-          const bv = new Date(b.getValue<string>(columnId)).getTime();
-          return av === bv ? 0 : av < bv ? -1 : 1;
-        },
-        cell: ({ row }) => (
-          <span className="text-sm text-gray-900">
-            {formatDate(row.original["@Date"])}
-          </span>
-        ),
-      },
-      {
-        id: "score",
-        header: "Score",
-        enableSorting: false,
-        cell: ({ row }) => {
-          const a = row.original;
-          return (
-            <div className="text-sm">
-              <div className="font-medium text-gray-900">
-                {a["@DisplayScore"]}
-              </div>
-              <div className="text-gray-500">{a["@Points"]}</div>
-            </div>
-          );
-        },
-      },
-      {
-        id: "percentage",
-        header: "Percentage",
-        sortingFn: (a, b) => {
-          const pctA = calculatePercentage(
-            a.original["@Score"],
-            a.original["@ScoreMaxValue"]
-          );
-          const pctB = calculatePercentage(
-            b.original["@Score"],
-            b.original["@ScoreMaxValue"]
-          );
-          return pctA === pctB ? 0 : pctA < pctB ? -1 : 1;
-        },
-        cell: ({ row }) => {
-          const a = row.original;
-          const pct = calculatePercentage(a["@Score"], a["@ScoreMaxValue"]);
-          return (
-            <div className="flex items-center space-x-2">
-              <div className="flex-1 bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full ${
-                    pct >= 90
-                      ? "bg-green-500"
-                      : pct >= 80
-                      ? "bg-blue-500"
-                      : pct >= 70
-                      ? "bg-yellow-500"
-                      : pct >= 60
-                      ? "bg-orange-500"
-                      : "bg-red-500"
-                  }`}
-                  style={{ width: `${Math.min(pct, 100)}%` }}
-                />
-              </div>
-              <span className="text-sm font-medium text-gray-900 min-w-[3rem]">
-                {pct}%
-              </span>
-            </div>
-          );
-        },
-      },
-    ],
-    [getTypeColor]
-  );
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
     data: assignments,
@@ -190,7 +202,7 @@ export function AssignmentsTable({
     state: { sorting, columnFilters },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    getRowId: (row) => String(row["@GradebookID"]),
+    getRowId: (row) => String(row._GradebookID),
   });
 
   return (
@@ -199,7 +211,6 @@ export function AssignmentsTable({
         <CardTitle>Assignments ({assignments.length})</CardTitle>
         <CardDescription>List of all assignments</CardDescription>
         <CardAction>
-          {" "}
           <Input
             placeholder="Filter assignments..."
             value={
@@ -266,8 +277,7 @@ export function AssignmentsTable({
       <CardFooter>
         <div className="flex items-center justify-between w-full">
           <div className="text-xs text-gray-500">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount() || 1}
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
           </div>
           <div className="flex items-center gap-2">
             <Button

@@ -38,21 +38,21 @@ const chartConfig = {
 
 export function GradeProgressionChart({ assignments }: GradeProgressionChartProps) {
   const sortedAssignments = React.useMemo(
-    () => [...assignments].sort((a, b) => new Date(a["@Date"]).getTime() - new Date(b["@Date"]).getTime()),
+    () => [...assignments].sort((a, b) => new Date(a["_Date"]).getTime() - new Date(b["_Date"]).getTime()),
     [assignments]
   );
   const assignmentDates = React.useMemo(
-    () => Array.from(new Set(sortedAssignments.map(a => a["@Date"]))).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
+    () => Array.from(new Set(sortedAssignments.map(a => a["_Date"]))).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()),
     [sortedAssignments]
   );
 
   const chartData = React.useMemo(() => {
     return assignmentDates.map(date => {
-      const upTo = sortedAssignments.filter(a => new Date(a["@Date"]).getTime() <= new Date(date).getTime());
+      const upTo = sortedAssignments.filter(a => new Date(a["_Date"]).getTime() <= new Date(date).getTime());
       let total = 0; let possible = 0;
       upTo.forEach(a => {
-        const pts = Number(a["@Point"]);
-        const ptsPossible = Number(a["@PointPossible"]);
+        const pts = a._Point ? parseFloat(a._Point) : NaN;
+        const ptsPossible = a._PointPossible ? parseFloat(a._PointPossible) : NaN;
         if (!isNaN(pts) && !isNaN(ptsPossible)) {
           total += pts;
           possible += ptsPossible;

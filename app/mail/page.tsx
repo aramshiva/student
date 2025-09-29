@@ -1,15 +1,14 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
-// Button import removed (raw JSON toggle removed)
 
 interface MailRecipient {
   _RecipientType?: string;
   _GU?: string;
   _RecipientList?: string;
   _GroupUserTypes?: string;
-  _Details1?: string; // Name
-  _Details2?: string; // Role
+  _Details1?: string;
+  _Details2?: string;
 }
 
 interface MailMessage {
@@ -20,22 +19,18 @@ interface MailMessage {
   Attachments?: { AttachmentXML?: { _FileName?: string; _FileSize?: string }[] } | null;
   _SMMessageGU?: string;
   _SMMsgPersonGU?: string;
-  _SendDateTime?: string; // e.g. 09/26/2025 12:35:01
+  _SendDateTime?: string;
   _Subject?: string;
-  _MessageText?: string; // HTML
+  _MessageText?: string;
 }
 
-// MailFolder interface removed (not currently used)
 
-// Removed MailDataShape (only needed for raw debug)
 
 export default function MailPage() {
-  // removed data state (only used for raw debug previously)
   const [messages, setMessages] = useState<MailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<MailMessage | null>(null);
-  // removed raw JSON toggle
 
   useEffect(() => {
     const credsRaw = localStorage.getItem('studentvue-creds');
