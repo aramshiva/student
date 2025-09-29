@@ -1,31 +1,82 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+// New API underscore-based shapes
+interface APIAbsencePeriod {
+  _Number: string;
+  _Name: string;
+  _Reason?: string;
+  _Course?: string;
+  _Staff?: string;
+  _StaffEMail?: string;
+  _IconName?: string;
+  _SchoolName?: string;
+}
+
+interface APIAbsenceDay {
+  _AbsenceDate: string; // MM/DD/YYYY
+  _Reason?: string;
+  _Note?: string;
+  _DailyIconName?: string;
+  _CodeAllDayReasonType?: string;
+  _CodeAllDayDescription?: string;
+  Periods?: { Period: APIAbsencePeriod | APIAbsencePeriod[] };
+}
+
+interface APIPeriodTotalEntry {
+  _Number: string;
+  _Total: string;
+}
+interface APIPeriodTotalsWrapper {
+  PeriodTotal: APIPeriodTotalEntry | APIPeriodTotalEntry[];
+}
+
+interface AttendanceAPIResponseRoot {
+  Absences?: { Absence: APIAbsenceDay | APIAbsenceDay[] };
+  TotalExcused?: APIPeriodTotalsWrapper;
+  TotalTardies?: APIPeriodTotalsWrapper;
+  TotalUnexcused?: APIPeriodTotalsWrapper;
+  TotalActivities?: APIPeriodTotalsWrapper;
+  TotalUnexcusedTardies?: APIPeriodTotalsWrapper;
+  _Type?: string;
+  _StartPeriod?: string;
+  _EndPeriod?: string;
+  _PeriodCount?: string;
+  _SchoolName?: string;
+}
 
 interface PeriodEntry {
-  Number: number;
-  Course: string;
-  Name: string;
-  Staff: string;
-  StaffEmail?: string;
-  IconName?: string;
-  Reason?: string;
+  number: number;
+  course: string;
+  name: string;
+  staff: string;
+  staffEmail?: string;
+  iconName?: string;
+  reason?: string;
 }
 
 interface AbsenceDay {
-  date: string;
+  date: string; // ISO YYYY-MM-DD for sorting
+  displayDate: string; // original MM/DD/YYYY
   reason: string;
   note?: string;
   icon?: string;
   periods: PeriodEntry[];
-  raw: Record<string, unknown>;
 }
 
 interface PeriodTotal {
-  Number: number;
-  Total: number;
+  number: number;
+  total: number;
 }
 
 interface AttendanceDataShape {
@@ -33,7 +84,7 @@ interface AttendanceDataShape {
   type?: string;
   startPeriod?: number;
   endPeriod?: number;
-  absences: AbsenceDay[];
+  absenceDays: AbsenceDay[];
   totals: {
     activities?: PeriodTotal[];
     excused?: PeriodTotal[];
@@ -43,10 +94,18 @@ interface AttendanceDataShape {
   };
 }
 
+interface ScheduleClassListing { "@CourseTitle": string; "@Period": string | number }
+
 export default function AttendancePage() {
   const [dataShape, setDataShape] = useState<AttendanceDataShape | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [periodNameMap, setPeriodNameMap] = useState<Record<number,string>>({});
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (dateKey: string) => {
+    setExpanded(prev => ({ ...prev, [dateKey]: !prev[dateKey] }));
+  };
 
   useEffect(() => {
     const creds = localStorage.getItem("studentvue-creds");
@@ -54,95 +113,130 @@ export default function AttendancePage() {
       window.location.href = "/";
       return;
     }
-    setIsLoading(true);
-    setError(null);
-    fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/attendance`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(JSON.parse(creds)),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        const attRoot = data?.data?.Attendance;
-        if (!attRoot) {
-          setDataShape({ absences: [], totals: {} });
-          return;
-        }
+    const run = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await fetch(`/api/synergy/attendance`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(JSON.parse(creds)),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const root: AttendanceAPIResponseRoot = await res.json();
 
-        const absList = attRoot?.Absences?.Absence || [];
-        const absArray = Array.isArray(absList) ? absList : [absList];
-        const absences: AbsenceDay[] = absArray.map((aRaw: unknown) => {
-          interface Indexable { [key: string]: unknown }
-          const a = aRaw as Indexable;
-          const get = (o: Indexable | undefined | null, ...keys: string[]): unknown => {
-            if (!o) return undefined;
-            for (const k of keys) {
-              const v = o[k];
-              if (v !== undefined && v !== null && v !== "") return v;
+        const normalizeArray = <T,>(val: T | T[] | undefined | null): T[] => {
+          if (!val) return [];
+          return Array.isArray(val) ? val : [val];
+        };
+
+        const parsePeriodTotals = (
+          w?: APIPeriodTotalsWrapper
+        ): PeriodTotal[] => {
+          if (!w) return [];
+          return normalizeArray(w.PeriodTotal).map((pt) => ({
+            number: Number(pt._Number || 0),
+            total: Number(pt._Total || 0),
+          }));
+        };
+
+        const absenceDays: AbsenceDay[] = normalizeArray(root.Absences?.Absence)
+          .map((abs) => {
+            const periods = normalizeArray(abs.Periods?.Period).map((p) => ({
+              number: Number(p._Number || 0),
+              course: p._Course || "",
+              name: p._Name || "",
+              staff: p._Staff || "",
+              staffEmail: p._StaffEMail || "",
+              iconName: p._IconName || "",
+              reason: p._Reason || "",
+            }));
+            const mmddyyyy = abs._AbsenceDate || ""; // 09/23/2025
+            let iso = "";
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(mmddyyyy)) {
+              const [m, d, y] = mmddyyyy.split("/");
+              iso = `${y}-${m}-${d}`;
             }
-            return undefined;
-          };
-          const periodsNode = a["Periods"] as Indexable | undefined;
-          const periodsRaw = (periodsNode?.["Period"] as unknown) || [];
-          const periodArr = Array.isArray(periodsRaw) ? periodsRaw : periodsRaw ? [periodsRaw] : [];
-          const periods: PeriodEntry[] = periodArr.map(pRaw => {
-            const p = pRaw as Indexable;
             return {
-              Number: Number(get(p, "@Number", "Number") ?? 0),
-              Course: String(get(p, "@Course", "Course") ?? ""),
-              Name: String(get(p, "@Name", "Name") ?? ""),
-              Staff: String(get(p, "@Staff", "Staff") ?? ""),
-              StaffEmail: String(get(p, "@StaffEMail", "StaffEMail") ?? ""),
-              IconName: String(get(p, "@IconName", "IconName") ?? ""),
-              Reason: String(get(p, "@Reason", "Reason") ?? ""),
+              date: iso || mmddyyyy,
+              displayDate: mmddyyyy,
+              reason: abs._Reason || abs._CodeAllDayDescription || "",
+              note: abs._Note || "",
+              icon: abs._DailyIconName || abs._CodeAllDayReasonType || "",
+              periods,
             };
-          });
-          return {
-            date: String(get(a, "@AbsenceDate", "Date") ?? ""),
-            reason: String(get(a, "@Reason", "@CodeAllDayDescription", "Reason") ?? ""),
-            note: String(get(a, "@Note", "Note") ?? ""),
-            icon: String(get(a, "@DailyIconName", "DailyIconName") ?? ""),
-            periods,
-            raw: a,
-          };
-        });
+          })
+          .sort((a, b) => b.date.localeCompare(a.date));
 
-        const parseTotals = (node: unknown): PeriodTotal[] => {
-          if (!node) return [];
-          const n = node as { [key: string]: unknown };
-          const ptRaw = n["PeriodTotal"] as unknown;
-          const list = Array.isArray(ptRaw) ? ptRaw : ptRaw ? [ptRaw] : [];
-          return list.map(item => {
-            const it = item as { [key: string]: unknown };
-            return {
-              Number: Number(it["@Number"] ?? it["Number"] ?? 0),
-              Total: Number(it["@Total"] ?? it["Total"] ?? 0),
-            };
-          });
+        const dataShape: AttendanceDataShape = {
+          schoolName: root._SchoolName,
+          type: root._Type,
+          startPeriod: root._StartPeriod
+            ? Number(root._StartPeriod)
+            : undefined,
+          endPeriod: root._EndPeriod ? Number(root._EndPeriod) : undefined,
+          absenceDays,
+          totals: {
+            activities: parsePeriodTotals(root.TotalActivities),
+            excused: parsePeriodTotals(root.TotalExcused),
+            tardies: parsePeriodTotals(root.TotalTardies),
+            unexcused: parsePeriodTotals(root.TotalUnexcused),
+            unexcusedTardies: parsePeriodTotals(root.TotalUnexcusedTardies),
+          },
         };
+        setDataShape(dataShape);
 
-        const totals = {
-          activities: parseTotals(attRoot?.TotalActivities),
-            excused: parseTotals(attRoot?.TotalExcused),
-            tardies: parseTotals(attRoot?.TotalTardies),
-            unexcused: parseTotals(attRoot?.TotalUnexcused),
-            unexcusedTardies: parseTotals(attRoot?.TotalUnexcusedTardies),
-        };
-
-        setDataShape({
-          schoolName: attRoot?.["@SchoolName"],
-          type: attRoot?.["@Type"],
-          startPeriod: attRoot?.["@StartPeriod"],
-          endPeriod: attRoot?.["@EndPeriod"],
-          absences,
-          totals,
-        });
-      })
-      .catch((err) => setError((err as Error).message))
-      .finally(() => setIsLoading(false));
+        // Fetch schedule for period name mapping (aligning with schedule page endpoint)
+        try {
+          const schedRes = await fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/schedule`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...JSON.parse(creds), term_index: 0 }),
+          });
+          if (schedRes.ok) {
+            const schedJson = await schedRes.json();
+            const sched = schedJson?.data?.StudentClassSchedule;
+            const classList = sched?.ClassLists?.ClassListing;
+            const arr: ScheduleClassListing[] = Array.isArray(classList) ? classList : classList ? [classList] : [];
+            const map: Record<number,string> = {};
+            for (const c of arr) {
+              const num = Number(c["@Period"]);
+              const title = c["@CourseTitle"];
+              if (!Number.isNaN(num) && title && !map[num]) map[num] = title;
+            }
+            // Fallback enrichment using absence day period course names
+            for (const day of dataShape.absenceDays) {
+              for (const p of day.periods) {
+                if (p.course && !map[p.number]) map[p.number] = p.course;
+              }
+            }
+            setPeriodNameMap(map);
+          } else {
+            // Even if schedule fails, build map from absence days only
+            const map: Record<number,string> = {};
+            for (const day of dataShape.absenceDays) {
+              for (const p of day.periods) {
+                if (p.course && !map[p.number]) map[p.number] = p.course;
+              }
+            }
+            if (Object.keys(map).length) setPeriodNameMap(map);
+          }
+        } catch {
+          const map: Record<number,string> = {};
+          for (const day of dataShape.absenceDays) {
+            for (const p of day.periods) {
+              if (p.course && !map[p.number]) map[p.number] = p.course;
+            }
+          }
+          if (Object.keys(map).length) setPeriodNameMap(map);
+        }
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    run();
   }, []);
 
   if (isLoading) return <div className="p-8">Loading attendance...</div>;
@@ -150,97 +244,151 @@ export default function AttendancePage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-xl font-semibold mb-4">Attendance</h1>
-          {!dataShape?.absences?.length ? (
-            <div>No absence records.</div>
-          ) : (
-            <div className="space-y-6">
-              <div className="text-sm text-gray-600 flex flex-wrap gap-4">
-                {dataShape.schoolName && <span><strong>School:</strong> {dataShape.schoolName}</span>}
-                {dataShape.type && <span><strong>Type:</strong> {dataShape.type}</span>}
-                {typeof dataShape.startPeriod !== "undefined" && typeof dataShape.endPeriod !== "undefined" && (
-                  <span><strong>Periods:</strong> {dataShape.startPeriod} - {dataShape.endPeriod}</span>
-                )}
-                <span><strong>Total Absence Days:</strong> {dataShape.absences.length}</span>
-              </div>
+      <p className="text-xl font-medium pb-3">Attendance</p>
+      {!dataShape?.absenceDays?.length ? (
+        <div>No absence records.</div>
+      ) : (
+        <div className="space-y-6">
+          <div className="text-sm text-gray-500 flex flex-wrap gap-4">
+            {dataShape.schoolName && (
+              <span>
+                School: {dataShape.schoolName}
+              </span>
+            )}
+            {dataShape.type && (
+              <span>
+                Type: {dataShape.type}
+              </span>
+            )}
+            {typeof dataShape.startPeriod !== "undefined" &&
+              typeof dataShape.endPeriod !== "undefined" && (
+                <span>
+                  Periods: {dataShape.startPeriod} -{" "}
+                  {dataShape.endPeriod}
+                </span>
+              )}
+            <span>
+              Total Absence Days:{" "}
+              {dataShape.absenceDays.length}
+            </span>
+          </div>
 
-              {dataShape.absences.map((a) => (
+            <Card className="p-4">
+            <CardHeader className="pt-5">
+              <CardTitle>Period Totals</CardTitle>
+              <CardDescription>Summary of missed periods</CardDescription>
+            </CardHeader>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Period</TableHead>
+                  <TableHead>Activities</TableHead>
+                  <TableHead>Excused</TableHead>
+                  <TableHead>Tardies</TableHead>
+                  <TableHead>Unexcused</TableHead>
+                  <TableHead>Unexcused Tardies</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(() => {
+                  // Collect all period numbers from totals arrays
+                  const nums = new Set<number>();
+                  const pushNums = (list?: { number: number; total: number }[]) => list?.forEach(l => nums.add(l.number));
+                  pushNums(dataShape?.totals.activities);
+                  pushNums(dataShape?.totals.excused);
+                  pushNums(dataShape?.totals.tardies);
+                  pushNums(dataShape?.totals.unexcused);
+                  pushNums(dataShape?.totals.unexcusedTardies);
+                  // Add periods from schedule mapping and absence day periods (ensures period 7 etc.)
+                  Object.keys(periodNameMap).forEach(k => nums.add(Number(k)));
+                  dataShape?.absenceDays.forEach(day => day.periods.forEach(p => nums.add(p.number)));
+                  const activePeriodNums = new Set<number>();
+                  Object.keys(periodNameMap).forEach(k => activePeriodNums.add(Number(k)));
+                  dataShape?.absenceDays.forEach(day => day.periods.forEach(p => activePeriodNums.add(p.number)));
+                  const sorted = Array.from(nums).sort((a,b)=>a-b);
+                  return sorted.map(n => {
+                    const find = (list?: { number: number; total: number }[]) => list?.find(l => l.number === n)?.total ?? 0;
+                    const a = find(dataShape?.totals.activities);
+                    const e = find(dataShape?.totals.excused);
+                    const t = find(dataShape?.totals.tardies);
+                    const u = find(dataShape?.totals.unexcused);
+                    const ut = find(dataShape?.totals.unexcusedTardies);
+                    if (!periodNameMap[n] && a + e + t + u + ut === 0 && !activePeriodNums.has(n)) return null;
+                    const label = periodNameMap[n] ? `${n} – ${periodNameMap[n]}` : String(n);
+                    return (
+                      <TableRow key={n}>
+                        <TableCell className="max-w-[260px] truncate" title={label}>{label}</TableCell>
+                        <TableCell>{a}</TableCell>
+                        <TableCell>{e}</TableCell>
+                        <TableCell>{t}</TableCell>
+                        <TableCell>{u}</TableCell>
+                        <TableCell>{ut}</TableCell>
+                      </TableRow>
+                    );
+                  }).filter(Boolean);
+                })()}
+              </TableBody>
+            </Table>
+          </Card>
+            {dataShape.absenceDays.map((a) => {
+              const isOpen = expanded[a.date] ?? false;
+              return (
                 <Card key={a.date} className="p-4 space-y-3">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="font-semibold text-lg">{a.date}</h2>
-                      <p className="text-sm text-gray-700">{a.reason || "(No reason)"}</p>
-                      {a.note && <p className="text-xs mt-1 text-gray-500 italic">Note: {a.note}</p>}
+                    <div className="pr-4">
+                      <h2 className="font-semibold text-lg flex items-center gap-2">
+                        <button
+                          type="button"
+                          aria-label={isOpen ? "Collapse" : "Expand"}
+                          onClick={() => toggleExpand(a.date)}
+                          className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 transition"
+                        >
+                          {isOpen ? "−" : "+"}
+                        </button>
+                        {a.displayDate}
+                      </h2>
+                      <p className="text-sm pt-2 text-gray-500">
+                        {a.reason || "(No reason)"} - {a.note && (<span>{a.note}</span>)}
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[60px]">#</TableHead>
-                          <TableHead>Course</TableHead>
-                          <TableHead>Staff</TableHead>
-                          <TableHead>Reason</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {a.periods.map(p => (
-                          <TableRow key={p.Number}>
-                            <TableCell>{p.Number}</TableCell>
-                            <TableCell className="max-w-[260px] truncate" title={p.Course}>{p.Course}</TableCell>
-                            <TableCell>{p.Staff}</TableCell>
-                            <TableCell>{p.Reason || p.Name}</TableCell>
+                  {isOpen && (
+                    <div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[60px]">#</TableHead>
+                            <TableHead>Course</TableHead>
+                            <TableHead>Staff</TableHead>
+                            <TableHead>Reason</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                        </TableHeader>
+                        <TableBody>
+                          {a.periods.map((p) => (
+                            <TableRow key={p.number}>
+                              <TableCell>{p.number}</TableCell>
+                              <TableCell
+                                className="max-w-[260px] truncate"
+                                title={p.course}
+                              >
+                                {p.course}
+                              </TableCell>
+                              <TableCell>{p.staff}</TableCell>
+                              <TableCell>{p.reason || p.name}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
                 </Card>
-              ))}
-
-              <Card className="p-4">
-                <h2 className="font-semibold mb-3">Period Totals</h2>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Period</TableHead>
-                      <TableHead>Activities</TableHead>
-                      <TableHead>Excused</TableHead>
-                      <TableHead>Tardies</TableHead>
-                      <TableHead>Unexcused</TableHead>
-                      <TableHead>Unexcused Tardies</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(() => {
-                      const nums = new Set<number>();
-                      const pushNums = (list?: { Number: number; Total: number }[]) => list?.forEach(l => nums.add(l.Number));
-                      pushNums(dataShape?.totals.activities);
-                      pushNums(dataShape?.totals.excused);
-                      pushNums(dataShape?.totals.tardies);
-                      pushNums(dataShape?.totals.unexcused);
-                      pushNums(dataShape?.totals.unexcusedTardies);
-                      const sorted = Array.from(nums).sort((a,b)=>a-b);
-                      return sorted.map(n => {
-                        const find = (list?: { Number: number; Total: number }[]) => list?.find(l => l.Number === n)?.Total ?? 0;
-                        return (
-                          <TableRow key={n}>
-                            <TableCell>{n}</TableCell>
-                            <TableCell>{find(dataShape?.totals.activities)}</TableCell>
-                            <TableCell>{find(dataShape?.totals.excused)}</TableCell>
-                            <TableCell>{find(dataShape?.totals.tardies)}</TableCell>
-                            <TableCell>{find(dataShape?.totals.unexcused)}</TableCell>
-                            <TableCell>{find(dataShape?.totals.unexcusedTardies)}</TableCell>
-                          </TableRow>
-                        );
-                      });
-                    })()}
-                  </TableBody>
-                </Table>
-              </Card>
-            </div>
-          )}
-      <p className="text-xs text-gray-400 mt-4">Rendered {dataShape?.absences.length || 0} absence day(s).</p>
+              );
+            })}
+        </div>
+      )}
+      <p className="text-xs text-gray-400 mt-4">
+        Rendered {dataShape?.absenceDays.length || 0} absence day(s).
+      </p>
     </div>
   );
 }

@@ -60,9 +60,6 @@ export default function Dashboard({
         <div className="flex justify-between items-center py-6">
           <div>
       <p className="text-xl font-medium pb-3">Gradebook</p>
-            <p className="text-gray-600 mt-1">
-              Courses:
-            </p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
@@ -115,24 +112,6 @@ export default function Dashboard({
             })}
           </div>
         </div>
-
-        <footer className="mt-16 pt-8 border-t border-gray-200">
-          <div className="text-center text-sm text-gray-500">
-            <p>
-              Powered by{" "}
-              <Link href="https://github.com/aramshiva/APIVUE">APIVUE</Link> •
-              Made by <Link href="https://aram.sh">Aram</Link> •{" "}
-              <Link href="https://github.com/aramshiva/student">
-                Source Code
-              </Link>
-            </p>
-            {typeof window !== "undefined" && (
-              <p className="mt-1">
-                Data refreshed from: {new Date().toLocaleString()}
-              </p>
-            )}
-          </div>
-        </footer>
       </div>
     </>
   );

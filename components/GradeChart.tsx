@@ -55,7 +55,6 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
       const assignments = currentMark?.Assignments?.Assignment || [];
       
       assignments.forEach((assignment: import("@/types/gradebook").Assignment) => {
-        // Defensive: _Score and _PointPossible are optional and string, so parseFloat
         const score = assignment._Score ? parseFloat(assignment._Score) : -1;
         const possible = assignment._PointPossible ? parseFloat(assignment._PointPossible) : -1;
         if (score >= 0 && possible > 0) {

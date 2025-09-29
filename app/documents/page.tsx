@@ -94,7 +94,6 @@ export default function DocumentsPage() {
     }
     const json = await res.json();
   const docNode = json?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
-  // Support both direct string and { $: string } for Base64Code
   let base64: unknown = docNode?.Base64Code;
   if (base64 && typeof base64 === 'object' && base64 !== null && '$' in base64) {
     base64 = base64.$;
@@ -133,7 +132,6 @@ export default function DocumentsPage() {
       } else {
         const json = await res.json();
         const docNode = json?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
-        // Support both direct string and { $: string } for Base64Code
         let base64: unknown = docNode?.Base64Code;
         if (base64 && typeof base64 === 'object' && base64 !== null && '$' in base64) {
           base64 = base64.$;
