@@ -9,7 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface APIAbsencePeriod {
   _Number: string;
@@ -93,17 +98,24 @@ interface AttendanceDataShape {
   };
 }
 
-interface ScheduleClassListing { "@CourseTitle": string; "@Period": string | number }
+interface ScheduleClassListing {
+  _Period(_Period: string | number): unknown;
+  _CourseTitle: string;
+  "@CourseTitle": string;
+  "@Period": string | number;
+}
 
 export default function AttendancePage() {
   const [dataShape, setDataShape] = useState<AttendanceDataShape | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [periodNameMap, setPeriodNameMap] = useState<Record<number,string>>({});
+  const [periodNameMap, setPeriodNameMap] = useState<Record<number, string>>(
+    {}
+  );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const toggleExpand = (dateKey: string) => {
-    setExpanded(prev => ({ ...prev, [dateKey]: !prev[dateKey] }));
+    setExpanded((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
   };
 
   useEffect(() => {
@@ -122,7 +134,7 @@ export default function AttendancePage() {
           body: JSON.stringify(JSON.parse(creds)),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const root: AttendanceAPIResponseRoot = await res.json();
+        const root: AttendanceAPIResponseRoot = await res.json();
 
         const normalizeArray = <T,>(val: T | T[] | undefined | null): T[] => {
           if (!val) return [];
@@ -195,8 +207,12 @@ export default function AttendancePage() {
             const schedJson = await schedRes.json();
             const sched = schedJson?.data?.StudentClassSchedule;
             const classList = sched?.ClassLists?.ClassListing;
-            const arr: ScheduleClassListing[] = Array.isArray(classList) ? classList : classList ? [classList] : [];
-            const map: Record<number,string> = {};
+            const arr: ScheduleClassListing[] = Array.isArray(classList)
+              ? classList
+              : classList
+              ? [classList]
+              : [];
+            const map: Record<number, string> = {};
             for (const c of arr) {
               const num = Number(c._Period);
               const title = c._CourseTitle;
@@ -209,7 +225,7 @@ export default function AttendancePage() {
             }
             setPeriodNameMap(map);
           } else {
-            const map: Record<number,string> = {};
+            const map: Record<number, string> = {};
             for (const day of dataShape.absenceDays) {
               for (const p of day.periods) {
                 if (p.course && !map[p.number]) map[p.number] = p.course;
@@ -218,7 +234,7 @@ export default function AttendancePage() {
             if (Object.keys(map).length) setPeriodNameMap(map);
           }
         } catch {
-          const map: Record<number,string> = {};
+          const map: Record<number, string> = {};
           for (const day of dataShape.absenceDays) {
             for (const p of day.periods) {
               if (p.course && !map[p.number]) map[p.number] = p.course;
@@ -247,29 +263,19 @@ export default function AttendancePage() {
         <div className="space-y-6">
           <div className="text-sm text-gray-500 flex flex-wrap gap-4">
             {dataShape.schoolName && (
-              <span>
-                School: {dataShape.schoolName}
-              </span>
+              <span>School: {dataShape.schoolName}</span>
             )}
-            {dataShape.type && (
-              <span>
-                Type: {dataShape.type}
-              </span>
-            )}
+            {dataShape.type && <span>Type: {dataShape.type}</span>}
             {typeof dataShape.startPeriod !== "undefined" &&
               typeof dataShape.endPeriod !== "undefined" && (
                 <span>
-                  Periods: {dataShape.startPeriod} -{" "}
-                  {dataShape.endPeriod}
+                  Periods: {dataShape.startPeriod} - {dataShape.endPeriod}
                 </span>
               )}
-            <span>
-              Total Absence Days:{" "}
-              {dataShape.absenceDays.length}
-            </span>
+            <span>Total Absence Days: {dataShape.absenceDays.length}</span>
           </div>
 
-            <Card className="p-4">
+          <Card className="p-4">
             <CardHeader className="pt-5">
               <CardTitle>Period Totals</CardTitle>
               <CardDescription>Summary of missed periods</CardDescription>
@@ -288,96 +294,123 @@ export default function AttendancePage() {
               <TableBody>
                 {(() => {
                   const nums = new Set<number>();
-                  const pushNums = (list?: { number: number; total: number }[]) => list?.forEach(l => nums.add(l.number));
+                  const pushNums = (
+                    list?: { number: number; total: number }[]
+                  ) => list?.forEach((l) => nums.add(l.number));
                   pushNums(dataShape?.totals.activities);
                   pushNums(dataShape?.totals.excused);
                   pushNums(dataShape?.totals.tardies);
                   pushNums(dataShape?.totals.unexcused);
                   pushNums(dataShape?.totals.unexcusedTardies);
-                  Object.keys(periodNameMap).forEach(k => nums.add(Number(k)));
-                  dataShape?.absenceDays.forEach(day => day.periods.forEach(p => nums.add(p.number)));
+                  Object.keys(periodNameMap).forEach((k) =>
+                    nums.add(Number(k))
+                  );
+                  dataShape?.absenceDays.forEach((day) =>
+                    day.periods.forEach((p) => nums.add(p.number))
+                  );
                   const activePeriodNums = new Set<number>();
-                  Object.keys(periodNameMap).forEach(k => activePeriodNums.add(Number(k)));
-                  dataShape?.absenceDays.forEach(day => day.periods.forEach(p => activePeriodNums.add(p.number)));
-                  const sorted = Array.from(nums).sort((a,b)=>a-b);
-                  return sorted.map(n => {
-                    const find = (list?: { number: number; total: number }[]) => list?.find(l => l.number === n)?.total ?? 0;
-                    const a = find(dataShape?.totals.activities);
-                    const e = find(dataShape?.totals.excused);
-                    const t = find(dataShape?.totals.tardies);
-                    const u = find(dataShape?.totals.unexcused);
-                    const ut = find(dataShape?.totals.unexcusedTardies);
-                    if (!periodNameMap[n] && a + e + t + u + ut === 0 && !activePeriodNums.has(n)) return null;
-                    const label = periodNameMap[n] ? `${n} – ${periodNameMap[n]}` : String(n);
-                    return (
-                      <TableRow key={n}>
-                        <TableCell className="max-w-[260px] truncate" title={label}>{label}</TableCell>
-                        <TableCell>{a}</TableCell>
-                        <TableCell>{e}</TableCell>
-                        <TableCell>{t}</TableCell>
-                        <TableCell>{u}</TableCell>
-                        <TableCell>{ut}</TableCell>
-                      </TableRow>
-                    );
-                  }).filter(Boolean);
+                  Object.keys(periodNameMap).forEach((k) =>
+                    activePeriodNums.add(Number(k))
+                  );
+                  dataShape?.absenceDays.forEach((day) =>
+                    day.periods.forEach((p) => activePeriodNums.add(p.number))
+                  );
+                  const sorted = Array.from(nums).sort((a, b) => a - b);
+                  return sorted
+                    .map((n) => {
+                      const find = (
+                        list?: { number: number; total: number }[]
+                      ) => list?.find((l) => l.number === n)?.total ?? 0;
+                      const a = find(dataShape?.totals.activities);
+                      const e = find(dataShape?.totals.excused);
+                      const t = find(dataShape?.totals.tardies);
+                      const u = find(dataShape?.totals.unexcused);
+                      const ut = find(dataShape?.totals.unexcusedTardies);
+                      if (
+                        !periodNameMap[n] &&
+                        a + e + t + u + ut === 0 &&
+                        !activePeriodNums.has(n)
+                      )
+                        return null;
+                      const label = periodNameMap[n]
+                        ? `${n} – ${periodNameMap[n]}`
+                        : String(n);
+                      return (
+                        <TableRow key={n}>
+                          <TableCell
+                            className="max-w-[260px] truncate"
+                            title={label}
+                          >
+                            {label}
+                          </TableCell>
+                          <TableCell>{a}</TableCell>
+                          <TableCell>{e}</TableCell>
+                          <TableCell>{t}</TableCell>
+                          <TableCell>{u}</TableCell>
+                          <TableCell>{ut}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                    .filter(Boolean);
                 })()}
               </TableBody>
             </Table>
           </Card>
-            {dataShape.absenceDays.map((a) => {
-              const isOpen = expanded[a.date] ?? false;
-              return (
-                <Card key={a.date} className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="pr-4">
-                      <h2 className="font-semibold text-lg flex items-center gap-2">
-                        <button
-                          type="button"
-                          aria-label={isOpen ? "Collapse" : "Expand"}
-                          onClick={() => toggleExpand(a.date)}
-                          className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 transition"
-                        >
-                          {isOpen ? "−" : "+"}
-                        </button>
-                        {a.displayDate}
-                      </h2>
-                      <p className="text-sm pt-2 text-gray-500">
-                        {a.reason || "(No reason)"} - {a.note && (<span>{a.note}</span>)}
-                      </p>
-                    </div>
+          {dataShape.absenceDays.map((a) => {
+            const isOpen = expanded[a.date] ?? false;
+            return (
+              <Card key={a.date} className="p-4 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="pr-4">
+                    <h2 className="font-semibold text-lg flex items-center gap-2">
+                      <button
+                        type="button"
+                        aria-label={isOpen ? "Collapse" : "Expand"}
+                        onClick={() => toggleExpand(a.date)}
+                        className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 transition"
+                      >
+                        {isOpen ? "−" : "+"}
+                      </button>
+                      {a.displayDate}
+                    </h2>
+                    <p className="text-sm pt-2 text-gray-500">
+                      {a.reason || "(No reason)"} -{" "}
+                      {a.note && <span>{a.note}</span>}
+                    </p>
                   </div>
-                  {isOpen && (
-                    <div>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[60px]">#</TableHead>
-                            <TableHead>Course</TableHead>
-                            <TableHead>Staff</TableHead>
-                            <TableHead>Reason</TableHead>
+                </div>
+                {isOpen && (
+                  <div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[60px]">#</TableHead>
+                          <TableHead>Course</TableHead>
+                          <TableHead>Staff</TableHead>
+                          <TableHead>Reason</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {a.periods.map((p) => (
+                          <TableRow key={p.number}>
+                            <TableCell>{p.number}</TableCell>
+                            <TableCell
+                              className="max-w-[260px] truncate"
+                              title={p.course}
+                            >
+                              {p.course}
+                            </TableCell>
+                            <TableCell>{p.staff}</TableCell>
+                            <TableCell>{p.reason || p.name}</TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {a.periods.map((p) => (
-                            <TableRow key={p.number}>
-                              <TableCell>{p.number}</TableCell>
-                              <TableCell
-                                className="max-w-[260px] truncate"
-                                title={p.course}
-                              >
-                                {p.course}
-                              </TableCell>
-                              <TableCell>{p.staff}</TableCell>
-                              <TableCell>{p.reason || p.name}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
       <p className="text-xs text-gray-400 mt-4">
