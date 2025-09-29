@@ -10,6 +10,45 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+interface NewStudentInfoRoot {
+  FormattedName?: string;
+  PermID?: number | string;
+  Gender?: string;
+  Grade?: number | string;
+  Address?: string;
+  LastNameGoesBy?: string;
+  NickName?: string;
+  BirthDate?: string;
+  EMail?: string;
+  Phone?: string;
+  HomeLanguage?: string;
+  CurrentSchool?: string;
+  Track?: string;
+  HomeRoomTch?: string;
+  HomeRoomTchEMail?: string;
+  HomeRoomTchStaffGU?: string;
+  OrgYearGU?: string;
+  HomeRoom?: string;
+  CounselorName?: string;
+  CounselorEmail?: string;
+  CounselorStaffGU?: string;
+  Photo?: string; // base64 png
+  Physician?: {
+    _Name?: string; _Hospital?: string; _Phone?: string; _Extn?: string;
+  };
+  Dentist?: {
+    _Name?: string; _Office?: string; _Phone?: string; _Extn?: string;
+  };
+  _Type?: string;
+  _ShowStudentInfo?: string | boolean;
+}
+
+interface LegacyStudentInfoWrapper {
+  data?: {
+    StudentInfo?: Record<string, unknown>;
+  };
+}
+
 interface PXPMessagesApiResponse {
   PXPMessagesData?: {
     _SupportingSynergyMail?: string | boolean;
@@ -67,23 +106,35 @@ export default function StudentDashboard() {
       setLoading(true); setError(null);
       try {
         const creds = JSON.parse(credsRaw);
-        const studentInfoReq = fetch("https://studentvue.aram.sh/student_info", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(creds) });
+        const studentInfoReq = fetch("/api/synergy/student_info", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(creds) });
         const messagesReq = fetch("/api/synergy/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: credsRaw });
         const [infoRes, messagesRes] = await Promise.all([studentInfoReq, messagesReq]);
         if (!infoRes.ok) throw new Error(`Student info HTTP ${infoRes.status}`);
         if (!messagesRes.ok) throw new Error(`Messages HTTP ${messagesRes.status}`);
-        const infoJson = await infoRes.json();
-        const info = infoJson?.data?.StudentInfo;
-        if (info) {
-          if (info.Photo && typeof info.Photo === "object" && "$" in info.Photo) {
-            const p = String(info.Photo["$"] ?? ""); setPhotoBase64(p); localStorage.setItem("studentPhoto", p);
-          }
-          if (info.PermID && typeof info.PermID === "object" && "$" in info.PermID) {
-            const pid = String(info.PermID["$"] ?? ""); setPermId(pid); localStorage.setItem("studentPermId", pid);
-          }
-          if (info.CurrentSchool) {
-            let school = ""; if (typeof info.CurrentSchool === "object" && info.CurrentSchool !== null && "$" in info.CurrentSchool) school = String(info.CurrentSchool["$"]); else school = String(info.CurrentSchool ?? ""); localStorage.setItem("studentSchool", school);
-          }
+        const infoJson: NewStudentInfoRoot | LegacyStudentInfoWrapper = await infoRes.json();
+        let flat: NewStudentInfoRoot | undefined;
+        if (infoJson && 'PermID' in infoJson) {
+          flat = infoJson as NewStudentInfoRoot;
+        } else if ((infoJson as LegacyStudentInfoWrapper)?.data?.StudentInfo) {
+          const legacy = (infoJson as LegacyStudentInfoWrapper).data?.StudentInfo ?? {};
+          type DollarObj = { $?: unknown };
+          const hasDollar = (o: unknown): o is DollarObj => !!o && typeof o === 'object' && '$' in (o as Record<string, unknown>);
+          const pull = (v: unknown): string => {
+            if (hasDollar(v)) return String(v.$ ?? '');
+            return v == null ? '' : String(v);
+          };
+          flat = {
+            PermID: pull(legacy.PermID),
+            CurrentSchool: pull(legacy.CurrentSchool),
+            Photo: pull(legacy.Photo),
+            FormattedName: pull(legacy.FormattedName),
+            Grade: pull(legacy.Grade),
+          };
+        }
+        if (flat) {
+          if (flat.Photo) { setPhotoBase64(flat.Photo); localStorage.setItem('studentPhoto', flat.Photo); }
+          if (flat.PermID !== undefined) { const pid = String(flat.PermID); setPermId(pid); localStorage.setItem('studentPermId', pid); }
+          if (flat.CurrentSchool) { localStorage.setItem('studentSchool', flat.CurrentSchool); }
         }
         const messagesJson: PXPMessagesApiResponse = await messagesRes.json();
         const listingsRaw = messagesJson?.PXPMessagesData?.SynergyMailMessageListingByStudents?.SynergyMailMessageListingByStudent?.SynergyMailMessageListings?.SynergyMailMessageListing;
