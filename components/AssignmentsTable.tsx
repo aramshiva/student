@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as React from "react";
@@ -47,10 +46,10 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
     {
       id: "measure",
       accessorFn: (row) => row._Measure,
-      header: ({ column }: { column: unknown }) => (
+      header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => (column as any).toggleSorting((column as any).getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Assignment <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
