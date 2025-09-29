@@ -57,7 +57,6 @@ export default function MailPage() {
 
   const formatDate = (dt?: string) => {
     if(!dt) return '';
-    // dt format: MM/DD/YYYY HH:mm:ss
     const [datePart, timePart] = dt.split(' ');
     if(!datePart) return dt;
     const [m,d,y] = datePart.split('/').map(Number);

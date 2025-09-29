@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/table";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-// New API underscore-based shapes
 interface APIAbsencePeriod {
   _Number: string;
   _Name: string;
@@ -24,7 +23,7 @@ interface APIAbsencePeriod {
 }
 
 interface APIAbsenceDay {
-  _AbsenceDate: string; // MM/DD/YYYY
+  _AbsenceDate: string;
   _Reason?: string;
   _Note?: string;
   _DailyIconName?: string;
@@ -66,8 +65,8 @@ interface PeriodEntry {
 }
 
 interface AbsenceDay {
-  date: string; // ISO YYYY-MM-DD for sorting
-  displayDate: string; // original MM/DD/YYYY
+  date: string;
+  displayDate: string;
   reason: string;
   note?: string;
   icon?: string;
@@ -151,7 +150,7 @@ export default function AttendancePage() {
               iconName: p._IconName || "",
               reason: p._Reason || "",
             }));
-            const mmddyyyy = abs._AbsenceDate || ""; // 09/23/2025
+            const mmddyyyy = abs._AbsenceDate || "";
             let iso = "";
             if (/^\d{2}\/\d{2}\/\d{4}$/.test(mmddyyyy)) {
               const [m, d, y] = mmddyyyy.split("/");
@@ -186,9 +185,8 @@ export default function AttendancePage() {
         };
         setDataShape(dataShape);
 
-        // Fetch schedule for period name mapping (aligning with schedule page endpoint)
         try {
-          const schedRes = await fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/schedule`, {
+          const schedRes = await fetch(`/api/synergy/schedule`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...JSON.parse(creds), term_index: 0 }),
@@ -200,11 +198,10 @@ export default function AttendancePage() {
             const arr: ScheduleClassListing[] = Array.isArray(classList) ? classList : classList ? [classList] : [];
             const map: Record<number,string> = {};
             for (const c of arr) {
-              const num = Number(c["@Period"]);
-              const title = c["@CourseTitle"];
+              const num = Number(c._Period);
+              const title = c._CourseTitle;
               if (!Number.isNaN(num) && title && !map[num]) map[num] = title;
             }
-            // Fallback enrichment using absence day period course names
             for (const day of dataShape.absenceDays) {
               for (const p of day.periods) {
                 if (p.course && !map[p.number]) map[p.number] = p.course;
@@ -212,7 +209,6 @@ export default function AttendancePage() {
             }
             setPeriodNameMap(map);
           } else {
-            // Even if schedule fails, build map from absence days only
             const map: Record<number,string> = {};
             for (const day of dataShape.absenceDays) {
               for (const p of day.periods) {
@@ -291,7 +287,6 @@ export default function AttendancePage() {
               </TableHeader>
               <TableBody>
                 {(() => {
-                  // Collect all period numbers from totals arrays
                   const nums = new Set<number>();
                   const pushNums = (list?: { number: number; total: number }[]) => list?.forEach(l => nums.add(l.number));
                   pushNums(dataShape?.totals.activities);
@@ -299,7 +294,6 @@ export default function AttendancePage() {
                   pushNums(dataShape?.totals.tardies);
                   pushNums(dataShape?.totals.unexcused);
                   pushNums(dataShape?.totals.unexcusedTardies);
-                  // Add periods from schedule mapping and absence day periods (ensures period 7 etc.)
                   Object.keys(periodNameMap).forEach(k => nums.add(Number(k)));
                   dataShape?.absenceDays.forEach(day => day.periods.forEach(p => nums.add(p.number)));
                   const activePeriodNums = new Set<number>();

@@ -18,7 +18,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { GradebookData, Mark } from "@/types/gradebook"
+import { GradebookData, Mark, Course } from "@/types/gradebook"
 
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
@@ -38,18 +38,26 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+interface GradebookRootLike {
+  Gradebook?: { Courses?: { Course?: Course[] } };
+  Courses?: { Course?: Course[] };
+  [k: string]: unknown;
+}
+
 export function GradeChart({ gradebookData }: GradeChartProps) {
-  const courses = gradebookData.data.Gradebook.Courses.Course;
+  const root: GradebookRootLike = (gradebookData.data as unknown as GradebookRootLike).Gradebook
+    ? (gradebookData.data as unknown as GradebookRootLike).Gradebook as GradebookRootLike
+    : (gradebookData.data as unknown as GradebookRootLike);
 
   const chartData = React.useMemo(() => {
+    const coursesLocal: Course[] = root?.Courses?.Course || [];
     const allAssignments: Array<{
       date: string;
       grade: number;
       assignment: string;
       course: string;
     }> = [];
-
-    courses.forEach((course: import("@/types/gradebook").Course) => {
+    coursesLocal.forEach((course: Course) => {
       const marks = course.Marks.Mark;
       const currentMark = getCurrentMark(marks);
       const assignments = currentMark?.Assignments?.Assignment || [];
@@ -96,7 +104,7 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
       }))
 
     return result;
-  }, [courses]);
+  }, [root]);
 
   const trend = React.useMemo(() => {
     if (chartData.length < 2) return { direction: 'neutral', percentage: 0 };

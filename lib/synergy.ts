@@ -183,6 +183,11 @@ async getMailData(): Promise<MailData> {
 //     return r?.StudentClassList ?? {};
 // }
 
+async getSchedule(termIndex?: number): Promise<Schedule> {
+    const r = await this.request('StudentClassList', termIndex !== undefined ? { TermIndex: termIndex } : {});
+    return r?.StudentClassList ?? {};
+}
+
 async getMessages(): Promise<Record<string, unknown>> {
     const r = await this.request('GetPXPMessages');
     return r ?? {};

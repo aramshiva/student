@@ -18,20 +18,52 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface APIRawClassListing {
+  _Period: string;
+  _CourseTitle: string;
+  _RoomName?: string;
+  _Teacher?: string;
+  _TeacherEmail?: string;
+  _SectionGU?: string;
+  _TeacherStaffGU?: string;
+  _ExcludePVUE?: string;
+}
+
+interface APIRawTermDefCode { _TermDefName: string }
+interface APIRawTermListing {
+  _TermIndex: string;
+  _TermCode: string;
+  _TermName: string;
+  _BeginDate: string;
+  _EndDate: string;
+  TermDefCodes?: { TermDefCode: APIRawTermDefCode | APIRawTermDefCode[] };
+}
+
+interface APIRawStudentClassScheduleRoot {
+  StudentClassSchedule: {
+    ClassLists?: { ClassListing: APIRawClassListing | APIRawClassListing[] };
+    TermLists?: { TermListing: APIRawTermListing | APIRawTermListing[] };
+    _TermIndex?: string;
+    _TermIndexName?: string;
+    _ErrorMessage?: string;
+  };
+}
+
 interface Term {
   termIndex: number;
   termName: string;
   beginDate: string;
   endDate: string;
+  codes: string[];
 }
 
 interface ClassListing {
-  "@CourseTitle": string;
-  "@Period": number | string;
-  "@RoomName": string;
-  "@Teacher": string;
-  "@TeacherEmail"?: string;
-  [key: string]: string | number | undefined;
+  period: number;
+  courseTitle: string;
+  room?: string;
+  teacher?: string;
+  teacherEmail?: string;
+  excludePortal?: boolean;
 }
 
 export default function SchedulePage() {
@@ -47,31 +79,52 @@ export default function SchedulePage() {
       window.location.href = "/";
       return;
     }
-    fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/schedule`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...JSON.parse(creds), term_index: selectedTerm }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        const sched = data.data.StudentClassSchedule;
-        const classList = sched.ClassLists?.ClassListing || [];
-        setClasses(Array.isArray(classList) ? classList : [classList]);
-        const termList = sched.TermLists?.TermListing || [];
-        setTerms(
-          (Array.isArray(termList) ? termList : [termList]).map((t) => ({
-            termIndex: Number((t as { [key: string]: unknown })["@TermIndex"] as string),
-            termName: (t as { [key: string]: unknown })["@TermName"] as string,
-            beginDate: (t as { [key: string]: unknown })["@BeginDate"] as string,
-            endDate: (t as { [key: string]: unknown })["@EndDate"] as string,
-          }))
-        );
-      })
-      .catch((err) => setError((err as Error).message))
-      .finally(() => setIsLoading(false));
+    (async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await fetch(`/api/synergy/schedule`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...JSON.parse(creds), term_index: selectedTerm }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const raw: APIRawStudentClassScheduleRoot = await res.json();
+        const root = raw?.StudentClassSchedule;
+        if (!root) {
+          setClasses([]);
+          setTerms([]);
+          return;
+        }
+        const normalize = <T,>(v: T | T[] | undefined | null): T[] => !v ? [] : (Array.isArray(v) ? v : [v]);
+        const classArr = normalize(root.ClassLists?.ClassListing).map(c => ({
+          period: Number(c._Period || 0),
+          courseTitle: c._CourseTitle,
+          room: c._RoomName,
+            teacher: c._Teacher,
+          teacherEmail: c._TeacherEmail,
+          excludePortal: (c._ExcludePVUE || "false").toLowerCase() === "true",
+        }))
+          .sort((a,b)=>a.period - b.period);
+        const termArr = normalize(root.TermLists?.TermListing).map(t => ({
+          termIndex: Number(t._TermIndex || 0),
+          termName: t._TermName,
+          beginDate: t._BeginDate,
+          endDate: t._EndDate,
+          codes: normalize(t.TermDefCodes?.TermDefCode).map(cd => cd._TermDefName),
+        }))
+          .sort((a,b)=>a.termIndex - b.termIndex);
+        setClasses(classArr);
+        setTerms(termArr);
+        if (!termArr.some(t => t.termIndex === selectedTerm) && termArr.length) {
+          setSelectedTerm(termArr[0].termIndex);
+        }
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, [selectedTerm]);
 
   if (isLoading) return <div className="p-8">Loading schedule...</div>;
@@ -91,7 +144,7 @@ export default function SchedulePage() {
               <SelectValue placeholder="Select term" />
             </SelectTrigger>
             <SelectContent>
-              {terms.map((term: Term) => (
+              {terms.map(term => (
                 <SelectItem key={term.termIndex} value={term.termIndex.toString()}>
                   {term.termName} ({term.beginDate} - {term.endDate})
                 </SelectItem>
@@ -115,13 +168,13 @@ export default function SchedulePage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {classes.map((course: ClassListing, i: number) => (
-              <TableRow key={i}>
-                <TableCell>{course["@Period"]}</TableCell>
-                <TableCell>{course["@CourseTitle"]}</TableCell>
-                <TableCell>{course["@RoomName"]}</TableCell>
-                <TableCell>{course["@Teacher"]}</TableCell>
-                <TableCell>{course["@TeacherEmail"] || ""}</TableCell>
+            {classes.map(c => (
+              <TableRow key={c.period}>
+                <TableCell>{c.period}</TableCell>
+                <TableCell>{c.courseTitle}</TableCell>
+                <TableCell>{c.room}</TableCell>
+                <TableCell>{c.teacher}</TableCell>
+                <TableCell>{c.teacherEmail || ""}</TableCell>
               </TableRow>
             ))}
           </TableBody>

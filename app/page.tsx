@@ -13,7 +13,7 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/gradebook`, {
+      const response = await fetch(`/api/synergy/gradebook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
@@ -21,9 +21,11 @@ export default function Home() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
-      if (data.data.Gradebook["@ErrorMessage"]) {
-        throw new Error(data.data.Gradebook["@ErrorMessage"]);
+      const raw = await response.json();
+      const gradebookRoot = raw?.Gradebook ?? raw;
+      const errorMessage = gradebookRoot?.["@ErrorMessage"] || gradebookRoot?._ErrorMessage;
+      if (errorMessage) {
+        throw new Error(String(errorMessage));
       }
       localStorage.setItem('studentvue-creds', JSON.stringify(credentials));
       // saves creds in LOCAL STORAGE (not cloud)

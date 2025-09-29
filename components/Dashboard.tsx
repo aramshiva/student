@@ -1,7 +1,6 @@
 "use client";
 
 import { Course, Mark } from "@/types/gradebook";
-import Link from "next/link";
 
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
@@ -10,8 +9,16 @@ function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   return marks;
 }
 
+interface GradebookRootLike {
+  Gradebook?: {
+    Courses?: { Course?: Course[] };
+  };
+  Courses?: { Course?: Course[] };
+  [k: string]: unknown;
+}
+
 interface DashboardProps {
-  gradebookData: { data: unknown };
+  gradebookData: { data: GradebookRootLike };
   onCourseSelect: (course: Course) => void;
   onLogout: () => void;
 }
@@ -20,8 +27,8 @@ export default function Dashboard({
   gradebookData,
   onCourseSelect,
 }: DashboardProps) {
-  const data = gradebookData.data as { Courses?: { Course?: Course[] } };
-  const courses: Course[] = data.Courses?.Course || [];
+  const gbRoot = gradebookData.data.Gradebook ?? gradebookData.data;
+  const courses: Course[] = gbRoot?.Courses?.Course || [];
 
   const validCourses = courses.filter((course: Course) => {
     const currentMark = getCurrentMark(course.Marks.Mark);
