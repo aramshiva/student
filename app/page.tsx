@@ -27,8 +27,8 @@ export default function Home() {
       }
       localStorage.setItem('studentvue-creds', JSON.stringify(credentials));
       // saves creds in LOCAL STORAGE (not cloud)
-      // redirects to gradebook
-      window.location.href = '/gradebook';
+      // redirects to student page
+      window.location.href = '/student';
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message || 'Login failed');

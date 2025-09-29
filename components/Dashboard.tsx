@@ -60,11 +60,7 @@ export default function Dashboard({
           <div>
       <p className="text-xl font-medium pb-3">Gradebook</p>
             <p className="text-gray-600 mt-1">
-              {new Date().getHours() < 12 
-              ? "Good Morning" 
-              : new Date().getHours() < 17 
-              ? "Good Afternoon" 
-              : "Good Evening"}! Here are your courses:
+              Courses:
             </p>
           </div>
           <div className="flex items-center space-x-4">

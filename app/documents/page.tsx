@@ -26,10 +26,9 @@ export default function DocumentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [types, setTypes] = useState<string[]>([]); // distinct document types
+  const [types, setTypes] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>("ALL");
 
-  // Convert base64 PDF string to a Blob URL so Chrome (and others) reliably invoke the built‑in PDF viewer
   const base64PdfToObjectUrl = (b64: string) => {
     try {
       const binary = atob(b64.replace(/\s/g, ""));
@@ -123,29 +122,23 @@ export default function DocumentsPage() {
         body: JSON.stringify({ ...creds, document_guid: guid })
       });
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      // Expecting PDF bytes or base64; attempt to detect
       const ct = res.headers.get("content-type") || "";
       if (ct.includes("application/pdf")) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank", "noopener,noreferrer");
       } else {
-        // Actual structure (example):
-        // { data: { StudentAttachedDocumentData: { DocumentDatas: { DocumentData: { Base64Code: { $: "..." }, @FileName, @Notes }}}}}
         const json = await res.json();
         const docNode = json?.data?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
         const base64: unknown = docNode?.Base64Code?.$;
         const fileName: string = String(docNode?.['@FileName'] || "document.pdf");
-        // Some APIs may still return an alternate field name
         const fallback = (json?.data ?? json?.pdf) as unknown;
         const b64 = (typeof base64 === 'string' && base64.length > 50) ? base64 : (typeof fallback === 'string' ? fallback : null);
         if (b64) {
-          // Prefer object URL to encourage in-browser viewing vs forced download in some setups
           const objectUrl = base64PdfToObjectUrl(b64);
           const pdfUrl = objectUrl || `data:application/pdf;base64,${b64}`;
           const w = window.open(pdfUrl, "_blank");
           if (!w) {
-            // Popup blocked; fall back to triggering a download
             const a = document.createElement('a');
             a.href = pdfUrl;
             a.download = fileName;

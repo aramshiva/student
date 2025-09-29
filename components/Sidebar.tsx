@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-
+import { BookUser, Calendar, CalendarClock, File, Mail } from "lucide-react";
 export default function Sidebar() {
   const [showWarning, setShowWarning] = useState(false);
 
@@ -16,11 +16,11 @@ export default function Sidebar() {
   }, []);
 
   const navItems = [
-    { name: "Gradebook", href: "/gradebook" },
-    { name: "Schedule", href: "/schedule" },
-    { name: "Attendance", href: "/attendance" },
-    { name: "Documents", href: "/documents" },
-    { name: "Mail", href: "/mail" },
+    { name: "Gradebook", href: "/gradebook", icon: BookUser },
+    { name: "Schedule", href: "/schedule", icon: Calendar },
+    { name: "Attendance", href: "/attendance", icon: CalendarClock },
+    { name: "Documents", href: "/documents", icon: File },
+    { name: "Mail", href: "/mail", icon: Mail },
   ];
 
   let photoBase64 = "";
@@ -34,7 +34,7 @@ export default function Sidebar() {
 
   return (
     <aside className="h-screen w-48 bg-gray-50 border-r flex flex-col py-8 px-4 fixed top-0 left-0 z-20">
-      <div className="font-bold font-[Gosha] pb-5 text-xl">student</div>
+      <div className="font-bold font-[Gosha] pb-5 text-xl"><Link href="/student">student</Link></div>
       {showWarning && (
         <div className="text-red p-3 border border-dotted border-red-800 dotted bg-orange-100 rounded-xl relative">
           <button
@@ -52,9 +52,10 @@ export default function Sidebar() {
         </div>
       )}
       <nav className="flex flex-col gap-2 flex-1">
-        {navItems.map((item) => (
-          <Link key={item.href} href={item.href} className="px-1 py-2">
-            {item.name}
+        {navItems.map(({ name, href, icon: Icon }) => (
+          <Link key={href} href={href} className="px-1 py-2 text-sm flex items-center gap-2">
+            <Icon className="w-4 h-4" />
+            {name}
           </Link>
         ))}
       </nav>
