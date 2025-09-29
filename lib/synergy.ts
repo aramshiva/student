@@ -8,6 +8,7 @@ export type Documents = Record<string, unknown>;
 export type ReportCard = Record<string, unknown>;
 export type Attachment = Record<string, unknown>;
 export type AuthToken = Record<string, unknown>;
+export type Schedule = Record<string, unknown>;
 
 const alwaysArray = new Set<string>([
   'SynergyMailDataXML.FolderListViews.FolderListViewXML',
@@ -141,40 +142,76 @@ export class SynergyClient {
     return r?.AuthToken ?? {};
   }
 
-  async getGradebook(reportPeriod?: number): Promise<Gradebook> {
+async getGradebook(reportPeriod?: number): Promise<Gradebook> {
     const r = await this.request('Gradebook', reportPeriod ? { ReportPeriod: reportPeriod } : {});
     return r?.Gradebook ?? {};
-  }
+}
 
-  async getAttendance(): Promise<Attendance> {
+async getAttendance(): Promise<Attendance> {
     const r = await this.request('Attendance');
     return r?.Attendance ?? {};
-  }
+}
 
-  async getStudentInfo(): Promise<StudentInfo> {
+async getStudentInfo(): Promise<StudentInfo> {
     const r = await this.request('StudentInfo');
     return r?.StudentInfo ?? {};
-  }
+}
 
-  async getDocuments(): Promise<Documents> {
+async getDocuments(): Promise<Documents> {
     const r = await this.request('GetStudentDocumentInitialData');
     return r?.StudentDocuments ?? {};
-  }
+}
 
-  async getReportCard(documentGU: string): Promise<ReportCard> {
+async getReportCard(documentGU: string): Promise<ReportCard> {
     const r = await this.request('GetReportCardDocumentData', { DocumentGU: documentGU });
     return r?.DocumentData ?? {};
-  }
+}
 
-  async getMailData(): Promise<MailData> {
+async getMailData(): Promise<MailData> {
     const r = await this.request('SynergyMailGetData');
     return r?.SynergyMailDataXML ?? {};
-  }
+}
 
-  async getDocument(attachmentGU: string): Promise<Attachment> {
-    const r = await this.request('SynergyMailGetAttachment', { SmAttachmentGU: attachmentGU });
-    return r?.AttachmentXML ?? {};
-  }
+// async getSchedule(termIndex?: number): Promise<Schedule> {
+//     const params: Record<string, unknown> = {};
+    
+//     if (termIndex !== undefined) {
+//         params.TermIndex = termIndex;
+//     }
+    
+//     const r = await this.request('StudentClassList', params);
+//     return r?.StudentClassList ?? {};
+// }
+
+async getMessages(): Promise<Record<string, unknown>> {
+    const r = await this.request('GetPXPMessages');
+    return r ?? {};
+}
+
+async getCalendar(): Promise<Record<string, unknown>> {
+    const r = await this.request('StudentCalendar');
+    return r?.StudentCalendar ?? {};
+}
+
+async getClassNotes(): Promise<Record<string, unknown>> {
+    const r = await this.request('StudentHWNotes');
+    return r?.StudentHWNotes ?? {};
+}
+
+async getSchoolInfo(): Promise<Record<string, unknown>> {
+    const r = await this.request('StudentSchoolInfo');
+    return r?.StudentSchoolInfo ?? {};
+}
+
+async listReportCards(): Promise<Record<string, unknown>> {
+    const r = await this.request('GetReportCardInitialData');
+    return r ?? {};
+}
+
+async getDocument(documentGuid: string): Promise<Record<string, unknown>> {
+    const r = await this.request('GetContentOfAttachedDoc', { DocumentGU: documentGuid });
+    return r ?? {};
+}
 
   async call<T = unknown>(methodName: string, params?: unknown): Promise<T> {
     return this.request(methodName, params) as Promise<T>;

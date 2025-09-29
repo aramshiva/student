@@ -49,23 +49,23 @@ export default function DocumentsPage() {
     const creds = JSON.parse(credsRaw);
     setIsLoading(true);
     setError(null);
-    fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/documents`, {
+    fetch("/api/synergy/documents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(creds),
     })
       .then(r => { if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data => {
-        const list = data?.data?.StudentDocuments?.StudentDocumentDatas?.StudentDocumentData || [];
+        const list = data?.StudentDocumentDatas?.StudentDocumentData || [];
         const arr = Array.isArray(list) ? list : [list];
         let mapped: StudentDocument[] = arr.map((d: unknown) => {
           const doc = d as Record<string, unknown>;
           return {
-            comment: String(doc?.["@DocumentComment"] ?? ""),
-            date: String(doc?.["@DocumentDate"] ?? ""),
-            fileName: String(doc?.["@DocumentFileName"] ?? ""),
-            guid: String(doc?.["@DocumentGU"] ?? ""),
-            type: String(doc?.["@DocumentType"] ?? ""),
+            comment: String(doc?._DocumentComment ?? ""),
+            date: String(doc?._DocumentDate ?? ""),
+            fileName: String(doc?._DocumentFileName ?? ""),
+            guid: String(doc?._DocumentGU ?? ""),
+            type: String(doc?._DocumentType ?? ""),
           };
         });
         mapped = mapped.sort((a,b)=> new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -81,7 +81,7 @@ export default function DocumentsPage() {
     const credsRaw = localStorage.getItem("studentvue-creds");
     if(!credsRaw) return null;
     const creds = JSON.parse(credsRaw);
-    const res = await fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/document`, {
+    const res = await fetch("/api/synergy/document", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...creds, document_guid: guid })
@@ -93,13 +93,17 @@ export default function DocumentsPage() {
       return { base64: await blobToBase64(blob), fileName: `${guid}.pdf` };
     }
     const json = await res.json();
-    const docNode = json?.data?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
-    const base64: unknown = docNode?.Base64Code?.$;
-    const fileName: string = String(docNode?.['@FileName'] || "document.pdf");
-    const fallback = (json?.data ?? json?.pdf) as unknown;
-    const b64 = (typeof base64 === 'string' && base64.length > 50) ? base64 : (typeof fallback === 'string' ? fallback : null);
-    if (!b64) return null;
-    return { base64: b64, fileName };
+  const docNode = json?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
+  // Support both direct string and { $: string } for Base64Code
+  let base64: unknown = docNode?.Base64Code;
+  if (base64 && typeof base64 === 'object' && base64 !== null && '$' in base64) {
+    base64 = base64.$;
+  }
+  const fileName: string = String(docNode?._DocumentFileName ?? docNode?._FileName ?? "document.pdf");
+  const fallback = (json?.pdf) as unknown;
+  const b64 = (typeof base64 === 'string' && base64.length > 50) ? base64 : (typeof fallback === 'string' ? fallback : null);
+  if (!b64) return null;
+  return { base64: b64, fileName };
   };
 
   const blobToBase64 = (blob: Blob) => new Promise<string>((resolve, reject) => {
@@ -110,12 +114,12 @@ export default function DocumentsPage() {
   });
 
   const openDocument = async (guid: string) => {
-    const credsRaw = localStorage.getItem("studentvue-creds");
-    if(!credsRaw) return;
-    const creds = JSON.parse(credsRaw);
     setDownloading(guid);
     try {
-      const res = await fetch(`https://${process.env.NEXT_PUBLIC_APIVUE_SERVER_URL}/document`, {
+      const credsRaw = localStorage.getItem("studentvue-creds");
+      if(!credsRaw) return;
+      const creds = JSON.parse(credsRaw);
+      const res = await fetch("/api/synergy/document", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...creds, document_guid: guid })
@@ -128,10 +132,14 @@ export default function DocumentsPage() {
         window.open(url, "_blank", "noopener,noreferrer");
       } else {
         const json = await res.json();
-        const docNode = json?.data?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
-        const base64: unknown = docNode?.Base64Code?.$;
-        const fileName: string = String(docNode?.['@FileName'] || "document.pdf");
-        const fallback = (json?.data ?? json?.pdf) as unknown;
+        const docNode = json?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
+        // Support both direct string and { $: string } for Base64Code
+        let base64: unknown = docNode?.Base64Code;
+        if (base64 && typeof base64 === 'object' && base64 !== null && '$' in base64) {
+          base64 = base64.$;
+        }
+        const fileName: string = String(docNode?._DocumentFileName ?? docNode._FileName ?? "document.pdf");
+        const fallback = (json?.pdf) as unknown;
         const b64 = (typeof base64 === 'string' && base64.length > 50) ? base64 : (typeof fallback === 'string' ? fallback : null);
         if (b64) {
           const objectUrl = base64PdfToObjectUrl(b64);
@@ -146,7 +154,6 @@ export default function DocumentsPage() {
             document.body.removeChild(a);
           }
         } else {
-          console.warn("Unexpected /document JSON response", json);
           alert("Unable to display document: unexpected response format");
         }
       }

@@ -215,22 +215,22 @@ export default function AttendancePage() {
                     {(() => {
                       const nums = new Set<number>();
                       const pushNums = (list?: { Number: number; Total: number }[]) => list?.forEach(l => nums.add(l.Number));
-                      pushNums(dataShape.totals.activities);
-                      pushNums(dataShape.totals.excused);
-                      pushNums(dataShape.totals.tardies);
-                      pushNums(dataShape.totals.unexcused);
-                      pushNums(dataShape.totals.unexcusedTardies);
+                      pushNums(dataShape?.totals.activities);
+                      pushNums(dataShape?.totals.excused);
+                      pushNums(dataShape?.totals.tardies);
+                      pushNums(dataShape?.totals.unexcused);
+                      pushNums(dataShape?.totals.unexcusedTardies);
                       const sorted = Array.from(nums).sort((a,b)=>a-b);
                       return sorted.map(n => {
                         const find = (list?: { Number: number; Total: number }[]) => list?.find(l => l.Number === n)?.Total ?? 0;
                         return (
                           <TableRow key={n}>
                             <TableCell>{n}</TableCell>
-                            <TableCell>{find(dataShape.totals.activities)}</TableCell>
-                            <TableCell>{find(dataShape.totals.excused)}</TableCell>
-                            <TableCell>{find(dataShape.totals.tardies)}</TableCell>
-                            <TableCell>{find(dataShape.totals.unexcused)}</TableCell>
-                            <TableCell>{find(dataShape.totals.unexcusedTardies)}</TableCell>
+                            <TableCell>{find(dataShape?.totals.activities)}</TableCell>
+                            <TableCell>{find(dataShape?.totals.excused)}</TableCell>
+                            <TableCell>{find(dataShape?.totals.tardies)}</TableCell>
+                            <TableCell>{find(dataShape?.totals.unexcused)}</TableCell>
+                            <TableCell>{find(dataShape?.totals.unexcusedTardies)}</TableCell>
                           </TableRow>
                         );
                       });
@@ -240,7 +240,7 @@ export default function AttendancePage() {
               </Card>
             </div>
           )}
-          <p className="text-xs text-gray-400 mt-4">Rendered {dataShape?.absences.length || 0} absence day(s).</p>
+      <p className="text-xs text-gray-400 mt-4">Rendered {dataShape?.absences.length || 0} absence day(s).</p>
     </div>
   );
 }
