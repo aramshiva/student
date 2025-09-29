@@ -11,7 +11,7 @@ function getCurrentMark(marks: Mark | Mark[]): Mark | null {
 }
 
 interface DashboardProps {
-  gradebookData: { data: any };
+  gradebookData: { data: unknown };
   onCourseSelect: (course: Course) => void;
   onLogout: () => void;
 }
@@ -20,7 +20,8 @@ export default function Dashboard({
   gradebookData,
   onCourseSelect,
 }: DashboardProps) {
-  const courses: Course[] = gradebookData.data.Courses?.Course || [];
+  const data = gradebookData.data as { Courses?: { Course?: Course[] } };
+  const courses: Course[] = data.Courses?.Course || [];
 
   const validCourses = courses.filter((course: Course) => {
     const currentMark = getCurrentMark(course.Marks.Mark);

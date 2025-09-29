@@ -26,8 +26,8 @@ interface CourseCardProps {
 export default function CourseCard({ course, onClick }: CourseCardProps) {
   const marks = course.Marks.Mark;
   const currentMark = getCurrentMark(marks);
-  const gradeColorClass = getGradeColor(currentMark?.["@CalculatedScoreString"] || "");
-  const icon = getCourseIcon(course["@ImageType"]);
+  const gradeColorClass = getGradeColor(currentMark?._CalculatedScoreString || "");
+  const icon = getCourseIcon(course._ImageType);
 
   return (
     <Card onClick={onClick} className="cursor-pointer">
@@ -37,16 +37,16 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
                     <span className="text-2xl">{icon}</span>
                     <div>
                         <CardTitle className="text-lg leading-tight">
-                            {course["@CourseName"]}
+                            {course._CourseName}
                         </CardTitle>
                         <CardDescription>
-                            {course["@CourseID"]} • Period {course["@Period"]} • Room {course["@Room"]}
+                            {course._CourseID} • Period {course._Period} • Room {course._Room}
                         </CardDescription>
                     </div>
                 </div>
                 <CardAction>
                     <div className={`px-3 py-1 rounded-lg text-2xl font-bold ${gradeColorClass}`}>
-                        {currentMark?.["@CalculatedScoreString"] || "N/A"}
+                        {currentMark?._CalculatedScoreString || "N/A"}
                     </div>
                 </CardAction>
         </div>
@@ -55,12 +55,12 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Teacher:</span>
-            <span className="text-sm font-medium text-gray-900">{course["@Staff"]}</span>
+            <span className="text-sm font-medium text-gray-900">{course._Staff}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Current Score:</span>
             <span className="text-sm font-bold text-gray-900">
-              {currentMark?.["@CalculatedScoreRaw"] || "N/A"}%
+              {currentMark?._CalculatedScoreRaw || "N/A"}%
             </span>
           </div>
         </div>
@@ -74,10 +74,10 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
               {currentMark.GradeCalculationSummary.AssignmentGradeCalc.map((calc: AssignmentGradeCalc, index: number) => (
                 <div key={index} className="flex justify-between items-center text-xs">
                   <span className="text-gray-600">
-                    {calc["@Type"]} ({calc["@Weight"]})
+                    {calc._Type} ({calc._Weight})
                   </span>
                   <span className="font-medium">
-                    {calc["@CalculatedMark"]} ({calc["@WeightedPct"]})
+                    {calc._CalculatedMark} ({calc._WeightedPct})
                   </span>
                 </div>
               ))}
