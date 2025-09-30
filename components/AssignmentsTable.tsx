@@ -42,6 +42,37 @@ interface AssignmentsTableProps {
 }
 
 export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTableProps) {
+  const decodeEntities = React.useCallback((input: string | undefined | null): string => {
+    if (!input) return "";
+    return input.replace(/&(#x?[0-9A-Fa-f]+|[A-Za-z]+);/g, (full, ent) => {
+      if (ent.startsWith('#')) {
+        const num = ent.startsWith('#x') || ent.startsWith('#X')
+          ? parseInt(ent.slice(2), 16)
+          : parseInt(ent.slice(1), 10);
+        if (!isNaN(num)) {
+          if (num === 10 || num === 13) return '\n';
+          return String.fromCharCode(num);
+        }
+        return full;
+      }
+      const map: Record<string, string> = {
+        amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', nbspx: ' ',
+      };
+      return map[ent] ?? full;
+    });
+  }, []);
+
+  // Track which description blocks are expanded (by assignment id)
+  const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
+  const toggleExpanded = (id: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const SHOULD_TRUNCATE_THRESHOLD = 160; // char heuristic before showing toggle
+
   const columns: ColumnDef<Assignment>[] = [
     {
       id: "measure",
@@ -56,19 +87,59 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
       ),
       cell: ({ row }) => {
         const a = row.original;
+        const measure = decodeEntities(a._Measure);
+        const desc = a._MeasureDescription ? decodeEntities(a._MeasureDescription) : '';
+        const notes = a._Notes ? decodeEntities(a._Notes) : '';
+        const id = String(a._GradebookID ?? row.id);
+        const isExpanded = expanded.has(id);
+        const shouldTruncate = !isExpanded && desc && desc.length > SHOULD_TRUNCATE_THRESHOLD;
         return (
           <div className="max-w-[260px] md:max-w-[340px] xl:max-w-[420px] space-y-1 pl-5">
-            <div className="font-medium text-gray-900 break-words whitespace-normal leading-snug">
-              {a._Measure}
+            <div className="font-medium text-gray-900 break-words whitespace-pre-line leading-snug">
+              {measure}
             </div>
-            {a._MeasureDescription && (
-              <div className="text-sm text-gray-500 break-words whitespace-normal leading-snug">
-                {a._MeasureDescription}
+            {desc && (
+              <div className="relative group">
+                <div
+                  className={
+                    `text-sm text-gray-500 break-words whitespace-pre-line leading-snug transition-all` +
+                    (shouldTruncate ? ' line-clamp-2 overflow-hidden' : '')
+                  }
+                  style={shouldTruncate ? {
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                  } as React.CSSProperties : undefined}
+                >
+                  {desc}
+                </div>
+                {shouldTruncate && (
+                  <div className="absolute bottom-0 right-0 flex items-end justify-end pl-4 text-xs bg-gradient-to-l from-white via-white/80 to-transparent h-6">
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(id)}
+                      className="px-1 py-0.5 rounded text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300"
+                      aria-label="Expand full description"
+                    >
+                      …
+                    </button>
+                  </div>
+                )}
+                {desc && !shouldTruncate && desc.length > SHOULD_TRUNCATE_THRESHOLD && (
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(id)}
+                    className="mt-1 text-xs text-blue-600 hover:underline focus:outline-none"
+                    aria-label="Collapse description"
+                  >
+                    Collapse
+                  </button>
+                )}
               </div>
             )}
-            {a._Notes && (
-              <div className="text-sm text-blue-600 italic break-words whitespace-normal leading-snug">
-                Note: {a._Notes}
+            {notes && (
+              <div className="text-sm text-blue-600 italic break-words whitespace-pre-line leading-snug">
+                Note: {notes}
               </div>
             )}
           </div>
@@ -179,11 +250,12 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
       id: "notes",
   accessorFn: (row) => row._Notes,
       header: "Notes",
-  cell: ({ row }) => (
-        <span className="text-sm text-gray-900">
-          {row.original._Notes}
-        </span>
-      ),
+  cell: ({ row }) => {
+        const decoded = decodeEntities(row.original._Notes);
+        return (
+          <span className="text-sm text-gray-900 break-words whitespace-pre-line">{decoded}</span>
+        );
+      },
     },
   ];
 
