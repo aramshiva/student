@@ -130,7 +130,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
             }
           />
           <div className="flex items-center mt-2 pt-2">
-            <EyeOff className="w-9 h-3 mr-1" />
+            <EyeOff className="w-9 h-3 mr-1 text-gray-700" />
             <p className="text-xs text-gray-700">
               Your device directly, and securely connects to Synergy/StudentVUE.
               We can{"'"}t see your passwords or your grades.
