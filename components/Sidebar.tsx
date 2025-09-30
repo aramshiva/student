@@ -34,7 +34,9 @@ export default function Sidebar() {
 
   return (
     <aside className="h-screen w-48 bg-gray-50 border-r flex flex-col py-8 px-4 fixed top-0 left-0 z-20">
-      <div className="font-bold font-[Gosha] pb-5 text-xl"><Link href="/student">student</Link></div>
+      <div className="font-bold font-[Gosha] pb-5 text-xl">
+        <Link href="/student">student</Link>
+      </div>
       {showWarning && (
         <div className="text-red p-3 border border-dotted border-red-800 dotted bg-orange-100 rounded-xl relative">
           <button
@@ -53,7 +55,11 @@ export default function Sidebar() {
       )}
       <nav className="flex flex-col gap-2 flex-1">
         {navItems.map(({ name, href, icon: Icon }) => (
-          <Link key={href} href={href} className="px-1 py-2 text-sm flex items-center gap-2">
+          <Link
+            key={href}
+            href={href}
+            className="px-1 py-2 text-sm flex items-center gap-2"
+          >
             <Icon className="w-4 h-4" />
             {name}
           </Link>

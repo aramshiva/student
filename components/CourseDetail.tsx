@@ -24,7 +24,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const currentMark = getCurrentMark(marks);
   const assignments = currentMark?.Assignments?.Assignment || [];
   const gradeColorClass = getGradeColor(
-    currentMark?._CalculatedScoreString || ""
+    currentMark?._CalculatedScoreString || "",
   );
   const icon = getCourseIcon(course._ImageType);
 
@@ -50,7 +50,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-  <div className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <div className="bg-white shadow-sm border-b sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <button
@@ -68,7 +68,8 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                     {course._CourseName}
                   </h1>
                   <p className="text-gray-600">
-                    {course._CourseID} • Period {course._Period} • Room {course._Room}
+                    {course._CourseID} • Period {course._Period} • Room{" "}
+                    {course._Room}
                   </p>
                   <p className="text-gray-600">
                     {course._Staff} • {course._StaffEMail}
@@ -94,9 +95,14 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
         <GradeProgressionChart assignments={assignments} />
         {currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
-          <GradeBreakdown calcs={currentMark.GradeCalculationSummary.AssignmentGradeCalc} />
+          <GradeBreakdown
+            calcs={currentMark.GradeCalculationSummary.AssignmentGradeCalc}
+          />
         )}
-        <AssignmentsTable assignments={assignments} getTypeColor={getAssignmentTypeColor} />
+        <AssignmentsTable
+          assignments={assignments}
+          getTypeColor={getAssignmentTypeColor}
+        />
       </div>
     </div>
   );

@@ -14,14 +14,14 @@ export async function POST(req: Request) {
     if (!district_url || !username || !password) {
       return NextResponse.json(
         { error: "district_url, username, and password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const client = new SynergyClient(
       String(district_url),
       String(username),
-      String(password)
+      String(password),
     );
 
     const param = reportPeriod != null ? { ReportPeriod: reportPeriod } : {};
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     const gradebook =
       raw && typeof raw === "object" && "Gradebook" in raw
         ? (raw as { Gradebook: unknown }).Gradebook
-        : raw ?? {};
+        : (raw ?? {});
     return NextResponse.json(gradebook, { status: 200 });
   } catch (e: unknown) {
     const msg =

@@ -66,14 +66,12 @@ export default function Dashboard({
       <div className="min-h-screen bg-white p-9">
         <div className="flex justify-between items-center py-6">
           <div>
-      <p className="text-xl font-medium pb-3">Gradebook</p>
+            <p className="text-xl font-medium pb-3">Gradebook</p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <div className="text-sm text-gray-600">GPA</div>
-              <div className="text-2xl font-bold">
-                {gpa}
-              </div>
+              <div className="text-2xl font-bold">{gpa}</div>
             </div>
           </div>
         </div>
@@ -83,7 +81,8 @@ export default function Dashboard({
             {courses.map((course: Course, index: number) => {
               const currentMark = getCurrentMark(course.Marks.Mark);
               const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
-              const calculatedScore = currentMark?._CalculatedScoreString || "N/A";
+              const calculatedScore =
+                currentMark?._CalculatedScoreString || "N/A";
 
               return (
                 <div
@@ -114,7 +113,6 @@ export default function Dashboard({
                     </div>
                   </div>
                 </div>
-                
               );
             })}
           </div>

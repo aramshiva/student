@@ -41,33 +41,47 @@ interface AssignmentsTableProps {
   getTypeColor: (type: string) => string;
 }
 
-export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTableProps) {
-  const decodeEntities = React.useCallback((input: string | undefined | null): string => {
-    if (!input) return "";
-    return input.replace(/&(#x?[0-9A-Fa-f]+|[A-Za-z]+);/g, (full, ent) => {
-      if (ent.startsWith('#')) {
-        const num = ent.startsWith('#x') || ent.startsWith('#X')
-          ? parseInt(ent.slice(2), 16)
-          : parseInt(ent.slice(1), 10);
-        if (!isNaN(num)) {
-          if (num === 10 || num === 13) return '\n';
-          return String.fromCharCode(num);
+export function AssignmentsTable({
+  assignments,
+  getTypeColor,
+}: AssignmentsTableProps) {
+  const decodeEntities = React.useCallback(
+    (input: string | undefined | null): string => {
+      if (!input) return "";
+      return input.replace(/&(#x?[0-9A-Fa-f]+|[A-Za-z]+);/g, (full, ent) => {
+        if (ent.startsWith("#")) {
+          const num =
+            ent.startsWith("#x") || ent.startsWith("#X")
+              ? parseInt(ent.slice(2), 16)
+              : parseInt(ent.slice(1), 10);
+          if (!isNaN(num)) {
+            if (num === 10 || num === 13) return "\n";
+            return String.fromCharCode(num);
+          }
+          return full;
         }
-        return full;
-      }
-      const map: Record<string, string> = {
-        amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', nbspx: ' ',
-      };
-      return map[ent] ?? full;
-    });
-  }, []);
+        const map: Record<string, string> = {
+          amp: "&",
+          lt: "<",
+          gt: ">",
+          quot: '"',
+          apos: "'",
+          nbsp: " ",
+          nbspx: " ",
+        };
+        return map[ent] ?? full;
+      });
+    },
+    [],
+  );
 
   // Track which description blocks are expanded (by assignment id)
   const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
   const toggleExpanded = (id: string) => {
-    setExpanded(prev => {
+    setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -88,11 +102,14 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
       cell: ({ row }) => {
         const a = row.original;
         const measure = decodeEntities(a._Measure);
-        const desc = a._MeasureDescription ? decodeEntities(a._MeasureDescription) : '';
-        const notes = a._Notes ? decodeEntities(a._Notes) : '';
+        const desc = a._MeasureDescription
+          ? decodeEntities(a._MeasureDescription)
+          : "";
+        const notes = a._Notes ? decodeEntities(a._Notes) : "";
         const id = String(a._GradebookID ?? row.id);
         const isExpanded = expanded.has(id);
-        const shouldTruncate = !isExpanded && desc && desc.length > SHOULD_TRUNCATE_THRESHOLD;
+        const shouldTruncate =
+          !isExpanded && desc && desc.length > SHOULD_TRUNCATE_THRESHOLD;
         return (
           <div className="max-w-[260px] md:max-w-[340px] xl:max-w-[420px] space-y-1 pl-5">
             <div className="font-medium text-gray-900 break-words whitespace-pre-line leading-snug">
@@ -103,13 +120,17 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
                 <div
                   className={
                     `text-sm text-gray-500 break-words whitespace-pre-line leading-snug transition-all` +
-                    (shouldTruncate ? ' line-clamp-2 overflow-hidden' : '')
+                    (shouldTruncate ? " line-clamp-2 overflow-hidden" : "")
                   }
-                  style={shouldTruncate ? {
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  } as React.CSSProperties : undefined}
+                  style={
+                    shouldTruncate
+                      ? ({
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                        } as React.CSSProperties)
+                      : undefined
+                  }
                 >
                   {desc}
                 </div>
@@ -125,16 +146,18 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
                     </button>
                   </div>
                 )}
-                {desc && !shouldTruncate && desc.length > SHOULD_TRUNCATE_THRESHOLD && (
-                  <button
-                    type="button"
-                    onClick={() => toggleExpanded(id)}
-                    className="mt-1 text-xs text-blue-600 hover:underline focus:outline-none"
-                    aria-label="Collapse description"
-                  >
-                    Collapse
-                  </button>
-                )}
+                {desc &&
+                  !shouldTruncate &&
+                  desc.length > SHOULD_TRUNCATE_THRESHOLD && (
+                    <button
+                      type="button"
+                      onClick={() => toggleExpanded(id)}
+                      className="mt-1 text-xs text-blue-600 hover:underline focus:outline-none"
+                      aria-label="Collapse description"
+                    >
+                      Collapse
+                    </button>
+                  )}
               </div>
             )}
             {notes && (
@@ -148,9 +171,9 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
     },
     {
       id: "type",
-  accessorFn: (row) => row._Type,
+      accessorFn: (row) => row._Type,
       header: "Type",
-  cell: ({ row }) => (
+      cell: ({ row }) => (
         <Badge className={`${getTypeColor(row.original._Type)}`}>
           {row.original._Type}
         </Badge>
@@ -158,8 +181,8 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
     },
     {
       id: "date",
-  accessorFn: (row) => row._Date,
-  header: ({ column }) => (
+      accessorFn: (row) => row._Date,
+      header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -172,7 +195,7 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
         const bv = new Date(b.getValue<string>(columnId)).getTime();
         return av === bv ? 0 : av < bv ? -1 : 1;
       },
-  cell: ({ row }) => (
+      cell: ({ row }) => (
         <span className="text-sm text-gray-900">
           {formatDate(row.original._Date)}
         </span>
@@ -182,13 +205,11 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
       id: "score",
       header: "Score",
       enableSorting: false,
-  cell: ({ row }) => {
+      cell: ({ row }) => {
         const a = row.original;
         return (
           <div className="text-sm">
-            <div className="font-medium text-gray-900">
-              {a._DisplayScore}
-            </div>
+            <div className="font-medium text-gray-900">{a._DisplayScore}</div>
             <div className="text-gray-500">{a._Points}</div>
           </div>
         );
@@ -200,41 +221,50 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
       sortingFn: (a, b) => {
         const pctA = calculatePercentage(
           Number(a.original._Score),
-          Number(a.original._ScoreMaxValue)
+          Number(a.original._ScoreMaxValue),
         );
         const pctB = calculatePercentage(
           Number(b.original._Score),
-          Number(b.original._ScoreMaxValue)
+          Number(b.original._ScoreMaxValue),
         );
         return pctA === pctB ? 0 : pctA < pctB ? -1 : 1;
       },
-  cell: ({ row }) => {
+      cell: ({ row }) => {
         const a = row.original;
         const rawScore = Number(a._Score);
         const rawMax = Number(a._ScoreMaxValue);
         const pct = calculatePercentage(rawScore, rawMax);
-        const invalid = !Number.isFinite(rawScore) || !Number.isFinite(rawMax) || rawMax === 0 || Number.isNaN(pct);
+        const invalid =
+          !Number.isFinite(rawScore) ||
+          !Number.isFinite(rawMax) ||
+          rawMax === 0 ||
+          Number.isNaN(pct);
         if (invalid) {
           return (
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500" title="Not graded yet">Not graded</span>
+              <span className="text-sm text-gray-500" title="Not graded yet">
+                Not graded
+              </span>
             </div>
           );
         }
         return (
           <div className="flex items-center space-x-2">
-            <div className="flex-1 bg-gray-200 rounded-full h-2" aria-hidden="true">
+            <div
+              className="flex-1 bg-gray-200 rounded-full h-2"
+              aria-hidden="true"
+            >
               <div
                 className={`h-2 rounded-full ${
                   pct >= 90
                     ? "bg-green-500"
                     : pct >= 80
-                    ? "bg-blue-500"
-                    : pct >= 70
-                    ? "bg-yellow-500"
-                    : pct >= 60
-                    ? "bg-orange-500"
-                    : "bg-red-500"
+                      ? "bg-blue-500"
+                      : pct >= 70
+                        ? "bg-yellow-500"
+                        : pct >= 60
+                          ? "bg-orange-500"
+                          : "bg-red-500"
                 }`}
                 style={{ width: `${Math.min(pct, 100)}%` }}
               />
@@ -248,9 +278,9 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
     },
     {
       id: "dueDate",
-  accessorFn: (row) => row._DueDate,
+      accessorFn: (row) => row._DueDate,
       header: "Due Date",
-  cell: ({ row }) => (
+      cell: ({ row }) => (
         <span className="text-sm text-gray-900">
           {formatDate(row.original._DueDate)}
         </span>
@@ -258,12 +288,14 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
     },
     {
       id: "notes",
-  accessorFn: (row) => row._Notes,
+      accessorFn: (row) => row._Notes,
       header: "Notes",
-  cell: ({ row }) => {
+      cell: ({ row }) => {
         const decoded = decodeEntities(row.original._Notes);
         return (
-          <span className="text-sm text-gray-900 break-words whitespace-pre-line">{decoded}</span>
+          <span className="text-sm text-gray-900 break-words whitespace-pre-line">
+            {decoded}
+          </span>
         );
       },
     },
@@ -272,7 +304,9 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "date", desc: true },
   ]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
 
   const table = useReactTable({
     data: assignments,
@@ -317,7 +351,7 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   ))}
@@ -336,7 +370,7 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}
@@ -359,7 +393,8 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
       <CardFooter>
         <div className="flex items-center justify-between w-full">
           <div className="text-xs text-gray-500">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
+            Page {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount() || 1}
           </div>
           <div className="flex items-center gap-2">
             <Button

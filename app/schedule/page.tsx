@@ -29,7 +29,9 @@ interface APIRawClassListing {
   _ExcludePVUE?: string;
 }
 
-interface APIRawTermDefCode { _TermDefName: string }
+interface APIRawTermDefCode {
+  _TermDefName: string;
+}
 interface APIRawTermListing {
   _TermIndex: string;
   _TermCode: string;
@@ -86,7 +88,10 @@ export default function SchedulePage() {
         const res = await fetch(`/api/synergy/schedule`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...JSON.parse(creds), term_index: selectedTerm }),
+          body: JSON.stringify({
+            ...JSON.parse(creds),
+            term_index: selectedTerm,
+          }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const raw: APIRawStudentClassScheduleRoot = await res.json();
@@ -96,27 +101,35 @@ export default function SchedulePage() {
           setTerms([]);
           return;
         }
-        const normalize = <T,>(v: T | T[] | undefined | null): T[] => !v ? [] : (Array.isArray(v) ? v : [v]);
-        const classArr = normalize(root.ClassLists?.ClassListing).map(c => ({
-          period: Number(c._Period || 0),
-          courseTitle: c._CourseTitle,
-          room: c._RoomName,
+        const normalize = <T,>(v: T | T[] | undefined | null): T[] =>
+          !v ? [] : Array.isArray(v) ? v : [v];
+        const classArr = normalize(root.ClassLists?.ClassListing)
+          .map((c) => ({
+            period: Number(c._Period || 0),
+            courseTitle: c._CourseTitle,
+            room: c._RoomName,
             teacher: c._Teacher,
-          teacherEmail: c._TeacherEmail,
-          excludePortal: (c._ExcludePVUE || "false").toLowerCase() === "true",
-        }))
-          .sort((a,b)=>a.period - b.period);
-        const termArr = normalize(root.TermLists?.TermListing).map(t => ({
-          termIndex: Number(t._TermIndex || 0),
-          termName: t._TermName,
-          beginDate: t._BeginDate,
-          endDate: t._EndDate,
-          codes: normalize(t.TermDefCodes?.TermDefCode).map(cd => cd._TermDefName),
-        }))
-          .sort((a,b)=>a.termIndex - b.termIndex);
+            teacherEmail: c._TeacherEmail,
+            excludePortal: (c._ExcludePVUE || "false").toLowerCase() === "true",
+          }))
+          .sort((a, b) => a.period - b.period);
+        const termArr = normalize(root.TermLists?.TermListing)
+          .map((t) => ({
+            termIndex: Number(t._TermIndex || 0),
+            termName: t._TermName,
+            beginDate: t._BeginDate,
+            endDate: t._EndDate,
+            codes: normalize(t.TermDefCodes?.TermDefCode).map(
+              (cd) => cd._TermDefName,
+            ),
+          }))
+          .sort((a, b) => a.termIndex - b.termIndex);
         setClasses(classArr);
         setTerms(termArr);
-        if (!termArr.some(t => t.termIndex === selectedTerm) && termArr.length) {
+        if (
+          !termArr.some((t) => t.termIndex === selectedTerm) &&
+          termArr.length
+        ) {
           setSelectedTerm(termArr[0].termIndex);
         }
       } catch (e) {
@@ -138,14 +151,17 @@ export default function SchedulePage() {
           <label className="font-semibold mr-2">Term:</label>
           <Select
             value={selectedTerm.toString()}
-            onValueChange={val => setSelectedTerm(Number(val))}
+            onValueChange={(val) => setSelectedTerm(Number(val))}
           >
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="Select term" />
             </SelectTrigger>
             <SelectContent>
-              {terms.map(term => (
-                <SelectItem key={term.termIndex} value={term.termIndex.toString()}>
+              {terms.map((term) => (
+                <SelectItem
+                  key={term.termIndex}
+                  value={term.termIndex.toString()}
+                >
                   {term.termName} ({term.beginDate} - {term.endDate})
                 </SelectItem>
               ))}
@@ -168,7 +184,7 @@ export default function SchedulePage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {classes.map(c => (
+            {classes.map((c) => (
               <TableRow key={c.period}>
                 <TableCell>{c.period}</TableCell>
                 <TableCell>{c.courseTitle}</TableCell>

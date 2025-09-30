@@ -34,10 +34,16 @@ interface NewStudentInfoRoot {
   CounselorStaffGU?: string;
   Photo?: string; // base64 png
   Physician?: {
-    _Name?: string; _Hospital?: string; _Phone?: string; _Extn?: string;
+    _Name?: string;
+    _Hospital?: string;
+    _Phone?: string;
+    _Extn?: string;
   };
   Dentist?: {
-    _Name?: string; _Office?: string; _Phone?: string; _Extn?: string;
+    _Name?: string;
+    _Office?: string;
+    _Phone?: string;
+    _Extn?: string;
   };
   _Type?: string;
   _ShowStudentInfo?: string | boolean;
@@ -102,26 +108,47 @@ export default function StudentDashboard() {
   useEffect(() => {
     (async () => {
       const credsRaw = localStorage.getItem("studentvue-creds");
-      if (!credsRaw) { window.location.href = "/"; return; }
-      setLoading(true); setError(null);
+      if (!credsRaw) {
+        window.location.href = "/";
+        return;
+      }
+      setLoading(true);
+      setError(null);
       try {
         const creds = JSON.parse(credsRaw);
-        const studentInfoReq = fetch("/api/synergy/student_info", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(creds) });
-        const messagesReq = fetch("/api/synergy/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: credsRaw });
-        const [infoRes, messagesRes] = await Promise.all([studentInfoReq, messagesReq]);
+        const studentInfoReq = fetch("/api/synergy/student_info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(creds),
+        });
+        const messagesReq = fetch("/api/synergy/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: credsRaw,
+        });
+        const [infoRes, messagesRes] = await Promise.all([
+          studentInfoReq,
+          messagesReq,
+        ]);
         if (!infoRes.ok) throw new Error(`Student info HTTP ${infoRes.status}`);
-        if (!messagesRes.ok) throw new Error(`Messages HTTP ${messagesRes.status}`);
-        const infoJson: NewStudentInfoRoot | LegacyStudentInfoWrapper = await infoRes.json();
+        if (!messagesRes.ok)
+          throw new Error(`Messages HTTP ${messagesRes.status}`);
+        const infoJson: NewStudentInfoRoot | LegacyStudentInfoWrapper =
+          await infoRes.json();
         let flat: NewStudentInfoRoot | undefined;
-        if (infoJson && 'PermID' in infoJson) {
+        if (infoJson && "PermID" in infoJson) {
           flat = infoJson as NewStudentInfoRoot;
         } else if ((infoJson as LegacyStudentInfoWrapper)?.data?.StudentInfo) {
-          const legacy = (infoJson as LegacyStudentInfoWrapper).data?.StudentInfo ?? {};
+          const legacy =
+            (infoJson as LegacyStudentInfoWrapper).data?.StudentInfo ?? {};
           type DollarObj = { $?: unknown };
-          const hasDollar = (o: unknown): o is DollarObj => !!o && typeof o === 'object' && '$' in (o as Record<string, unknown>);
+          const hasDollar = (o: unknown): o is DollarObj =>
+            !!o &&
+            typeof o === "object" &&
+            "$" in (o as Record<string, unknown>);
           const pull = (v: unknown): string => {
-            if (hasDollar(v)) return String(v.$ ?? '');
-            return v == null ? '' : String(v);
+            if (hasDollar(v)) return String(v.$ ?? "");
+            return v == null ? "" : String(v);
           };
           flat = {
             PermID: pull(legacy.PermID),
@@ -132,22 +159,71 @@ export default function StudentDashboard() {
           };
         }
         if (flat) {
-          if (flat.Photo) { setPhotoBase64(flat.Photo); localStorage.setItem('studentPhoto', flat.Photo); }
-          if (flat.PermID !== undefined) { const pid = String(flat.PermID); setPermId(pid); localStorage.setItem('studentPermId', pid); }
-          if (flat.CurrentSchool) { localStorage.setItem('studentSchool', flat.CurrentSchool); }
+          if (flat.Photo) {
+            setPhotoBase64(flat.Photo);
+            localStorage.setItem("studentPhoto", flat.Photo);
+          }
+          if (flat.PermID !== undefined) {
+            const pid = String(flat.PermID);
+            setPermId(pid);
+            localStorage.setItem("studentPermId", pid);
+          }
+          if (flat.CurrentSchool) {
+            localStorage.setItem("studentSchool", flat.CurrentSchool);
+          }
         }
         const messagesJson: PXPMessagesApiResponse = await messagesRes.json();
-        const listingsRaw = messagesJson?.PXPMessagesData?.SynergyMailMessageListingByStudents?.SynergyMailMessageListingByStudent?.SynergyMailMessageListings?.SynergyMailMessageListing;
-        const list: MessageListing[] = listingsRaw ? (Array.isArray(listingsRaw) ? listingsRaw : [listingsRaw]) : [];
-        if (!list.length) { setMessages([]); return; }
+        const listingsRaw =
+          messagesJson?.PXPMessagesData?.SynergyMailMessageListingByStudents
+            ?.SynergyMailMessageListingByStudent?.SynergyMailMessageListings
+            ?.SynergyMailMessageListing;
+        const list: MessageListing[] = listingsRaw
+          ? Array.isArray(listingsRaw)
+            ? listingsRaw
+            : [listingsRaw]
+          : [];
+        if (!list.length) {
+          setMessages([]);
+          return;
+        }
         const parseDate = (raw?: string): string => {
-          if (!raw) return ""; const cleaned = raw.replace(/ 00:00:00$/, "");
-          if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(cleaned)) { const [mm, dd, yyyy] = cleaned.split("/").map(Number); const d = new Date(yyyy, (mm||1)-1, dd||1); if (!isNaN(d.getTime())) return d.toLocaleDateString(undefined,{month:"short",day:"numeric"}); }
-          const d2 = new Date(cleaned); if (!isNaN(d2.getTime())) return d2.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+          if (!raw) return "";
+          const cleaned = raw.replace(/ 00:00:00$/, "");
+          if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(cleaned)) {
+            const [mm, dd, yyyy] = cleaned.split("/").map(Number);
+            const d = new Date(yyyy, (mm || 1) - 1, dd || 1);
+            if (!isNaN(d.getTime()))
+              return d.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+              });
+          }
+          const d2 = new Date(cleaned);
+          if (!isNaN(d2.getTime()))
+            return d2.toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+            });
           return raw;
         };
-        const parsed: ParsedMessage[] = list.map((m,i) => { const subj = m._SubjectNoHTML || m._Subject || "(No Subject)"; return { id: `${i}-${subj.slice(0,24)}`, subject: subj, date: parseDate(m._BeginDate), module: m._Module || "", read: typeof m._Read === "string" ? m._Read === "true" : !!m._Read, type: m._Type || "" }; });
-        parsed.sort((a,b)=>{ const findRaw = (pm: ParsedMessage) => list[parsed.indexOf(pm)]?._BeginDate || ""; const ad = new Date(findRaw(a).replace(/ 00:00:00$/, "")).getTime(); const bd = new Date(findRaw(b).replace(/ 00:00:00$/, "")).getTime(); return bd - ad; });
+        const parsed: ParsedMessage[] = list.map((m, i) => {
+          const subj = m._SubjectNoHTML || m._Subject || "(No Subject)";
+          return {
+            id: `${i}-${subj.slice(0, 24)}`,
+            subject: subj,
+            date: parseDate(m._BeginDate),
+            module: m._Module || "",
+            read: typeof m._Read === "string" ? m._Read === "true" : !!m._Read,
+            type: m._Type || "",
+          };
+        });
+        parsed.sort((a, b) => {
+          const findRaw = (pm: ParsedMessage) =>
+            list[parsed.indexOf(pm)]?._BeginDate || "";
+          const ad = new Date(findRaw(a).replace(/ 00:00:00$/, "")).getTime();
+          const bd = new Date(findRaw(b).replace(/ 00:00:00$/, "")).getTime();
+          return bd - ad;
+        });
         setMessages(parsed);
       } catch (e) {
         setError((e as Error).message);

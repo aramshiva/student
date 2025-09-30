@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import React from "react"
-import { TrendingUp, TrendingDown } from "lucide-react"
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import React from "react";
+import { TrendingUp, TrendingDown } from "lucide-react";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -11,14 +11,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
-import { GradebookData, Mark, Course } from "@/types/gradebook"
+} from "@/components/ui/chart";
+import { GradebookData, Mark, Course } from "@/types/gradebook";
 
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
@@ -36,7 +36,7 @@ const chartConfig = {
     label: "Grade",
     color: "hsl(var(--chart-1))",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 interface GradebookRootLike {
   Gradebook?: { Courses?: { Course?: Course[] } };
@@ -45,8 +45,11 @@ interface GradebookRootLike {
 }
 
 export function GradeChart({ gradebookData }: GradeChartProps) {
-  const root: GradebookRootLike = (gradebookData.data as unknown as GradebookRootLike).Gradebook
-    ? (gradebookData.data as unknown as GradebookRootLike).Gradebook as GradebookRootLike
+  const root: GradebookRootLike = (
+    gradebookData.data as unknown as GradebookRootLike
+  ).Gradebook
+    ? ((gradebookData.data as unknown as GradebookRootLike)
+        .Gradebook as GradebookRootLike)
     : (gradebookData.data as unknown as GradebookRootLike);
 
   const chartData = React.useMemo(() => {
@@ -61,61 +64,71 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
       const marks = course.Marks.Mark;
       const currentMark = getCurrentMark(marks);
       const assignments = currentMark?.Assignments?.Assignment || [];
-      
-      assignments.forEach((assignment: import("@/types/gradebook").Assignment) => {
-        const score = assignment._Score ? parseFloat(assignment._Score) : -1;
-        const possible = assignment._PointPossible ? parseFloat(assignment._PointPossible) : -1;
-        if (score >= 0 && possible > 0) {
-          const gradePercentage = (score / possible) * 100;
-          allAssignments.push({
-            date: assignment._Date,
-            grade: Math.round(gradePercentage * 10) / 10,
-            assignment: assignment._Measure,
-            course: course._Title,
-          });
-        }
-      });
+
+      assignments.forEach(
+        (assignment: import("@/types/gradebook").Assignment) => {
+          const score = assignment._Score ? parseFloat(assignment._Score) : -1;
+          const possible = assignment._PointPossible
+            ? parseFloat(assignment._PointPossible)
+            : -1;
+          if (score >= 0 && possible > 0) {
+            const gradePercentage = (score / possible) * 100;
+            allAssignments.push({
+              date: assignment._Date,
+              grade: Math.round(gradePercentage * 10) / 10,
+              assignment: assignment._Measure,
+              course: course._Title,
+            });
+          }
+        },
+      );
     });
 
-    allAssignments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    const weeklyData: Record<string, { grades: number[], date: string }> = {};
-    
+    allAssignments.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+
+    const weeklyData: Record<string, { grades: number[]; date: string }> = {};
+
     allAssignments.forEach((assignment) => {
       const date = new Date(assignment.date);
       const weekStart = new Date(date);
       weekStart.setDate(date.getDate() - date.getDay());
-      const weekKey = weekStart.toISOString().split('T')[0];
-      
+      const weekKey = weekStart.toISOString().split("T")[0];
+
       if (!weeklyData[weekKey]) {
         weeklyData[weekKey] = { grades: [], date: weekKey };
       }
       weeklyData[weekKey].grades.push(assignment.grade);
     });
 
-    const result = Object.values(weeklyData)
-      .map((week) => ({
-        date: new Date(week.date).toLocaleDateString('en-US', { 
-          month: 'short', 
-          day: 'numeric' 
-        }),
-        grade: Math.round((week.grades.reduce((sum, grade) => sum + grade, 0) / week.grades.length) * 10) / 10,
-        fullDate: week.date,
-      }))
+    const result = Object.values(weeklyData).map((week) => ({
+      date: new Date(week.date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
+      grade:
+        Math.round(
+          (week.grades.reduce((sum, grade) => sum + grade, 0) /
+            week.grades.length) *
+            10,
+        ) / 10,
+      fullDate: week.date,
+    }));
 
     return result;
   }, [root]);
 
   const trend = React.useMemo(() => {
-    if (chartData.length < 2) return { direction: 'neutral', percentage: 0 };
-    
+    if (chartData.length < 2) return { direction: "neutral", percentage: 0 };
+
     const firstGrade = chartData[0].grade;
     const lastGrade = chartData[chartData.length - 1].grade;
     const change = lastGrade - firstGrade;
     const percentage = Math.abs(change);
-    
+
     return {
-      direction: change > 0 ? 'up' : change < 0 ? 'down' : 'neutral',
+      direction: change > 0 ? "up" : change < 0 ? "down" : "neutral",
       percentage: Math.round(percentage * 10) / 10,
     };
   }, [chartData]);
@@ -192,24 +205,24 @@ export function GradeChart({ gradebookData }: GradeChartProps) {
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 leading-none font-medium">
-          {trend.direction === 'up' && (
+          {trend.direction === "up" && (
             <>
-              Trending up by {trend.percentage}% <TrendingUp className="h-4 w-4" />
+              Trending up by {trend.percentage}%{" "}
+              <TrendingUp className="h-4 w-4" />
             </>
           )}
-          {trend.direction === 'down' && (
+          {trend.direction === "down" && (
             <>
-              Trending down by {trend.percentage}% <TrendingDown className="h-4 w-4" />
+              Trending down by {trend.percentage}%{" "}
+              <TrendingDown className="h-4 w-4" />
             </>
           )}
-          {trend.direction === 'neutral' && (
-            <>Grade performance is stable</>
-          )}
+          {trend.direction === "neutral" && <>Grade performance is stable</>}
         </div>
         <div className="text-muted-foreground leading-none">
           Based on weekly assignment averages
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

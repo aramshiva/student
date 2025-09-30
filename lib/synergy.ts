@@ -1,4 +1,4 @@
-import { XMLBuilder, XMLParser } from 'fast-xml-parser';
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
 
 export type MailData = Record<string, unknown>;
 export type Attendance = Record<string, unknown>;
@@ -11,39 +11,43 @@ export type AuthToken = Record<string, unknown>;
 export type Schedule = Record<string, unknown>;
 
 const alwaysArray = new Set<string>([
-  'SynergyMailDataXML.FolderListViews.FolderListViewXML',
-  'SynergyMailDataXML.InboxItemListings.MessageXML',
-  'SynergyMailDataXML.SentItemListings.MessageXML',
-  'SynergyMailDataXML.DraftItemListings.MessageXML',
-  'SynergyMailDataXML.InboxItemListings.MessageXML.Attachments.AttachmentXML',
-  'RecipientXML',
+  "SynergyMailDataXML.FolderListViews.FolderListViewXML",
+  "SynergyMailDataXML.InboxItemListings.MessageXML",
+  "SynergyMailDataXML.SentItemListings.MessageXML",
+  "SynergyMailDataXML.DraftItemListings.MessageXML",
+  "SynergyMailDataXML.InboxItemListings.MessageXML.Attachments.AttachmentXML",
+  "RecipientXML",
 
-  'Gradebook.Courses.Course',
-  'Gradebook.Courses.Course.Marks.Mark.Assignments.Assignment',
-  'Gradebook.ReportingPeriods.ReportPeriod',
+  "Gradebook.Courses.Course",
+  "Gradebook.Courses.Course.Marks.Mark.Assignments.Assignment",
+  "Gradebook.ReportingPeriods.ReportPeriod",
 
-  'Attendance.Absences.Absence',
+  "Attendance.Absences.Absence",
 ]);
 
 const parser = new XMLParser({
   ignoreAttributes: false,
   ignoreDeclaration: true,
-  attributeNamePrefix: '_',
+  attributeNamePrefix: "_",
   isArray: (_name, jpath) => alwaysArray.has(jpath),
 });
 
 const builder = new XMLBuilder({
   ignoreAttributes: false,
-  attributeNamePrefix: '_',
+  attributeNamePrefix: "_",
 });
 
 const escapeXmlText = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const sanitizeDomain = (raw: string) =>
-  raw.replace(/^https?:\/\//i, '').replace(/\/+$/g, '');
+  raw.replace(/^https?:\/\//i, "").replace(/\/+$/g, "");
 
-async function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, ms = 15000) {
+async function fetchWithTimeout(
+  input: RequestInfo,
+  init: RequestInit = {},
+  ms = 15000,
+) {
   const c = new AbortController();
   const id = setTimeout(() => c.abort(), ms);
   try {
@@ -53,7 +57,9 @@ async function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, ms =
   }
 }
 
-type Operation = 'ProcessWebServiceRequest' | 'ProcessWebServiceRequestMultiWeb';
+type Operation =
+  | "ProcessWebServiceRequest"
+  | "ProcessWebServiceRequestMultiWeb";
 
 export class SynergyClient {
   private domain: string;
@@ -70,7 +76,11 @@ export class SynergyClient {
     return `https://${this.domain}/Service/PXPCommunication.asmx`;
   }
 
-  private buildEnvelope(operation: Operation, methodName: string, params: unknown) {
+  private buildEnvelope(
+    operation: Operation,
+    methodName: string,
+    params: unknown,
+  ) {
     const paramXml = builder.build({ Params: params ?? {} });
     const paramStr = escapeXmlText(paramXml);
 
@@ -90,133 +100,153 @@ export class SynergyClient {
 </soap12:Envelope>`.trim();
   }
 
-  private async soapRequest(operation: Operation, methodName: string, params?: unknown) {
+  private async soapRequest(
+    operation: Operation,
+    methodName: string,
+    params?: unknown,
+  ) {
     const res = await fetchWithTimeout(this.endpoint(), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/soap+xml; charset=utf-8' },
+      method: "POST",
+      headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
       body: this.buildEnvelope(operation, methodName, params),
     });
 
-    const raw = await res.text().catch(() => '');
-    if (!res.ok) throw new Error(`HTTP ${res.status} from Synergy: ${raw.slice(0, 400)}`);
+    const raw = await res.text().catch(() => "");
+    if (!res.ok)
+      throw new Error(`HTTP ${res.status} from Synergy: ${raw.slice(0, 400)}`);
 
     const outer = parser.parse(raw);
-    const responseNode = outer?.['soap:Envelope']?.['soap:Body']?.[`${operation}Response`];
+    const responseNode =
+      outer?.["soap:Envelope"]?.["soap:Body"]?.[`${operation}Response`];
     const resultStr = responseNode?.[`${operation}Result`];
-    if (!resultStr || typeof resultStr !== 'string') throw new Error('Malformed SOAP response');
+    if (!resultStr || typeof resultStr !== "string")
+      throw new Error("Malformed SOAP response");
 
     const result = parser.parse(resultStr);
     if (result?.RT_ERROR) {
       const msg =
         result.RT_ERROR._ERROR_MESSAGE ??
         result.RT_ERROR._ERROR_USER_MESSAGE ??
-        'Unknown Synergy error';
+        "Unknown Synergy error";
       throw new Error(String(msg));
     }
     return result;
   }
 
   private request(methodName: string, params?: unknown) {
-    return this.soapRequest('ProcessWebServiceRequest', methodName, params);
+    return this.soapRequest("ProcessWebServiceRequest", methodName, params);
   }
 
   private requestMultiWeb(methodName: string, params?: unknown) {
-    return this.soapRequest('ProcessWebServiceRequestMultiWeb', methodName, params);
+    return this.soapRequest(
+      "ProcessWebServiceRequestMultiWeb",
+      methodName,
+      params,
+    );
   }
 
-
   async checkLogin(): Promise<void> {
-    await this.request('StudentInfo');
+    await this.request("StudentInfo");
   }
 
   async getAuthToken(): Promise<AuthToken> {
-    const r = await this.requestMultiWeb('GenerateAuthToken', {
+    const r = await this.requestMultiWeb("GenerateAuthToken", {
       Username: this.userID,
       TokenForClassWebSite: true,
       Usertype: 0,
       IsParentStudent: 0,
-      DataString: '',
+      DataString: "",
       DocumentID: 1,
       AssignmentID: 1,
     });
     return r?.AuthToken ?? {};
   }
 
-async getGradebook(reportPeriod?: number): Promise<Gradebook> {
-    const r = await this.request('Gradebook', reportPeriod ? { ReportPeriod: reportPeriod } : {});
+  async getGradebook(reportPeriod?: number): Promise<Gradebook> {
+    const r = await this.request(
+      "Gradebook",
+      reportPeriod ? { ReportPeriod: reportPeriod } : {},
+    );
     return r?.Gradebook ?? {};
-}
+  }
 
-async getAttendance(): Promise<Attendance> {
-    const r = await this.request('Attendance');
+  async getAttendance(): Promise<Attendance> {
+    const r = await this.request("Attendance");
     return r?.Attendance ?? {};
-}
+  }
 
-async getStudentInfo(): Promise<StudentInfo> {
-    const r = await this.request('StudentInfo');
+  async getStudentInfo(): Promise<StudentInfo> {
+    const r = await this.request("StudentInfo");
     return r?.StudentInfo ?? {};
-}
+  }
 
-async getDocuments(): Promise<Documents> {
-    const r = await this.request('GetStudentDocumentInitialData');
+  async getDocuments(): Promise<Documents> {
+    const r = await this.request("GetStudentDocumentInitialData");
     return r?.StudentDocuments ?? {};
-}
+  }
 
-async getReportCard(documentGU: string): Promise<ReportCard> {
-    const r = await this.request('GetReportCardDocumentData', { DocumentGU: documentGU });
+  async getReportCard(documentGU: string): Promise<ReportCard> {
+    const r = await this.request("GetReportCardDocumentData", {
+      DocumentGU: documentGU,
+    });
     return r?.DocumentData ?? {};
-}
+  }
 
-async getMailData(): Promise<MailData> {
-    const r = await this.request('SynergyMailGetData');
+  async getMailData(): Promise<MailData> {
+    const r = await this.request("SynergyMailGetData");
     return r?.SynergyMailDataXML ?? {};
-}
+  }
 
-// async getSchedule(termIndex?: number): Promise<Schedule> {
-//     const params: Record<string, unknown> = {};
-    
-//     if (termIndex !== undefined) {
-//         params.TermIndex = termIndex;
-//     }
-    
-//     const r = await this.request('StudentClassList', params);
-//     return r?.StudentClassList ?? {};
-// }
+  // async getSchedule(termIndex?: number): Promise<Schedule> {
+  //     const params: Record<string, unknown> = {};
 
-async getSchedule(termIndex?: number): Promise<Schedule> {
-    const r = await this.request('StudentClassList', termIndex !== undefined ? { TermIndex: termIndex } : {});
+  //     if (termIndex !== undefined) {
+  //         params.TermIndex = termIndex;
+  //     }
+
+  //     const r = await this.request('StudentClassList', params);
+  //     return r?.StudentClassList ?? {};
+  // }
+
+  async getSchedule(termIndex?: number): Promise<Schedule> {
+    const r = await this.request(
+      "StudentClassList",
+      termIndex !== undefined ? { TermIndex: termIndex } : {},
+    );
     return r?.StudentClassList ?? {};
-}
+  }
 
-async getMessages(): Promise<Record<string, unknown>> {
-    const r = await this.request('GetPXPMessages');
+  async getMessages(): Promise<Record<string, unknown>> {
+    const r = await this.request("GetPXPMessages");
     return r ?? {};
-}
+  }
 
-async getCalendar(): Promise<Record<string, unknown>> {
-    const r = await this.request('StudentCalendar');
+  async getCalendar(): Promise<Record<string, unknown>> {
+    const r = await this.request("StudentCalendar");
     return r?.StudentCalendar ?? {};
-}
+  }
 
-async getClassNotes(): Promise<Record<string, unknown>> {
-    const r = await this.request('StudentHWNotes');
+  async getClassNotes(): Promise<Record<string, unknown>> {
+    const r = await this.request("StudentHWNotes");
     return r?.StudentHWNotes ?? {};
-}
+  }
 
-async getSchoolInfo(): Promise<Record<string, unknown>> {
-    const r = await this.request('StudentSchoolInfo');
+  async getSchoolInfo(): Promise<Record<string, unknown>> {
+    const r = await this.request("StudentSchoolInfo");
     return r?.StudentSchoolInfo ?? {};
-}
+  }
 
-async listReportCards(): Promise<Record<string, unknown>> {
-    const r = await this.request('GetReportCardInitialData');
+  async listReportCards(): Promise<Record<string, unknown>> {
+    const r = await this.request("GetReportCardInitialData");
     return r ?? {};
-}
+  }
 
-async getDocument(documentGuid: string): Promise<Record<string, unknown>> {
-    const r = await this.request('GetContentOfAttachedDoc', { DocumentGU: documentGuid });
+  async getDocument(documentGuid: string): Promise<Record<string, unknown>> {
+    const r = await this.request("GetContentOfAttachedDoc", {
+      DocumentGU: documentGuid,
+    });
     return r ?? {};
-}
+  }
 
   async call<T = unknown>(methodName: string, params?: unknown): Promise<T> {
     return this.request(methodName, params) as Promise<T>;

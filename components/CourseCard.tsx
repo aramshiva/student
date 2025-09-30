@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
@@ -26,36 +26,43 @@ interface CourseCardProps {
 export default function CourseCard({ course, onClick }: CourseCardProps) {
   const marks = course.Marks.Mark;
   const currentMark = getCurrentMark(marks);
-  const gradeColorClass = getGradeColor(currentMark?._CalculatedScoreString || "");
+  const gradeColorClass = getGradeColor(
+    currentMark?._CalculatedScoreString || "",
+  );
   const icon = getCourseIcon(course._ImageType);
 
   return (
     <Card onClick={onClick} className="cursor-pointer">
-        <CardHeader>
-            <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                    <span className="text-2xl">{icon}</span>
-                    <div>
-                        <CardTitle className="text-lg leading-tight">
-                            {course._CourseName}
-                        </CardTitle>
-                        <CardDescription>
-                            {course._CourseID} • Period {course._Period} • Room {course._Room}
-                        </CardDescription>
-                    </div>
-                </div>
-                <CardAction>
-                    <div className={`px-3 py-1 rounded-lg text-2xl font-bold ${gradeColorClass}`}>
-                        {currentMark?._CalculatedScoreString || "N/A"}
-                    </div>
-                </CardAction>
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3">
+            <span className="text-2xl">{icon}</span>
+            <div>
+              <CardTitle className="text-lg leading-tight">
+                {course._CourseName}
+              </CardTitle>
+              <CardDescription>
+                {course._CourseID} • Period {course._Period} • Room{" "}
+                {course._Room}
+              </CardDescription>
+            </div>
+          </div>
+          <CardAction>
+            <div
+              className={`px-3 py-1 rounded-lg text-2xl font-bold ${gradeColorClass}`}
+            >
+              {currentMark?._CalculatedScoreString || "N/A"}
+            </div>
+          </CardAction>
         </div>
-    </CardHeader>
-    <CardContent>
+      </CardHeader>
+      <CardContent>
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Teacher:</span>
-            <span className="text-sm font-medium text-gray-900">{course._Staff}</span>
+            <span className="text-sm font-medium text-gray-900">
+              {course._Staff}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Current Score:</span>
@@ -71,20 +78,25 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
               Grade Breakdown
             </h4>
             <div className="space-y-1">
-              {currentMark.GradeCalculationSummary.AssignmentGradeCalc.map((calc: AssignmentGradeCalc, index: number) => (
-                <div key={index} className="flex justify-between items-center text-xs">
-                  <span className="text-gray-600">
-                    {calc._Type} ({calc._Weight})
-                  </span>
-                  <span className="font-medium">
-                    {calc._CalculatedMark} ({calc._WeightedPct})
-                  </span>
-                </div>
-              ))}
+              {currentMark.GradeCalculationSummary.AssignmentGradeCalc.map(
+                (calc: AssignmentGradeCalc, index: number) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center text-xs"
+                  >
+                    <span className="text-gray-600">
+                      {calc._Type} ({calc._Weight})
+                    </span>
+                    <span className="font-medium">
+                      {calc._CalculatedMark} ({calc._WeightedPct})
+                    </span>
+                  </div>
+                ),
+              )}
             </div>
           </div>
         )}
-    </CardContent>
+      </CardContent>
     </Card>
   );
 }

@@ -110,7 +110,7 @@ export default function AttendancePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [periodNameMap, setPeriodNameMap] = useState<Record<number, string>>(
-    {}
+    {},
   );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -142,7 +142,7 @@ export default function AttendancePage() {
         };
 
         const parsePeriodTotals = (
-          w?: APIPeriodTotalsWrapper
+          w?: APIPeriodTotalsWrapper,
         ): PeriodTotal[] => {
           if (!w) return [];
           return normalizeArray(w.PeriodTotal).map((pt) => ({
@@ -210,8 +210,8 @@ export default function AttendancePage() {
             const arr: ScheduleClassListing[] = Array.isArray(classList)
               ? classList
               : classList
-              ? [classList]
-              : [];
+                ? [classList]
+                : [];
             const map: Record<number, string> = {};
             for (const c of arr) {
               const num = Number(c._Period);
@@ -295,7 +295,7 @@ export default function AttendancePage() {
                 {(() => {
                   const nums = new Set<number>();
                   const pushNums = (
-                    list?: { number: number; total: number }[]
+                    list?: { number: number; total: number }[],
                   ) => list?.forEach((l) => nums.add(l.number));
                   pushNums(dataShape?.totals.activities);
                   pushNums(dataShape?.totals.excused);
@@ -303,23 +303,23 @@ export default function AttendancePage() {
                   pushNums(dataShape?.totals.unexcused);
                   pushNums(dataShape?.totals.unexcusedTardies);
                   Object.keys(periodNameMap).forEach((k) =>
-                    nums.add(Number(k))
+                    nums.add(Number(k)),
                   );
                   dataShape?.absenceDays.forEach((day) =>
-                    day.periods.forEach((p) => nums.add(p.number))
+                    day.periods.forEach((p) => nums.add(p.number)),
                   );
                   const activePeriodNums = new Set<number>();
                   Object.keys(periodNameMap).forEach((k) =>
-                    activePeriodNums.add(Number(k))
+                    activePeriodNums.add(Number(k)),
                   );
                   dataShape?.absenceDays.forEach((day) =>
-                    day.periods.forEach((p) => activePeriodNums.add(p.number))
+                    day.periods.forEach((p) => activePeriodNums.add(p.number)),
                   );
                   const sorted = Array.from(nums).sort((a, b) => a - b);
                   return sorted
                     .map((n) => {
                       const find = (
-                        list?: { number: number; total: number }[]
+                        list?: { number: number; total: number }[],
                       ) => list?.find((l) => l.number === n)?.total ?? 0;
                       const a = find(dataShape?.totals.activities);
                       const e = find(dataShape?.totals.excused);

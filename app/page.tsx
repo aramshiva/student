@@ -1,9 +1,8 @@
-'use client';
+"use client";
 
-
-import { useState } from 'react';
-import Login from '@/components/Login';
-import { LoginCredentials } from '@/types/gradebook';
+import { useState } from "react";
+import Login from "@/components/Login";
+import { LoginCredentials } from "@/types/gradebook";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,8 +13,8 @@ export default function Home() {
     setError(null);
     try {
       const response = await fetch(`/api/synergy/gradebook`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
       if (!response.ok) {
@@ -23,19 +22,20 @@ export default function Home() {
       }
       const raw = await response.json();
       const gradebookRoot = raw?.Gradebook ?? raw;
-      const errorMessage = gradebookRoot?.["@ErrorMessage"] || gradebookRoot?._ErrorMessage;
+      const errorMessage =
+        gradebookRoot?.["@ErrorMessage"] || gradebookRoot?._ErrorMessage;
       if (errorMessage) {
         throw new Error(String(errorMessage));
       }
-      localStorage.setItem('studentvue-creds', JSON.stringify(credentials));
+      localStorage.setItem("studentvue-creds", JSON.stringify(credentials));
       // saves creds in LOCAL STORAGE (not cloud)
       // redirects to student page
-      window.location.href = '/student';
+      window.location.href = "/student";
     } catch (err) {
       if (err instanceof Error) {
-        setError(err.message || 'Login failed');
+        setError(err.message || "Login failed");
       } else {
-        setError('Login failed');
+        setError("Login failed");
       }
     } finally {
       setIsLoading(false);

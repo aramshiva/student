@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Student",
-  description: "A modern StudentVUE replacement"
+  description: "A modern StudentVUE replacement",
 };
 
 import ClientLayout from "@/components/ClientLayout";
@@ -26,8 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-  <ClientLayout>{children}</ClientLayout>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
