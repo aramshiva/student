@@ -63,11 +63,11 @@ export function GradeProgressionChart({
       let total = 0;
       let possible = 0;
       upTo.forEach((a) => {
-        const pts = a._Point ? parseFloat(a._Point) : NaN;
-        const ptsPossible = a._PointPossible
-          ? parseFloat(a._PointPossible)
-          : NaN;
-        if (!isNaN(pts) && !isNaN(ptsPossible)) {
+        const pts = a._Score ? parseFloat(a._Score) : (a._Point ? parseFloat(a._Point) : NaN);
+        const ptsPossible = a._ScoreMaxValue
+          ? parseFloat(a._ScoreMaxValue)
+          : (a._PointPossible ? parseFloat(a._PointPossible) : NaN);
+        if (Number.isFinite(pts) && Number.isFinite(ptsPossible) && ptsPossible > 0) {
           total += pts;
           possible += ptsPossible;
         }

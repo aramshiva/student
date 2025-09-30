@@ -14,6 +14,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,11 +40,17 @@ import { Badge } from "./ui/badge";
 interface AssignmentsTableProps {
   assignments: Assignment[];
   getTypeColor: (type: string) => string;
+  onEditScore?: (id: string, score: string, max: string) => void;
+  hypotheticalMode?: boolean;
+  onToggleHypothetical?: (val: boolean) => void;
 }
 
-export function AssignmentsTable({
+function AssignmentsTableBase({
   assignments,
   getTypeColor,
+  onEditScore,
+  hypotheticalMode = false,
+  onToggleHypothetical,
 }: AssignmentsTableProps) {
   const decodeEntities = React.useCallback(
     (input: string | undefined | null): string => {
@@ -72,244 +79,380 @@ export function AssignmentsTable({
         return map[ent] ?? full;
       });
     },
-    [],
+    []
   );
 
-  // Track which description blocks are expanded (by assignment id)
   const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
-  const toggleExpanded = (id: string) => {
+  const toggleExpanded = React.useCallback((id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
-  const SHOULD_TRUNCATE_THRESHOLD = 160; // char heuristic before showing toggle
+  }, []);
+  const SHOULD_TRUNCATE_THRESHOLD = 120;
 
-  const columns: ColumnDef<Assignment>[] = [
-    {
-      id: "measure",
-      accessorFn: (row) => row._Measure,
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Assignment <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const a = row.original;
-        const measure = decodeEntities(a._Measure);
-        const desc = a._MeasureDescription
-          ? decodeEntities(a._MeasureDescription)
-          : "";
-        const notes = a._Notes ? decodeEntities(a._Notes) : "";
-        const id = String(a._GradebookID ?? row.id);
-        const isExpanded = expanded.has(id);
-        const shouldTruncate =
-          !isExpanded && desc && desc.length > SHOULD_TRUNCATE_THRESHOLD;
-        return (
-          <div className="max-w-[260px] md:max-w-[340px] xl:max-w-[420px] space-y-1 pl-5">
-            <div className="font-medium text-gray-900 break-words whitespace-pre-line leading-snug">
-              {measure}
-            </div>
-            {desc && (
-              <div className="relative group">
-                <div
-                  className={
-                    `text-sm text-gray-500 break-words whitespace-pre-line leading-snug transition-all` +
-                    (shouldTruncate ? " line-clamp-2 overflow-hidden" : "")
-                  }
-                  style={
-                    shouldTruncate
-                      ? ({
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                        } as React.CSSProperties)
-                      : undefined
-                  }
-                >
-                  {desc}
+  const [draftScores, setDraftScores] = React.useState<
+    Record<string, { score: string; max: string }>
+  >({});
+  // Ephemeral renamed titles in hypothetical mode (does not affect calculations)
+  const [draftNames, setDraftNames] = React.useState<Record<string, string>>({});
+  const debounceTimers = React.useRef<
+    Record<string, ReturnType<typeof setTimeout>>
+  >({});
+  const DEBOUNCE_MS = 500;
+  React.useEffect(() => {
+    setDraftScores((prev) => {
+      const next = { ...prev };
+      assignments.forEach((a) => {
+        const id = a._GradebookID;
+        if (!next[id]) {
+          next[id] = {
+            score: a._Score ?? "",
+            max: a._ScoreMaxValue ?? a._PointPossible ?? "",
+          };
+        }
+      });
+      return next;
+    });
+    setDraftNames((prev) => {
+      const next: Record<string, string> = { ...prev };
+      assignments.forEach((a) => {
+        const id = a._GradebookID;
+        if (next[id] == null) next[id] = a._Measure ?? '';
+      });
+      // Remove any stale keys for assignments no longer present
+      Object.keys(next).forEach(k => {
+        if (!assignments.some(a => a._GradebookID === k)) delete next[k];
+      });
+      return next;
+    });
+  }, [assignments]);
+
+  const flushUpdate = React.useCallback(
+    (id: string) => {
+      const data = draftScoresRef.current[id];
+      if (!data) return;
+      onEditScore?.(id, data.score, data.max);
+    },
+    [onEditScore]
+  );
+
+  const handleDraftChange = React.useCallback(
+    (id: string, field: "score" | "max", value: string) => {
+      setDraftScores((prev) => {
+        const cur = prev[id] || { score: "", max: "" };
+        const next = { ...prev, [id]: { ...cur, [field]: value } };
+        return next;
+      });
+      if (debounceTimers.current[id]) clearTimeout(debounceTimers.current[id]);
+      debounceTimers.current[id] = setTimeout(() => {
+        flushUpdate(id);
+      }, DEBOUNCE_MS);
+    },
+    [flushUpdate]
+  );
+
+  const draftScoresRef = React.useRef(draftScores);
+  React.useEffect(() => {
+    draftScoresRef.current = draftScores;
+  }, [draftScores]);
+  const draftNamesRef = React.useRef(draftNames);
+  React.useEffect(() => { draftNamesRef.current = draftNames; }, [draftNames]);
+  React.useEffect(() => {
+    const timersSnapshot = { ...debounceTimers.current };
+    return () => {
+      Object.values(timersSnapshot).forEach((t) => clearTimeout(t));
+      const snapshot = draftScoresRef.current;
+      Object.keys(snapshot).forEach((id) => {
+        const data = snapshot[id];
+        if (data) onEditScore?.(id, data.score, data.max);
+      });
+    };
+  }, [onEditScore]);
+
+  const columns: ColumnDef<Assignment>[] = React.useMemo(
+    () => [
+      {
+        id: "measure",
+        accessorFn: (row) => row._Measure,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Assignment <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const a = row.original;
+          const originalMeasure = decodeEntities(a._Measure);
+          const renamed = draftNames[a._GradebookID] ?? originalMeasure;
+          const desc = a._MeasureDescription
+            ? decodeEntities(a._MeasureDescription)
+            : "";
+          const notes = a._Notes ? decodeEntities(a._Notes) : "";
+          const id = String(a._GradebookID ?? row.id);
+          const isExpanded = expanded.has(id);
+          const shouldTruncate =
+            !isExpanded && desc && desc.length > SHOULD_TRUNCATE_THRESHOLD;
+          return (
+            <div className="max-w-[260px] md:max-w-[340px] xl:max-w-[420px] space-y-1 pl-5">
+              {hypotheticalMode ? (
+                <Input
+                  type="text"                  value={renamed}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setDraftNames(prev => ({ ...prev, [a._GradebookID]: value }));
+                  }}
+                  placeholder="Assignment name"
+                />
+              ) : (
+                <div className="font-medium text-gray-900 break-words whitespace-pre-line leading-snug">
+                  {originalMeasure}
                 </div>
-                {shouldTruncate && (
-                  <div className="absolute bottom-0 right-0 flex items-end justify-end pl-4 text-xs bg-gradient-to-l from-white via-white/80 to-transparent h-6">
-                    <button
-                      type="button"
-                      onClick={() => toggleExpanded(id)}
-                      className="px-1 py-0.5 rounded text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300"
-                      aria-label="Expand full description"
-                    >
-                      …
-                    </button>
+              )}
+              {desc && (
+                <div className="relative group">
+                  <div
+                    className={
+                      `text-sm text-gray-500 break-words whitespace-pre-line leading-snug transition-all` +
+                      (shouldTruncate ? " line-clamp-2 overflow-hidden" : "")
+                    }
+                    style={
+                      shouldTruncate
+                        ? ({
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                          } as React.CSSProperties)
+                        : undefined
+                    }
+                  >
+                    {desc}
                   </div>
-                )}
-                {desc &&
-                  !shouldTruncate &&
-                  desc.length > SHOULD_TRUNCATE_THRESHOLD && (
-                    <button
-                      type="button"
-                      onClick={() => toggleExpanded(id)}
-                      className="mt-1 text-xs text-blue-600 hover:underline focus:outline-none"
-                      aria-label="Collapse description"
-                    >
-                      Collapse
-                    </button>
+                  {shouldTruncate && (
+                    <div className="absolute bottom-0 right-0 flex items-end justify-end pl-4 text-xs bg-gradient-to-l from-white via-white/80 to-transparent h-6">
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(id)}
+                        className="px-1 py-0.5 rounded text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300"
+                        aria-label="Expand full description"
+                      >
+                        …
+                      </button>
+                    </div>
                   )}
-              </div>
-            )}
-            {notes && (() => {
-              const lower = notes.trim().toLowerCase();
-              const isMissing = lower === 'missing';
-              return (
-                <div className={`text-sm ${isMissing ? 'text-red-600' : 'text-blue-600'} italic break-words whitespace-pre-line leading-snug`}>
-                  Note: {notes}
+                  {desc &&
+                    !shouldTruncate &&
+                    desc.length > SHOULD_TRUNCATE_THRESHOLD && (
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(id)}
+                        className="mt-1 text-xs text-blue-600 hover:underline focus:outline-none"
+                        aria-label="Collapse description"
+                      >
+                        Collapse
+                      </button>
+                    )}
                 </div>
-              );
-            })()}
-          </div>
-        );
+              )}
+              {notes &&
+                (() => {
+                  const lower = notes.trim().toLowerCase();
+                  const isMissing = lower === "missing";
+                  return (
+                    <div
+                      className={`text-sm ${
+                        isMissing ? "text-red-600" : "text-blue-600"
+                      } italic break-words whitespace-pre-line leading-snug`}
+                    >
+                      Note: {notes}
+                    </div>
+                  );
+                })()}
+            </div>
+          );
+        },
       },
-    },
-    {
-      id: "type",
-      accessorFn: (row) => row._Type,
-      header: "Type",
-      cell: ({ row }) => (
-        <Badge className={`${getTypeColor(row.original._Type)}`}>
-          {row.original._Type}
-        </Badge>
-      ),
-    },
-    {
-      id: "date",
-      accessorFn: (row) => row._Date,
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Date <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      sortingFn: (a, b, columnId) => {
-        const av = new Date(a.getValue<string>(columnId)).getTime();
-        const bv = new Date(b.getValue<string>(columnId)).getTime();
-        return av === bv ? 0 : av < bv ? -1 : 1;
+      {
+        id: "type",
+        accessorFn: (row) => row._Type,
+        header: "Type",
+        cell: ({ row }) => (
+          <Badge className={`${getTypeColor(row.original._Type)}`}>
+            {row.original._Type}
+          </Badge>
+        ),
       },
-      cell: ({ row }) => (
-        <span className="text-sm text-gray-900">
-          {formatDate(row.original._Date)}
-        </span>
-      ),
-    },
-    {
-      id: "score",
-      header: "Score",
-      enableSorting: false,
-      cell: ({ row }) => {
-        const a = row.original;
-        return (
-          <div className="text-sm">
-            <div className="font-medium text-gray-900">{a._DisplayScore}</div>
-            <div className="text-gray-500">{a._Points}</div>
-          </div>
-        );
+      {
+        id: "date",
+        accessorFn: (row) => row._Date,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Date <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        sortingFn: (a, b, columnId) => {
+          const av = new Date(a.getValue<string>(columnId)).getTime();
+          const bv = new Date(b.getValue<string>(columnId)).getTime();
+          return av === bv ? 0 : av < bv ? -1 : 1;
+        },
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-900">
+            {formatDate(row.original._Date)}
+          </span>
+        ),
       },
-    },
-    {
-      id: "percentage",
-      header: "Percentage",
-      sortingFn: (a, b) => {
-        const pctA = calculatePercentage(
-          Number(a.original._Score),
-          Number(a.original._ScoreMaxValue),
-        );
-        const pctB = calculatePercentage(
-          Number(b.original._Score),
-          Number(b.original._ScoreMaxValue),
-        );
-        return pctA === pctB ? 0 : pctA < pctB ? -1 : 1;
+      {
+        id: "score",
+        header: "Score",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const a = row.original;
+          const id = a._GradebookID;
+          const ds = draftScoresRef.current[id];
+          const draft = ds || {
+            score: a._Score ?? "",
+            max: a._ScoreMaxValue ?? a._PointPossible ?? "",
+          };
+          if (!hypotheticalMode) {
+            return (
+              <div className="text-sm">
+                <div className="font-medium text-gray-900">
+                  {a._DisplayScore}
+                </div>
+                <div className="text-gray-500">{a._Points}</div>
+              </div>
+            );
+          }
+          return (
+            <div className="flex items-center gap-1 text-sm w-[130px]">
+              <Input
+                type="number"
+                className="w-16 p-1"
+                defaultValue={draft.score}
+                onChange={(e) => handleDraftChange(id, "score", e.target.value)}
+                onBlur={() => flushUpdate(id)}
+              />
+              <span className="text-gray-500">/</span>
+              <Input
+                type="number"
+                className="w-16 p-1"
+                defaultValue={draft.max}
+                onChange={(e) => handleDraftChange(id, "max", e.target.value)}
+                onBlur={() => flushUpdate(id)}
+              />
+            </div>
+          );
+        },
       },
-      cell: ({ row }) => {
-        const a = row.original;
-        const rawScore = Number(a._Score);
-        const rawMax = Number(a._ScoreMaxValue);
-        const pct = calculatePercentage(rawScore, rawMax);
-        const invalid =
-          !Number.isFinite(rawScore) ||
-          !Number.isFinite(rawMax) ||
-          rawMax === 0 ||
-          Number.isNaN(pct);
-        if (invalid) {
+      {
+        id: "percentage",
+        header: "Percentage",
+        sortingFn: (a, b) => {
+          const pctA = calculatePercentage(
+            Number(a.original._Score),
+            Number(a.original._ScoreMaxValue)
+          );
+          const pctB = calculatePercentage(
+            Number(b.original._Score),
+            Number(b.original._ScoreMaxValue)
+          );
+          return pctA === pctB ? 0 : pctA < pctB ? -1 : 1;
+        },
+        cell: ({ row }) => {
+          const a = row.original;
+          const rawScore = Number(a._Score);
+          const rawMax = Number(a._ScoreMaxValue);
+          const pct = calculatePercentage(rawScore, rawMax);
+          const invalid =
+            !Number.isFinite(rawScore) ||
+            !Number.isFinite(rawMax) ||
+            rawMax === 0 ||
+            Number.isNaN(pct);
+          if (invalid) {
+            return (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-500" title="Not graded yet">
+                  Not graded
+                </span>
+              </div>
+            );
+          }
           return (
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500" title="Not graded yet">
-                Not graded
+              <div
+                className="flex-1 bg-gray-200 rounded-full h-2"
+                aria-hidden="true"
+              >
+                <div
+                  className={`h-2 rounded-full ${
+                    pct >= 90
+                      ? "bg-green-500"
+                      : pct >= 80
+                      ? "bg-blue-500"
+                      : pct >= 70
+                      ? "bg-yellow-500"
+                      : pct >= 60
+                      ? "bg-orange-500"
+                      : "bg-red-500"
+                  }`}
+                  style={{ width: `${Math.min(pct, 100)}%` }}
+                />
+              </div>
+              <span className="text-sm font-medium text-gray-900 min-w-[3rem]">
+                {pct}%
               </span>
             </div>
           );
-        }
-        return (
-          <div className="flex items-center space-x-2">
-            <div
-              className="flex-1 bg-gray-200 rounded-full h-2"
-              aria-hidden="true"
-            >
-              <div
-                className={`h-2 rounded-full ${
-                  pct >= 90
-                    ? "bg-green-500"
-                    : pct >= 80
-                      ? "bg-blue-500"
-                      : pct >= 70
-                        ? "bg-yellow-500"
-                        : pct >= 60
-                          ? "bg-orange-500"
-                          : "bg-red-500"
-                }`}
-                style={{ width: `${Math.min(pct, 100)}%` }}
-              />
-            </div>
-            <span className="text-sm font-medium text-gray-900 min-w-[3rem]">
-              {pct}%
-            </span>
-          </div>
-        );
+        },
       },
-    },
-    {
-      id: "dueDate",
-      accessorFn: (row) => row._DueDate,
-      header: "Due Date",
-      cell: ({ row }) => (
-        <span className="text-sm text-gray-900">
-          {formatDate(row.original._DueDate)}
-        </span>
-      ),
-    },
-    {
-      id: "notes",
-      accessorFn: (row) => row._Notes,
-      header: "Notes",
-      cell: ({ row }) => {
-        const decoded = decodeEntities(row.original._Notes);
-        return (
-          <span className="text-sm text-gray-900 break-words whitespace-pre-line">
-            {decoded}
+      {
+        id: "dueDate",
+        accessorFn: (row) => row._DueDate,
+        header: "Due Date",
+        cell: ({ row }) => (
+          <span className="text-sm text-gray-900">
+            {formatDate(row.original._DueDate)}
           </span>
-        );
+        ),
       },
-    },
-  ];
+      {
+        id: "notes",
+        accessorFn: (row) => row._Notes,
+        header: "Notes",
+        cell: ({ row }) => {
+          const decoded = decodeEntities(row.original._Notes);
+          return (
+            <span className="text-sm text-gray-900 break-words whitespace-pre-line">
+              {decoded}
+            </span>
+          );
+        },
+      },
+    ],
+    [
+      decodeEntities,
+      expanded,
+      hypotheticalMode,
+      getTypeColor,
+      toggleExpanded,
+      handleDraftChange,
+      flushUpdate,
+      draftNames,
+    ]
+  );
 
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "date", desc: true },
   ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
+    []
   );
 
   const table = useReactTable({
@@ -331,16 +474,28 @@ export function AssignmentsTable({
         <CardTitle>Assignments ({assignments.length})</CardTitle>
         <CardDescription>List of all assignments</CardDescription>
         <CardAction>
-          <Input
-            placeholder="Filter assignments..."
-            value={
-              (table.getColumn("measure")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(e) =>
-              table.getColumn("measure")?.setFilterValue(e.target.value)
-            }
-            className="h-8"
-          />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full">
+              <Checkbox
+                defaultChecked={hypotheticalMode}
+                onCheckedChange={(val) => {
+                  const next = val === "indeterminate" ? false : Boolean(val);
+                  onToggleHypothetical?.(next);
+                }}
+              />
+              <p className="text-sm">Hypothetical Mode</p>
+            </div>
+            <Input
+              placeholder="Filter assignments..."
+              value={
+                (table.getColumn("measure")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(e) =>
+                table.getColumn("measure")?.setFilterValue(e.target.value)
+              }
+              className="h-8"
+            />
+          </div>
         </CardAction>
       </CardHeader>
       <CardContent>
@@ -355,7 +510,7 @@ export function AssignmentsTable({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext(),
+                            header.getContext()
                           )}
                     </TableHead>
                   ))}
@@ -374,7 +529,7 @@ export function AssignmentsTable({
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext(),
+                          cell.getContext()
                         )}
                       </TableCell>
                     ))}
@@ -394,32 +549,36 @@ export function AssignmentsTable({
           </Table>
         </div>
       </CardContent>
-      <CardFooter>
-        <div className="flex items-center justify-between w-full">
-          <div className="text-xs text-gray-500">
-            Page {table.getState().pagination.pageIndex + 1} of{" "}
-            {table.getPageCount() || 1}
+      {table.getPageCount() > 1 && (
+        <CardFooter>
+          <div className="flex items-center justify-between w-full">
+            <div className="text-xs text-gray-500">
+              Page {table.getState().pagination.pageIndex + 1} of{" "}
+              {table.getPageCount()}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      </CardFooter>
+        </CardFooter>
+      )}
     </Card>
   );
 }
+
+export const AssignmentsTable = React.memo(AssignmentsTableBase);

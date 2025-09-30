@@ -1,7 +1,7 @@
 "use client";
 
-import { Course, Mark } from "@/types/gradebook";
-import { getGradeColor, getCourseIcon } from "@/utils/gradebook";
+import { Course, Mark, Assignment, AssignmentGradeCalc } from "@/types/gradebook";
+import { getGradeColor, getCourseIcon, numericToLetterGrade, parseWeightString } from "@/utils/gradebook";
 import * as React from "react";
 import { GradeProgressionChart } from "@/components/GradeProgressionChart";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
@@ -22,10 +22,71 @@ interface CourseDetailProps {
 export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const marks = course.Marks.Mark;
   const currentMark = getCurrentMark(marks);
-  const assignments = currentMark?.Assignments?.Assignment || [];
-  const gradeColorClass = getGradeColor(
-    currentMark?._CalculatedScoreString || "",
-  );
+  const originalAssignments = React.useMemo(() => (
+    currentMark?.Assignments?.Assignment || []
+  ), [currentMark]);
+  const [editableAssignments, setEditableAssignments] = React.useState<Assignment[]>(() => [...originalAssignments]);
+  const [hypotheticalMode, setHypotheticalMode] = React.useState(false);
+
+  React.useEffect(() => {
+    setEditableAssignments([...originalAssignments]);
+  }, [course, currentMark, originalAssignments]);
+
+  const workingAssignments = hypotheticalMode ? editableAssignments : originalAssignments;
+
+  const recalcTotals = React.useMemo(() => {
+    let earned = 0;
+    let possible = 0;
+    workingAssignments.forEach(a => {
+      const score = a._Score ? parseFloat(a._Score) : NaN;
+      const max = a._ScoreMaxValue ? parseFloat(a._ScoreMaxValue) : (a._PointPossible ? parseFloat(a._PointPossible) : NaN);
+      if (Number.isFinite(score) && Number.isFinite(max) && max > 0) {
+        earned += score;
+        possible += max;
+      }
+    });
+    const pct = possible > 0 ? (earned / possible) * 100 : NaN;
+    return { earned, possible, pct };
+  }, [workingAssignments]);
+
+  const simulatedLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
+  const gradeColorClass = getGradeColor(hypotheticalMode ? (simulatedLetter || "") : (currentMark?._CalculatedScoreString || ""));
+
+  const recalculatedBreakdown: AssignmentGradeCalc[] | null = React.useMemo(() => {
+    if (!hypotheticalMode || !currentMark?.GradeCalculationSummary?.AssignmentGradeCalc) return null;
+    const originals = currentMark.GradeCalculationSummary.AssignmentGradeCalc;
+    const byType: Record<string, { points: number; possible: number; weight: string }> = {};
+    workingAssignments.forEach(a => {
+      const type = a._Type || 'Other';
+      const score = a._Score ? parseFloat(a._Score) : NaN;
+      const max = a._ScoreMaxValue ? parseFloat(a._ScoreMaxValue) : (a._PointPossible ? parseFloat(a._PointPossible) : NaN);
+      if (!Number.isFinite(score) || !Number.isFinite(max) || max <= 0) return;
+      if (!byType[type]) {
+        const original = originals.find(o => o._Type === type);
+        byType[type] = { points: 0, possible: 0, weight: original?._Weight || '0%' };
+      }
+      byType[type].points += score;
+      byType[type].possible += max;
+    });
+    const weightSum = Object.values(byType).reduce((acc, v) => acc + parseWeightString(v.weight), 0) || 1;
+    return Object.entries(byType).map(([type, v]) => {
+      const pct = v.possible > 0 ? (v.points / v.possible) * 100 : 0;
+      const weightNum = parseWeightString(v.weight);
+      const weightedPct = (pct * weightNum) / weightSum;
+      return {
+        _Type: type,
+        _Points: v.points.toFixed(1),
+        _PointsPossible: v.possible.toFixed(1),
+        _Weight: v.weight,
+        _CalculatedMark: numericToLetterGrade(Math.round(pct)),
+        _WeightedPct: `${weightedPct.toFixed(1)}%`,
+      } as AssignmentGradeCalc;
+    });
+  }, [workingAssignments, currentMark, hypotheticalMode]);
+
+  const onUpdateAssignmentScore = React.useCallback((id: string, score: string, max: string) => {
+    setEditableAssignments(prev => prev.map(a => a._GradebookID === id ? { ...a, _Score: score, _ScoreMaxValue: max } : a));
+  }, []);
   const icon = getCourseIcon(course._ImageType);
 
   const getAssignmentTypeColor = (type: string) => {
@@ -78,13 +139,11 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
               </div>
 
               <div className="text-right">
-                <div
-                  className={`inline-flex px-4 py-2 rounded-lg text-lg font-bold ${gradeColorClass}`}
-                >
-                  {currentMark?._CalculatedScoreString || "N/A"}
+                <div className={`inline-flex px-4 py-2 rounded-lg text-lg font-bold ${gradeColorClass}`}>
+                  {hypotheticalMode ? (simulatedLetter || currentMark?._CalculatedScoreString || "N/A") : (currentMark?._CalculatedScoreString || "N/A")}
                 </div>
                 <p className="text-sm text-gray-600 mt-1">
-                  {currentMark?._CalculatedScoreRaw || "N/A"}%
+                  {hypotheticalMode ? (Number.isFinite(recalcTotals.pct) ? `${Math.round(recalcTotals.pct)}%` : 'N/A') : (currentMark?._CalculatedScoreRaw || 'N/A') + '%'}
                 </p>
               </div>
             </div>
@@ -93,15 +152,18 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
-        <GradeProgressionChart assignments={assignments} />
-        {currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
-          <GradeBreakdown
-            calcs={currentMark.GradeCalculationSummary.AssignmentGradeCalc}
-          />
-        )}
+        <GradeProgressionChart assignments={workingAssignments} />
+        {hypotheticalMode && recalculatedBreakdown ? (
+          <GradeBreakdown calcs={recalculatedBreakdown} />
+        ) : (currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
+          <GradeBreakdown calcs={currentMark.GradeCalculationSummary.AssignmentGradeCalc} />
+        ))}
         <AssignmentsTable
-          assignments={assignments}
+          assignments={workingAssignments}
           getTypeColor={getAssignmentTypeColor}
+          onEditScore={onUpdateAssignmentScore}
+          hypotheticalMode={hypotheticalMode}
+          onToggleHypothetical={setHypotheticalMode}
         />
       </div>
     </div>
