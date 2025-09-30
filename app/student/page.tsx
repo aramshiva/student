@@ -90,6 +90,15 @@ interface ParsedMessage {
   type: string;
 }
 
+interface TodayScheduleClass {
+  period: number;
+  className: string;
+  room: string;
+  teacher: string;
+  start?: string;
+  end?: string;
+}
+
 function greetingForNow(date = new Date()) {
   const h = date.getHours();
   if (h < 5) return "Good Night";
@@ -105,6 +114,8 @@ export default function StudentDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState("");
   const [permId, setPermId] = useState("");
+  const [todaySchedule, setTodaySchedule] = useState<TodayScheduleClass[]>([]);
+  const [todayScheduleError, setTodayScheduleError] = useState<string | null>(null);
   useEffect(() => {
     (async () => {
       const credsRaw = localStorage.getItem("studentvue-creds");
@@ -126,9 +137,15 @@ export default function StudentDashboard() {
           headers: { "Content-Type": "application/json" },
           body: credsRaw,
         });
-        const [infoRes, messagesRes] = await Promise.all([
+        const scheduleReq = fetch("/api/synergy/schedule", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: credsRaw,
+        });
+        const [infoRes, messagesRes, scheduleRes] = await Promise.all([
           studentInfoReq,
           messagesReq,
+          scheduleReq,
         ]);
         if (!infoRes.ok) throw new Error(`Student info HTTP ${infoRes.status}`);
         if (!messagesRes.ok)
@@ -225,6 +242,46 @@ export default function StudentDashboard() {
           return bd - ad;
         });
         setMessages(parsed);
+
+        if (!scheduleRes.ok) {
+          setTodayScheduleError(`Schedule HTTP ${scheduleRes.status}`);
+        } else {
+          const schedJson = await scheduleRes.json();
+          const scheduleRoot =
+            schedJson?.StudentClassSchedule ?? schedJson?.StudentClassList ?? schedJson;
+          const normalize = <T,>(v: T | T[] | undefined | null): T[] =>
+            !v ? [] : Array.isArray(v) ? v : [v];
+          const todayClassesRaw = normalize(
+            scheduleRoot?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes?.ClassInfo,
+          );
+
+          if (todayClassesRaw.length) {
+            const mapped: TodayScheduleClass[] = todayClassesRaw
+              .map(
+                (c: {
+                  _Period?: string;
+                  _ClassName?: string;
+                  _RoomName?: string;
+                  _TeacherName?: string;
+                  _TeacherEmail?: string;
+                  _StartTime?: string;
+                  _EndTime?: string;
+                }) => ({
+                  period: Number(c._Period || 0),
+                  className: c._ClassName || "",
+                  room: c._RoomName || "",
+                  teacher: c._TeacherName || "",
+                  start: c._StartTime,
+                  end: c._EndTime,
+                }),
+              )
+              .filter((c) => !!c.className) // filter out any empty placeholders
+              .sort((a, b) => a.period - b.period);
+            setTodaySchedule(mapped);
+          } else {
+            setTodaySchedule([]);
+          }
+        }
       } catch (e) {
         setError((e as Error).message);
       } finally {
@@ -294,6 +351,48 @@ export default function StudentDashboard() {
               </li>
             ))}
           </ul>
+        </CardContent>
+      </Card>
+
+      <Card className="px-2 py-5">
+        <CardHeader>
+          <CardTitle>Your schedule for today</CardTitle>
+          <CardDescription>
+            {todayScheduleError
+              ? todayScheduleError
+              : todaySchedule.length
+              ? `Showing ${todaySchedule.length} classes`
+              : loading
+              ? "Loading..."
+              : "No classes found for today"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {todaySchedule.length > 0 && (
+            <ul className="divide-y text-sm">
+              {todaySchedule.map((c) => (
+                <li key={c.period} className="py-2 flex items-center gap-4">
+                  <span className="w-8 text-xs text-gray-600">
+                    {c.period.toString().padStart(2, "0")}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate" title={c.className}>{c.className}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {c.teacher}{c.room ? ` • Rm ${c.room}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-xs text-muted-foreground w-24 text-right">
+                    {c.start && c.end ? (
+                      <>
+                        {c.start} –<br />
+                        {c.end}
+                      </>
+                    ) : ''}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
     </div>

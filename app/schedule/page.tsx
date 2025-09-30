@@ -48,7 +48,22 @@ interface APIRawStudentClassScheduleRoot {
     _TermIndex?: string;
     _TermIndexName?: string;
     _ErrorMessage?: string;
+    TodayScheduleInfoData?: {
+      SchoolInfos?: {
+        SchoolInfo?: {
+          Classes?: { ClassInfo: TodayClassInfo | TodayClassInfo[] };
+        };
+      };
+    };
   };
+}
+
+interface TodayClassInfo {
+  _Period?: string;
+  _ClassName?: string;
+  _RoomName?: string;
+  _TeacherName?: string;
+  _TeacherEmail?: string;
 }
 
 interface Term {
@@ -71,7 +86,8 @@ interface ClassListing {
 export default function SchedulePage() {
   const [classes, setClasses] = useState<ClassListing[]>([]);
   const [terms, setTerms] = useState<Term[]>([]);
-  const [selectedTerm, setSelectedTerm] = useState<number>(0);
+  const TODAY_SENTINEL = -1;
+  const [selectedTerm, setSelectedTerm] = useState<number>(TODAY_SENTINEL);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,12 +106,12 @@ export default function SchedulePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...JSON.parse(creds),
-            term_index: selectedTerm,
+            term_index: selectedTerm === TODAY_SENTINEL ? undefined : selectedTerm,
           }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const raw: APIRawStudentClassScheduleRoot = await res.json();
-        const root = raw?.StudentClassSchedule;
+  const root = raw?.StudentClassSchedule;
         if (!root) {
           setClasses([]);
           setTerms([]);
@@ -103,16 +119,33 @@ export default function SchedulePage() {
         }
         const normalize = <T,>(v: T | T[] | undefined | null): T[] =>
           !v ? [] : Array.isArray(v) ? v : [v];
-        const classArr = normalize(root.ClassLists?.ClassListing)
-          .map((c) => ({
-            period: Number(c._Period || 0),
-            courseTitle: c._CourseTitle,
-            room: c._RoomName,
-            teacher: c._Teacher,
-            teacherEmail: c._TeacherEmail,
-            excludePortal: (c._ExcludePVUE || "false").toLowerCase() === "true",
-          }))
-          .sort((a, b) => a.period - b.period);
+        let classArr: ClassListing[] = [];
+        if (selectedTerm === TODAY_SENTINEL) {
+          const todayClasses = normalize<TodayClassInfo>(
+            root?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes?.ClassInfo,
+          );
+            classArr = todayClasses
+              .map((c) => ({
+                period: Number(c._Period || 0),
+                courseTitle: c._ClassName || '',
+                room: c._RoomName || '',
+                teacher: c._TeacherName || '',
+                teacherEmail: c._TeacherEmail || '',
+                excludePortal: false,
+              }))
+              .sort((a, b) => a.period - b.period);
+        } else {
+          classArr = normalize(root.ClassLists?.ClassListing)
+            .map((c) => ({
+              period: Number(c._Period || 0),
+              courseTitle: c._CourseTitle,
+              room: c._RoomName,
+              teacher: c._Teacher,
+              teacherEmail: c._TeacherEmail,
+              excludePortal: (c._ExcludePVUE || "false").toLowerCase() === "true",
+            }))
+            .sort((a, b) => a.period - b.period);
+        }
         const termArr = normalize(root.TermLists?.TermListing)
           .map((t) => ({
             termIndex: Number(t._TermIndex || 0),
@@ -124,21 +157,15 @@ export default function SchedulePage() {
             ),
           }))
           .sort((a, b) => a.termIndex - b.termIndex);
-        setClasses(classArr);
         setTerms(termArr);
-        if (
-          !termArr.some((t) => t.termIndex === selectedTerm) &&
-          termArr.length
-        ) {
-          setSelectedTerm(termArr[0].termIndex);
-        }
+        setClasses(classArr);
       } catch (e) {
         setError((e as Error).message);
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [selectedTerm]);
+  }, [selectedTerm, TODAY_SENTINEL]);
 
   if (isLoading) return <div className="p-8">Loading schedule...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
@@ -146,17 +173,18 @@ export default function SchedulePage() {
   return (
     <div className="p-8">
       <p className="text-xl font-medium pb-3">Class Schedule</p>
-      {terms.length > 1 && (
+      {terms.length > 0 && (
         <div className="mb-4">
           <label className="font-semibold mr-2">Term:</label>
           <Select
             value={selectedTerm.toString()}
             onValueChange={(val) => setSelectedTerm(Number(val))}
           >
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Select term" />
+            <SelectTrigger className="w-[260px]">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value={TODAY_SENTINEL.toString()}>Today ( {new Date().toLocaleDateString()} )</SelectItem>
               {terms.map((term) => (
                 <SelectItem
                   key={term.termIndex}
