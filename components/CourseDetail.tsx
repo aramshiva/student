@@ -3,7 +3,7 @@
 import { Course, Mark, Assignment, AssignmentGradeCalc } from "@/types/gradebook";
 import { getGradeColor, getCourseIcon, numericToLetterGrade, parseWeightString } from "@/utils/gradebook";
 import * as React from "react";
-import { GradeProgressionChart } from "@/components/GradeProgressionChart";
+import { GradeChart } from "@/components/GradeChart";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { AssignmentsTable } from "@/components/AssignmentsTable";
 
@@ -56,6 +56,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
     if (!hypotheticalMode || !currentMark?.GradeCalculationSummary?.AssignmentGradeCalc) return null;
     const originals = currentMark.GradeCalculationSummary.AssignmentGradeCalc;
     const byType: Record<string, { points: number; possible: number; weight: string }> = {};
+    originals.forEach(o => {
+      byType[o._Type] = { points: 0, possible: 0, weight: o._Weight };
+    });
     workingAssignments.forEach(a => {
       const type = a._Type || 'Other';
       const score = a._Score ? parseFloat(a._Score) : NaN;
@@ -69,19 +72,21 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       byType[type].possible += max;
     });
     const weightSum = Object.values(byType).reduce((acc, v) => acc + parseWeightString(v.weight), 0) || 1;
-    return Object.entries(byType).map(([type, v]) => {
-      const pct = v.possible > 0 ? (v.points / v.possible) * 100 : 0;
+    const rows = Object.entries(byType).map(([type, v]) => {
+      const pct = v.possible > 0 ? (v.points / v.possible) * 100 : NaN;
       const weightNum = parseWeightString(v.weight);
-      const weightedPct = (pct * weightNum) / weightSum;
+      const weightedPct = Number.isFinite(pct) ? (pct * weightNum) / weightSum : 0;
+      const mark = Number.isFinite(pct) ? numericToLetterGrade(Math.round(pct)) : 'Not graded';
       return {
         _Type: type,
         _Points: v.points.toFixed(1),
         _PointsPossible: v.possible.toFixed(1),
         _Weight: v.weight,
-        _CalculatedMark: numericToLetterGrade(Math.round(pct)),
-        _WeightedPct: `${weightedPct.toFixed(1)}%`,
+        _CalculatedMark: mark,
+        _WeightedPct: Number.isFinite(pct) ? `${weightedPct.toFixed(1)}%` : '—',
       } as AssignmentGradeCalc;
     });
+    return rows.filter(r => r._Type.toUpperCase() !== 'TOTAL');
   }, [workingAssignments, currentMark, hypotheticalMode]);
 
   const onUpdateAssignmentScore = React.useCallback((id: string, score: string, max: string) => {
@@ -152,7 +157,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
-        <GradeProgressionChart assignments={workingAssignments} />
+        <GradeChart assignments={workingAssignments} />
         {hypotheticalMode && recalculatedBreakdown ? (
           <GradeBreakdown calcs={recalculatedBreakdown} />
         ) : (currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (

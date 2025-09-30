@@ -96,7 +96,6 @@ function AssignmentsTableBase({
   const [draftScores, setDraftScores] = React.useState<
     Record<string, { score: string; max: string }>
   >({});
-  // Ephemeral renamed titles in hypothetical mode (does not affect calculations)
   const [draftNames, setDraftNames] = React.useState<Record<string, string>>({});
   const debounceTimers = React.useRef<
     Record<string, ReturnType<typeof setTimeout>>
@@ -122,7 +121,6 @@ function AssignmentsTableBase({
         const id = a._GradebookID;
         if (next[id] == null) next[id] = a._Measure ?? '';
       });
-      // Remove any stale keys for assignments no longer present
       Object.keys(next).forEach(k => {
         if (!assignments.some(a => a._GradebookID === k)) delete next[k];
       });

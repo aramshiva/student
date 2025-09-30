@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Assignment } from "@/types/gradebook";
 
-interface GradeProgressionChartProps {
+interface GradeChartProps {
   assignments: Assignment[];
 }
 
@@ -36,9 +36,9 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function GradeProgressionChart({
+export function GradeChart({
   assignments,
-}: GradeProgressionChartProps) {
+}: GradeChartProps) {
   const sortedAssignments = React.useMemo(
     () =>
       [...assignments].sort(

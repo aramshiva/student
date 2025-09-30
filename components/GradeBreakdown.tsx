@@ -1,12 +1,7 @@
 "use client";
 import { AssignmentGradeCalc } from "@/types/gradebook";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface GradeBreakdownProps {
   calcs: AssignmentGradeCalc[];
@@ -21,31 +16,29 @@ export function GradeBreakdown({ calcs }: GradeBreakdownProps) {
         <CardDescription>Based on assignment categories</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          {calcs.map((calc, idx) => (
-            <div key={idx} className="bg-gray-50 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-medium text-gray-900">{calc._Type}</h3>
-                <span className="text-sm text-gray-600">{calc._Weight}</span>
-              </div>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Grade:</span>
-                  <span className="font-medium">{calc._CalculatedMark}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Points:</span>
-                  <span>
-                    {calc._Points}/{calc._PointsPossible}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Weighted:</span>
-                  <span className="font-medium">{calc._WeightedPct}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-1/4">Type</TableHead>
+                <TableHead className="w-1/6">Grade</TableHead>
+                <TableHead className="w-1/6">Weight</TableHead>
+                <TableHead className="w-1/4">Points</TableHead>              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {calcs.map((calc, idx) => {
+                const fraction = `${calc._Points}/${calc._PointsPossible}`;
+                return (
+                  <TableRow key={idx}>
+                    <TableCell className="font-medium text-gray-900">{calc._Type}</TableCell>
+                    <TableCell>{calc._CalculatedMark}</TableCell>
+                    <TableCell>{calc._Weight}</TableCell>
+                    <TableCell>{fraction}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>
