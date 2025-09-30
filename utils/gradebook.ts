@@ -16,28 +16,27 @@ export function getGradeColor(grade: string): string {
     case "A":
     case "A+":
     case "A-":
-      return "text-green-600 bg-green-100";
+      return "text-green-700 bg-green-200";
     case "B":
     case "B+":
     case "B-":
-      return "text-blue-600 bg-blue-100";
+      return "text-blue-700 bg-blue-200";
     case "C":
     case "C+":
     case "C-":
-      return "text-yellow-600 bg-yellow-100";
+      return "text-yellow-700 bg-yellow-200";
     case "D":
     case "D+":
     case "D-":
-      return "text-orange-600 bg-orange-100";
+      return "text-orange-700 bg-orange-200";
     case "F":
-      return "text-red-600 bg-red-100";
+      return "text-red-700 bg-red-200";
     case "E":
-      return "text-red-600 bg-red-100";
+      return "text-red-700 bg-red-200";
     case "P":
-      return "text-green-600 bg-green-100";
-
+      return "text-green-700 bg-green-200";
     default:
-      return "text-gray-600 bg-gray-100";
+      return "text-gray-700 bg-gray-200";
   }
 }
 
@@ -51,14 +50,13 @@ export function getCourseIcon(imageType: string): string {
       return "🌍";
     case "phyeducation":
       return "⚽";
-    case "english":
-      return "📚";
+    case "language":
+      return "🌐";
     case "art":
+    case "arts":
       return "🎨";
     case "music":
       return "🎵";
-    case "foreign language":
-      return "🌐";
     default:
       return "📖";
   }
@@ -80,8 +78,8 @@ export function numericToLetterGrade(pct: number): string {
   if (pct >= 73) return 'C';
   if (pct >= 70) return 'C-';
   if (pct >= 67) return 'D+';
-  if (pct >= 63) return 'D';
-  if (pct >= 60) return 'D-';
+  if (pct >= 60) return 'D';
+  if (pct >= 40) return 'F';
   return 'F';
 }
 
