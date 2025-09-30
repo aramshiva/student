@@ -210,10 +210,20 @@ export function AssignmentsTable({ assignments, getTypeColor }: AssignmentsTable
       },
   cell: ({ row }) => {
         const a = row.original;
-        const pct = calculatePercentage(Number(a._Score), Number(a._ScoreMaxValue));
+        const rawScore = Number(a._Score);
+        const rawMax = Number(a._ScoreMaxValue);
+        const pct = calculatePercentage(rawScore, rawMax);
+        const invalid = !Number.isFinite(rawScore) || !Number.isFinite(rawMax) || rawMax === 0 || Number.isNaN(pct);
+        if (invalid) {
+          return (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500" title="Not graded yet">Not graded</span>
+            </div>
+          );
+        }
         return (
           <div className="flex items-center space-x-2">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div className="flex-1 bg-gray-200 rounded-full h-2" aria-hidden="true">
               <div
                 className={`h-2 rounded-full ${
                   pct >= 90
