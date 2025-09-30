@@ -1,6 +1,13 @@
 "use client";
 
 import { Course, Mark } from "@/types/gradebook";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "./ui/select";
 
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
@@ -17,15 +24,30 @@ interface GradebookRootLike {
   [k: string]: unknown;
 }
 
+interface ReportingPeriodMeta {
+  index: number;
+  label: string;
+  start: string;
+  end: string;
+}
+
 interface DashboardProps {
   gradebookData: { data: GradebookRootLike };
   onCourseSelect: (course: Course) => void;
   onLogout: () => void;
+  reportingPeriods?: ReportingPeriodMeta[];
+  selectedReportingPeriod?: number | null;
+  onSelectReportingPeriod?: (index: number) => void;
+  isLoading?: boolean;
 }
 
 export default function Dashboard({
   gradebookData,
   onCourseSelect,
+  reportingPeriods = [],
+  selectedReportingPeriod = null,
+  onSelectReportingPeriod,
+  isLoading = false,
 }: DashboardProps) {
   const gbRoot = gradebookData.data.Gradebook ?? gradebookData.data;
   const courses: Course[] = gbRoot?.Courses?.Course || [];
@@ -64,11 +86,41 @@ export default function Dashboard({
   return (
     <>
       <div className="min-h-screen bg-white p-9">
-        <div className="flex justify-between items-center py-6">
-          <div>
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 py-6">
+          <div className="flex-1">
             <p className="text-xl font-medium pb-3">Gradebook</p>
+            {!!reportingPeriods.length && (
+              <div className="flex items-center gap-2 text-sm">
+                <label className="font-medium">Reporting Period:</label>
+                <Select
+                  disabled={isLoading}
+                  value={
+                    selectedReportingPeriod != null
+                      ? String(selectedReportingPeriod)
+                      : undefined
+                  }
+                  onValueChange={(val) =>
+                    onSelectReportingPeriod?.(Number(val))
+                  }
+                >
+                  <SelectTrigger className="w-[260px]">
+                    <SelectValue className="text-xs" placeholder="Select period" />
+                  </SelectTrigger>
+                  <SelectContent className="p-1">
+                    {reportingPeriods.map((rp) => (
+                      <SelectItem
+                        key={rp.index}
+                        value={rp.index.toString()}
+                      >
+                        {rp.label} ({rp.start} – {rp.end})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 md:self-start">
             <div className="text-right">
               <div className="text-sm text-gray-600">GPA</div>
               <div className="text-2xl font-bold">{gpa}</div>

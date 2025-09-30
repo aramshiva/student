@@ -275,7 +275,7 @@ export default function StudentDashboard() {
                   end: c._EndTime,
                 }),
               )
-              .filter((c) => !!c.className) // filter out any empty placeholders
+              .filter((c) => !!c.className)
               .sort((a, b) => a.period - b.period);
             setTodaySchedule(mapped);
           } else {
