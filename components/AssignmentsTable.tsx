@@ -160,11 +160,15 @@ export function AssignmentsTable({
                   )}
               </div>
             )}
-            {notes && (
-              <div className="text-sm text-blue-600 italic break-words whitespace-pre-line leading-snug">
-                Note: {notes}
-              </div>
-            )}
+            {notes && (() => {
+              const lower = notes.trim().toLowerCase();
+              const isMissing = lower === 'missing';
+              return (
+                <div className={`text-sm ${isMissing ? 'text-red-600' : 'text-blue-600'} italic break-words whitespace-pre-line leading-snug`}>
+                  Note: {notes}
+                </div>
+              );
+            })()}
           </div>
         );
       },
