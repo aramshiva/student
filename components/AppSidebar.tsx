@@ -47,6 +47,33 @@ export function AppSidebar() {
   const [studentPhoto, setStudentPhoto] = React.useState<string>("");
   const [permId, setPermId] = React.useState<string>("");
   const [school, setSchool] = React.useState<string>("");
+  const [quickStats, setQuickStats] = React.useState<{
+    gpa: string;
+    missing: number;
+    gradedCourses: number;
+    totalCourses: number;
+    ts: number;
+  } | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const KEY = "studentvue-quick-stats";
+    const read = () => {
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        setQuickStats((prev) => {
+          if (!prev || prev.ts !== parsed.ts) return parsed;
+          return prev;
+        });
+      } catch {
+      }
+    };
+    read();
+    const id = setInterval(read, 5000);
+    return () => clearInterval(id);
+  }, []);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -100,18 +127,42 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarSeparator />
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <div className="grid grid-cols-1 gap-2 text-xs px-1">
-              <div className="rounded-md border bg-sidebar-accent/50 p-2">
-                <p className="font-medium">Coming Soon</p>
-                <p className="text-[10px] opacity-70">Customizable widgets</p>
-              </div>
-            </div>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {quickStats && quickStats.gradedCourses > 0 && (
+          <>
+            <SidebarSeparator />
+            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+              <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="grid grid-cols-1 gap-2 text-xs px-1">
+                  <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
+                    <div className="flex items-baseline justify-between">
+                      <p className="font-medium tracking-tight">GPA</p>
+                      <p className="text-sm font-semibold">
+                        {quickStats.gpa}
+                      </p>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <p className="font-medium tracking-tight">Missing</p>
+                      <p
+                        className={`text-sm font-semibold ${
+                          (quickStats.missing || 0) > 0 ? "text-red-600" : ""
+                        }`}
+                      >
+                        {quickStats.missing}
+                      </p>
+                    </div>
+                    <div className="flex items-baseline justify-between text-[10px] pt-1 opacity-70 border-t mt-1">
+                      <span>Courses</span>
+                      <span>
+                        {quickStats.gradedCourses}/{quickStats.totalCourses}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter>
         {(studentPhoto || permId || school) && (

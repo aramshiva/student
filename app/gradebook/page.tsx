@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Dashboard from "@/components/Dashboard";
 import CourseDetail from "@/components/CourseDetail";
 import Loading from "@/components/loadingfunc";
-import { GradebookData, Course } from "@/types/gradebook";
+import { GradebookData, Course, Mark, Assignment } from "@/types/gradebook";
+import { loadCustomGPAScale, numericToLetterGrade } from "@/utils/gradebook";
 
 export default function GradebookPage() {
   const [gradebookData, setGradebookData] = useState<GradebookData | null>(
@@ -25,9 +26,67 @@ export default function GradebookPage() {
     number | null
   >(null);
   const REPORTING_PERIOD_STORAGE_KEY = "studentvue-last-reporting-period";
+  const QUICK_STATS_STORAGE_KEY = "studentvue-quick-stats";
+
+  function getCurrentMark(m: Mark | Mark[] | undefined): Mark | null {
+    if (!m) return null;
+    if (Array.isArray(m)) return m[m.length - 1] || null;
+    return m;
+  }
+
+  interface GradebookLike {
+    Gradebook?: {
+      Courses?: { Course?: Course[] };
+      [k: string]: unknown;
+    };
+    Courses?: { Course?: Course[] };
+    [k: string]: unknown;
+  }
+
+  const computeAndStoreQuickStats = useCallback((root: GradebookLike) => {
+    try {
+      const gbRoot: GradebookLike = root?.Gradebook ? (root as any).Gradebook : root;e
+      const courses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
+      const gpaScale = loadCustomGPAScale();
+      let gradedCourses = 0;
+      let totalGPAPoints = 0;
+      let missingCount = 0;
+
+      for (const course of courses) {
+        const currentMark = getCurrentMark(course?.Marks?.Mark);
+        if (!currentMark) continue;
+        const raw = Number(currentMark?._CalculatedScoreRaw) || 0;
+        if (raw > 0) {
+          gradedCourses++;
+          const letter = numericToLetterGrade(raw);
+          totalGPAPoints += gpaScale[letter] ?? 0;
+        }
+        const assignments: Assignment[] = currentMark?.Assignments?.Assignment || [];
+        for (const a of assignments) {
+          const note = (a._Notes || "").trim().toLowerCase();
+          if (note === "missing") missingCount++;
+        }
+      }
+
+      const overallGPA = gradedCourses > 0 ? (totalGPAPoints / gradedCourses).toFixed(2) : "0.00";
+      const payload = {
+        gpa: overallGPA,
+        missing: missingCount,
+        gradedCourses,
+        totalCourses: courses.length,
+        ts: Date.now(),
+      };
+      localStorage.setItem(QUICK_STATS_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+    }
+  }, []);
+
+  const inFlightRef = useRef(false);
 
   const fetchGradebook = useCallback(
     async (reportPeriodIndex: number | null = null) => {
+      if (inFlightRef.current) return;
+      inFlightRef.current = true;
       const creds = localStorage.getItem("studentvue-creds");
       if (!creds) {
         window.location.href = "/";
@@ -84,14 +143,16 @@ export default function GradebookPage() {
           );
         } catch {}
         setGradebookData({ data });
+        computeAndStoreQuickStats(data);
         setSelectedCourse(null);
       } catch (err) {
         setError((err as Error).message);
       } finally {
         setIsLoading(false);
+        inFlightRef.current = false;
       }
     },
-    [],
+    [computeAndStoreQuickStats],
   );
 
   useEffect(() => {
