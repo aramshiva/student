@@ -18,7 +18,19 @@ export default function Home() {
         body: JSON.stringify(credentials),
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let serverMessage: string | null = null;
+        try {
+          const maybeJson = await response.json();
+          if (
+            maybeJson &&
+            typeof maybeJson === "object" &&
+            typeof maybeJson.error === "string"
+          ) {
+            serverMessage = maybeJson.error;
+          }
+        } catch {
+        }
+        throw new Error(serverMessage || `HTTP error! status: ${response.status}`);
       }
       const raw = await response.json();
       const gradebookRoot = raw?.Gradebook ?? raw;
