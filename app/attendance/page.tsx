@@ -10,10 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  Card
 } from "@/components/ui/card";
 
 interface APIAbsencePeriod {
