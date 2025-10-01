@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { BookUser, Calendar, CalendarClock, File, Mail } from "lucide-react";
+import { BookUser, Calendar, CalendarClock, File, Mail, Settings as SettingsIcon } from "lucide-react";
 export default function Sidebar() {
   const [showWarning, setShowWarning] = useState(false);
 
@@ -64,6 +64,15 @@ export default function Sidebar() {
             {name}
           </Link>
         ))}
+        <div className="mt-auto">
+          <Link
+            href="/settings"
+            className="px-1 py-2 text-sm flex items-center gap-2 pb-7"
+          >
+            <SettingsIcon className="w-4 h-4" />
+            Settings
+          </Link>
+        </div>
       </nav>
       {photoBase64 && (
         <div className="flex items-center justify-center mt-auto mb-2">

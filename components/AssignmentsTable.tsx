@@ -36,6 +36,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "./ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface AssignmentsTableProps {
   assignments: Assignment[];
@@ -471,30 +476,37 @@ function AssignmentsTableBase({
       <CardHeader>
         <CardTitle>Assignments ({assignments.length})</CardTitle>
         <CardDescription>List of all assignments</CardDescription>
-        <CardAction>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 w-full">
-              <Checkbox
-                defaultChecked={hypotheticalMode}
-                onCheckedChange={(val) => {
-                  const next = val === "indeterminate" ? false : Boolean(val);
-                  onToggleHypothetical?.(next);
-                }}
-              />
-              <p className="text-sm">Hypothetical Mode</p>
-            </div>
-            <Input
-              placeholder="Filter assignments..."
-              value={
-                (table.getColumn("measure")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(e) =>
-                table.getColumn("measure")?.setFilterValue(e.target.value)
-              }
-              className="h-8"
+  <CardAction>
+    <div className="flex items-center gap-2">
+      <Tooltip>
+        <TooltipTrigger>
+            <div className="flex items-center gap-2 whitespace-nowrap">
+            <Checkbox
+              defaultChecked={hypotheticalMode}
+              onCheckedChange={(val) => {
+              const next = val === "indeterminate" ? false : Boolean(val);
+              onToggleHypothetical?.(next);
+              }}
             />
-          </div>
-        </CardAction>
+            <p className="text-sm pr-2">Hypothetical Mode</p>
+            </div>
+        </TooltipTrigger>
+        <TooltipContent className="w-96">
+          <p>Hypothetical Mode is a powerful mode allowing you to see how certain grades on assignments will affect your grade.</p>
+        </TooltipContent>
+      </Tooltip>
+      <Input
+        placeholder="Filter assignments..."
+        value={
+          (table.getColumn("measure")?.getFilterValue() as string) ?? ""
+        }
+        onChange={(e) =>
+          table.getColumn("measure")?.setFilterValue(e.target.value)
+        }
+        className="h-8"
+      />
+    </div>
+  </CardAction>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">

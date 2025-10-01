@@ -1,6 +1,7 @@
 "use client";
 
 import { Course, Mark } from "@/types/gradebook";
+import { loadCustomGPAScale, numericToLetterGrade } from "@/utils/gradebook";
 import {
   Select,
   SelectTrigger,
@@ -58,24 +59,13 @@ export default function Dashboard({
     return rawScore > 0;
   });
 
+  const gpaScale = loadCustomGPAScale();
   const totalPoints = validCourses.reduce((sum: number, course: Course) => {
     const currentMark = getCurrentMark(course.Marks.Mark);
     const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
-    let points = 0;
-
-    if (rawScore >= 93) points = 4.0;
-    else if (rawScore >= 90) points = 3.7;
-    else if (rawScore >= 87) points = 3.3;
-    else if (rawScore >= 83) points = 3.0;
-    else if (rawScore >= 80) points = 2.7;
-    else if (rawScore >= 77) points = 2.3;
-    else if (rawScore >= 73) points = 2.0;
-    else if (rawScore >= 70) points = 1.7;
-    else if (rawScore >= 67) points = 1.3;
-    else if (rawScore >= 60) points = 1.0;
-    else points = 0;
-
-    return sum + points;
+    const letter = numericToLetterGrade(rawScore);
+    const pts = gpaScale[letter] ?? 0;
+    return sum + pts;
   }, 0);
 
   const gpa =

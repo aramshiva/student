@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { EyeClosed, EyeOff, Lock } from "lucide-react";
+import { EyeOff } from "lucide-react";
 
 interface LoginProps {
   onLogin: (credentials: LoginCredentials) => void;
@@ -92,88 +92,101 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center bg-white min-h-screen text-black">
-      <div className="text-left w-full max-w-md mb-4">
-        <p className="font-bold font-[Gosha]">student</p>
-        <p className="text-gray-500">
-          A alternative client for StudentVUE, with a refreshed UI and more
-          powerful features to help maintain academics.
-        </p>
-      </div>
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col space-y-4 w-full max-w-md"
-      >
-        <div>
-          <label htmlFor="username" className="block text-sm font-medium mb-2">
-            Student ID:
-          </label>
-          <Input
-            type="text"
-            id="username"
-            value={credentials.username}
-            onChange={(e) =>
-              setCredentials({ ...credentials, username: e.target.value })
-            }
-          />
+    <>
+      <div className="flex flex-col items-center justify-center bg-white min-h-screen text-black">
+        <div className="text-left w-full max-w-md mb-4">
+          <p className="font-bold font-[Gosha]">student</p>
+          <p className="text-gray-500">
+            A alternative client for StudentVUE, with a refreshed UI and more
+            powerful features to help maintain academics.
+          </p>
         </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-2">
-            Password:
-          </label>
-          <Input
-            type="password"
-            id="password"
-            value={credentials.password}
-            onChange={(e) =>
-              setCredentials({ ...credentials, password: e.target.value })
-            }
-          />
-          <div className="flex items-center mt-2 pt-2">
-            <EyeOff className="w-9 h-3 mr-1 text-gray-700" />
-            <p className="text-xs text-gray-700">
-              Your device directly, and securely connects to Synergy/StudentVUE.
-              We can{"'"}t see your passwords or your grades.
-            </p>
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col space-y-4 w-full max-w-md"
+        >
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium mb-2"
+            >
+              Student ID:
+            </label>
+            <Input
+              type="text"
+              id="username"
+              value={credentials.username}
+              onChange={(e) =>
+                setCredentials({ ...credentials, username: e.target.value })
+              }
+            />
           </div>
-          {/* <div className="flex items-center mt-2 pt-2">
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium mb-2"
+            >
+              Password:
+            </label>
+            <Input
+              type="password"
+              id="password"
+              value={credentials.password}
+              onChange={(e) =>
+                setCredentials({ ...credentials, password: e.target.value })
+              }
+            />
+            <div className="flex items-center mt-2 pt-2">
+              <EyeOff className="w-9 h-3 mr-1 text-gray-700" />
+              <p className="text-xs text-gray-700">
+                Your device directly, and securely connects to
+                Synergy/StudentVUE. We can{"'"}t see your passwords or your
+                grades.
+              </p>
+            </div>
+            {/* <div className="flex items-center mt-2 pt-2">
             <Lock className="w-9 h-3 mr-1" />
             <p className="text-sm text-gray-700">
               If your school district uses custom sign in or google sign in, you may need to set a password
             </p>
           </div> */}
-        </div>
-        <Accordion type="single" collapsible>
-          <AccordionItem value="item-1">
-            <AccordionTrigger>Advanced Settings</AccordionTrigger>
-            <AccordionContent>
-              <label
-                htmlFor="district_url"
-                className="block text-sm font-medium mb-2"
-              >
-                District URL:
-              </label>
-              <Input
-                type="url"
-                id="district_url"
-                value={credentials.district_url}
-                onChange={(e) =>
-                  setCredentials({
-                    ...credentials,
-                    district_url: e.target.value,
-                  })
-                }
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-4">
-            <p className="text-red-700 text-sm">{error}</p>
           </div>
-        )}
-        <LoginButton />
-      </form>
-    </div>
+          <Accordion type="single" collapsible>
+            <AccordionItem value="item-1">
+              <AccordionTrigger>Advanced Settings</AccordionTrigger>
+              <AccordionContent>
+                <label
+                  htmlFor="district_url"
+                  className="block text-sm font-medium mb-2"
+                >
+                  District URL:
+                </label>
+                <Input
+                  type="url"
+                  id="district_url"
+                  value={credentials.district_url}
+                  onChange={(e) =>
+                    setCredentials({
+                      ...credentials,
+                      district_url: e.target.value,
+                    })
+                  }
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+          <LoginButton />
+        </form>
+        <p className="text-gray-400 text-xs pt-5 w-full max-w-md mb-4">
+          StudentVUE is a registered trademark of Edupoint Educational Systems,
+          LLC. This project is not affiliated with Edupoint, or Synergy.
+        </p>
+      </div>
+    </>
   );
 }
