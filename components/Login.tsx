@@ -78,7 +78,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
     }
     setDistrictSearchLoading(true);
     try {
-      const res = await fetch(`/api/synergy/districts?zip=${five}`);
+      const res = await fetch(`/api/synergy/districts/${five}`);
       if (!res.ok) throw new Error(`Search failed (${res.status})`);
       const data = await res.json();
       setDistricts(data.districts || []);
