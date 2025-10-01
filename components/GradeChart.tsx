@@ -226,7 +226,7 @@ export function GradeChart({
         <div className="flex items-center gap-4">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
-              className="hidden w-[140px] h-8 rounded-md sm:ml-auto sm:flex text-xs"
+              className="hidden w-36 h-8 rounded-md sm:ml-auto sm:flex text-xs"
               aria-label="Select a value"
             >
               <SelectValue placeholder="All" />
@@ -236,13 +236,13 @@ export function GradeChart({
                 All
               </SelectItem>
               <SelectItem value="90d" className="rounded-md text-xs">
-                3 mo
+                3 months
               </SelectItem>
               <SelectItem value="30d" className="rounded-md text-xs">
-                30 d
+                30 days
               </SelectItem>
               <SelectItem value="7d" className="rounded-md text-xs">
-                7 d
+                7 days
               </SelectItem>
             </SelectContent>
           </Select>
@@ -311,7 +311,7 @@ export function GradeChart({
           </AreaChart>
         </ChartContainer>
         <div className="flex items-center justify-end gap-2 mt-2 pr-1">
-          <label className="flex items-center gap-2 text-[10px] uppercase tracking-wide text-gray-500 select-none">
+          <label className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 select-none">
             <Checkbox
               checked={effectiveSticky}
               onCheckedChange={(val) => handleSetSticky(val === true)}

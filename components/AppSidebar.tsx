@@ -202,12 +202,12 @@ export function AppSidebar() {
               <DropdownMenuLabel className="text-xs">Account</DropdownMenuLabel>
               <div className="px-2 pb-1 pt-0.5">
                 {permId && (
-                  <p className="text-[11px] font-medium truncate">
+                  <p className="text-xs font-medium truncate">
                     ID: {permId}
                   </p>
                 )}
                 {school && (
-                  <p className="text-[10px] text-muted-foreground truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {school}
                   </p>
                 )}

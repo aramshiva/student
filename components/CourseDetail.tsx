@@ -218,7 +218,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       _HasDropBox: "false",
       _Measure: "Untitled Assignment",
       _MeasureDescription:
-        "Hypothetical Assignment created in hypothetical mode",
+        "Hypothetical Assignment",
       _Notes: "",
       _Point: "",
       _PointPossible: "",
@@ -355,6 +355,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
           onEditType={onEditAssignmentType}
           onEditName={onEditAssignmentName}
           onCreateHypothetical={onCreateHypothetical}
+          onDeleteHypothetical={(id) => {
+            setEditableAssignments((prev) => prev.filter(a => a._GradebookID !== id));
+          }}
         />
       </div>
     </div>

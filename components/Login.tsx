@@ -218,7 +218,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                   <span className="font-medium text-sm truncate">
                     {selectedDistrict.name}
                   </span>
-                  <span className="text-[10px] text-gray-500 truncate">
+                  <span className="text-xs text-gray-500 truncate">
                     {selectedDistrict.address}
                   </span>
                 </button>
@@ -298,7 +298,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                               >
                                 <div>
                                   <p className="font-medium">{d.name}</p>
-                                  <p className="text-[10px] text-gray-500">
+                                  <p className="text-xs text-gray-500">
                                     {d.address}
                                   </p>
                                 </div>
@@ -308,7 +308,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                         </div>
                       )}
                       <div className="flex justify-between items-center pt-1">
-                        <p className="text-[10px] text-gray-500">
+                        <p className="text-xs text-gray-500">
                           {districts.length > 0 &&
                             `${districts.length} result${
                               districts.length === 1 ? "" : "s"

@@ -15,7 +15,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -58,6 +58,7 @@ interface AssignmentsTableProps {
   onEditType?: (id: string, newType: string) => void;
   onEditName?: (id: string, name: string) => void;
   onCreateHypothetical?: () => void;
+  onDeleteHypothetical?: (id: string) => void;
 }
 
 function AssignmentsTableBase({
@@ -69,6 +70,7 @@ function AssignmentsTableBase({
   onEditType,
   onEditName,
   onCreateHypothetical,
+  onDeleteHypothetical,
 }: AssignmentsTableProps) {
   const decodeEntities = React.useCallback(
     (input: string | undefined | null): string => {
@@ -217,12 +219,12 @@ function AssignmentsTableBase({
           const shouldTruncate =
             !isExpanded && desc && desc.length > SHOULD_TRUNCATE_THRESHOLD;
           return (
-            <div className="max-w-[260px] md:max-w-[340px] xl:max-w-[420px] space-y-1 pl-5">
+            <div className="max-w-[16rem] md:max-w-[21rem] xl:max-w-[26rem] space-y-1 pl-5">
               {hypotheticalMode ? (
-                <Input
-                  type="text"
-                  value={renamed}
-                  onChange={(e) => {
+              <Input
+                type="text"
+                value={renamed}
+                onChange={(e) => {
                     const value = e.target.value;
                     setDraftNames((prev) => ({
                       ...prev,
@@ -514,6 +516,34 @@ function AssignmentsTableBase({
           );
         },
       },
+      {
+        id: "actions",
+        header: "",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const a = row.original;
+          const isHypo = typeof a._GradebookID === 'string' && a._GradebookID.startsWith('hypo-');
+          if (!hypotheticalMode || !isHypo) return null;
+          return (
+            <div className="flex justify-end pr-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                    onClick={() => onDeleteHypothetical?.(a._GradebookID)}
+                    aria-label="Delete hypothetical assignment"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Delete</TooltipContent>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
     ],
     [
       decodeEntities,
@@ -527,6 +557,7 @@ function AssignmentsTableBase({
       assignments,
       onEditType,
       onEditName,
+      onDeleteHypothetical,
     ],
   );
 
