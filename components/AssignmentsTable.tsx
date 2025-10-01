@@ -387,7 +387,6 @@ function AssignmentsTableBase({
                 <div className="font-medium text-gray-900">
                   {a._DisplayScore}
                 </div>
-                <div className="text-gray-500">{a._Points}</div>
               </div>
             );
           }
@@ -416,59 +415,58 @@ function AssignmentsTableBase({
         id: "percentage",
         header: "Percentage",
         sortingFn: (a, b) => {
-          const pctA = calculatePercentage(
-            Number(a.original._Score),
-            Number(a.original._ScoreMaxValue),
-          );
-          const pctB = calculatePercentage(
-            Number(b.original._Score),
-            Number(b.original._ScoreMaxValue),
-          );
+          const pctFrom = (row: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+            const ra = row.original;
+            const usePoints = hypotheticalMode && typeof ra._Points === 'string' && ra._Points.includes('/');
+            let score = Number(ra._Score);
+            let max = Number(ra._ScoreMaxValue);
+            if (usePoints) {
+              const cleaned = ra._Points.replace(/of/i, '/');
+              const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+              if (m) {
+                score = parseFloat(m[1]);
+                max = parseFloat(m[2]);
+              }
+            }
+            return calculatePercentage(score, max);
+          };
+          const pctA = pctFrom(a);
+          const pctB = pctFrom(b);
           return pctA === pctB ? 0 : pctA < pctB ? -1 : 1;
         },
         cell: ({ row }) => {
           const a = row.original;
-          const rawScore = Number(a._Score);
-          const rawMax = Number(a._ScoreMaxValue);
+          const usePoints = hypotheticalMode && typeof a._Points === 'string' && a._Points.includes('/');
+          let rawScore = Number(a._Score);
+            let rawMax = Number(a._ScoreMaxValue);
+          if (usePoints) {
+            const cleaned = a._Points.replace(/of/i, '/');
+            const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+            if (m) {
+              rawScore = parseFloat(m[1]);
+              rawMax = parseFloat(m[2]);
+            }
+          }
           const pct = calculatePercentage(rawScore, rawMax);
-          const invalid =
-            !Number.isFinite(rawScore) ||
-            !Number.isFinite(rawMax) ||
-            rawMax === 0 ||
-            Number.isNaN(pct);
+          const invalid = !Number.isFinite(rawScore) || !Number.isFinite(rawMax) || rawMax === 0 || Number.isNaN(pct);
           if (invalid) {
             return (
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500" title="Not graded yet">
-                  Not graded
-                </span>
+                <span className="text-sm text-gray-500" title="Not graded yet">Not graded</span>
               </div>
             );
           }
           return (
             <div className="flex items-center space-x-2">
-              <div
-                className="flex-1 bg-gray-200 rounded-full h-2"
-                aria-hidden="true"
-              >
+              <div className="flex-1 bg-gray-200 rounded-full h-2" aria-hidden="true">
                 <div
                   className={`h-2 rounded-full ${
-                    pct >= 90
-                      ? "bg-green-500"
-                      : pct >= 80
-                        ? "bg-blue-500"
-                        : pct >= 70
-                          ? "bg-yellow-500"
-                          : pct >= 60
-                            ? "bg-orange-500"
-                            : "bg-red-500"
+                    pct >= 90 ? 'bg-green-500' : pct >= 80 ? 'bg-blue-500' : pct >= 70 ? 'bg-yellow-500' : pct >= 60 ? 'bg-orange-500' : 'bg-red-500'
                   }`}
                   style={{ width: `${Math.min(pct, 100)}%` }}
                 />
               </div>
-              <span className="text-sm font-medium text-gray-900 min-w-[3rem]">
-                {pct}%
-              </span>
+              <span className="text-sm font-medium text-gray-900 min-w-[3rem]">{pct}%</span>
             </div>
           );
         },
@@ -492,6 +490,30 @@ function AssignmentsTableBase({
           return (
             <span className="text-sm text-gray-900 break-words whitespace-pre-line">
               {decoded}
+            </span>
+          );
+        },
+      },
+      {
+        id: "points",
+        header: "Points",
+        cell: ({ row }) => {
+          const a = row.original;
+          let display: string | null = null;
+          const rawPts = typeof a._Points === 'string' ? a._Points.trim() : '';
+          if (rawPts) {
+            const normalized = rawPts.replace(/\s*\/\s*/g, ' / ').replace(/\s{2,}/g, ' ').trim();
+            display = /\bpts?\b|\bpoints?\b/i.test(normalized) ? normalized : `${normalized}`;
+          } else {
+            const s = a._Score?.toString().trim();
+            const m = (a._ScoreMaxValue || a._PointPossible || '').toString().trim();
+            if (s && m) display = `${parseFloat(s).toFixed(2)} / ${parseFloat(m).toFixed(2)}`;
+            else if (s) display = `${parseFloat(s).toFixed(2)}`;
+          }
+          if (!display) display = '—';
+          return (
+            <span className="text-sm text-gray-900">
+              {display}
             </span>
           );
         },
