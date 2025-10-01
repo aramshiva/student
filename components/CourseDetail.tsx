@@ -92,6 +92,47 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const onUpdateAssignmentScore = React.useCallback((id: string, score: string, max: string) => {
     setEditableAssignments(prev => prev.map(a => a._GradebookID === id ? { ...a, _Score: score, _ScoreMaxValue: max } : a));
   }, []);
+
+  const onEditAssignmentType = React.useCallback((id: string, newType: string) => {
+    setEditableAssignments(prev => prev.map(a => a._GradebookID === id ? { ...a, _Type: newType } : a));
+  }, []);
+
+  const onEditAssignmentName = React.useCallback((id: string, name: string) => {
+    setEditableAssignments(prev => prev.map(a => a._GradebookID === id ? { ...a, _Measure: name } : a));
+  }, []);
+
+  const onCreateHypothetical = React.useCallback(() => {
+    const newId = 'hypo-' + Date.now().toString(36);
+    const defaultType = (editableAssignments[0]?._Type) || 'Homework';
+    const newAssignment: Assignment = {
+      _Date: new Date().toISOString(),
+      _DisplayScore: '',
+      _DropEndDate: '',
+      _DropStartDate: '',
+      _DueDate: new Date().toISOString(),
+      _GradebookID: newId,
+      _HasDropBox: 'false',
+      _Measure: 'Untitled Assignment',
+      _MeasureDescription: 'Hypothetical Assignment created in hypothetical mode',
+      _Notes: '',
+      _Point: '',
+      _PointPossible: '',
+      _Points: '',
+      _Score: '',
+      _ScoreCalValue: '',
+      _ScoreMaxValue: '',
+      _ScoreType: 'Score',
+      _StudentID: '',
+      _TeacherID: '',
+      _TimeSincePost: '0',
+      _TotalSecondsSincePost: '0',
+      _Type: defaultType,
+      Resources: {},
+      Standards: {},
+    };
+    setEditableAssignments(prev => [newAssignment, ...prev]);
+    if (!hypotheticalMode) setHypotheticalMode(true);
+  }, [editableAssignments, hypotheticalMode]);
   const icon = getCourseIcon(course._ImageType);
 
   const getAssignmentTypeColor = (type: string) => {
@@ -169,6 +210,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
           onEditScore={onUpdateAssignmentScore}
           hypotheticalMode={hypotheticalMode}
           onToggleHypothetical={setHypotheticalMode}
+          onEditType={onEditAssignmentType}
+          onEditName={onEditAssignmentName}
+          onCreateHypothetical={onCreateHypothetical}
         />
       </div>
     </div>

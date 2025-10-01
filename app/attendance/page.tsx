@@ -262,25 +262,10 @@ export default function AttendancePage() {
       ) : (
         <div className="space-y-6">
           <div className="text-sm text-gray-500 flex flex-wrap gap-4">
-            {dataShape.schoolName && (
-              <span>School: {dataShape.schoolName}</span>
-            )}
-            {dataShape.type && <span>Type: {dataShape.type}</span>}
-            {typeof dataShape.startPeriod !== "undefined" &&
-              typeof dataShape.endPeriod !== "undefined" && (
-                <span>
-                  Periods: {dataShape.startPeriod} - {dataShape.endPeriod}
-                </span>
-              )}
-            <span>Total Absence Days: {dataShape.absenceDays.length}</span>
+            <span>{dataShape.absenceDays.length} days absent total.</span>
           </div>
 
-          <Card className="p-4">
-            <CardHeader className="pt-5">
-              <CardTitle>Period Totals</CardTitle>
-              <CardDescription>Summary of missed periods</CardDescription>
-            </CardHeader>
-            <Table>
+            <Table className="px-8">
               <TableHeader>
                 <TableRow>
                   <TableHead>Period</TableHead>
@@ -355,7 +340,6 @@ export default function AttendancePage() {
                 })()}
               </TableBody>
             </Table>
-          </Card>
           {dataShape.absenceDays.map((a) => {
             const isOpen = expanded[a.date] ?? false;
             return (

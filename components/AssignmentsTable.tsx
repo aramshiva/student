@@ -41,6 +41,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select";
 
 interface AssignmentsTableProps {
   assignments: Assignment[];
@@ -48,6 +49,9 @@ interface AssignmentsTableProps {
   onEditScore?: (id: string, score: string, max: string) => void;
   hypotheticalMode?: boolean;
   onToggleHypothetical?: (val: boolean) => void;
+  onEditType?: (id: string, newType: string) => void;
+  onEditName?: (id: string, name: string) => void;
+  onCreateHypothetical?: () => void;
 }
 
 function AssignmentsTableBase({
@@ -56,6 +60,9 @@ function AssignmentsTableBase({
   onEditScore,
   hypotheticalMode = false,
   onToggleHypothetical,
+  onEditType,
+  onEditName,
+  onCreateHypothetical,
 }: AssignmentsTableProps) {
   const decodeEntities = React.useCallback(
     (input: string | undefined | null): string => {
@@ -204,10 +211,12 @@ function AssignmentsTableBase({
             <div className="max-w-[260px] md:max-w-[340px] xl:max-w-[420px] space-y-1 pl-5">
               {hypotheticalMode ? (
                 <Input
-                  type="text"                  value={renamed}
+                  type="text"
+                  value={renamed}
                   onChange={(e) => {
                     const value = e.target.value;
                     setDraftNames(prev => ({ ...prev, [a._GradebookID]: value }));
+                    onEditName?.(a._GradebookID, value);
                   }}
                   placeholder="Assignment name"
                 />
@@ -283,11 +292,39 @@ function AssignmentsTableBase({
         id: "type",
         accessorFn: (row) => row._Type,
         header: "Type",
-        cell: ({ row }) => (
-          <Badge className={`${getTypeColor(row.original._Type)}`}>
-            {row.original._Type}
-          </Badge>
-        ),
+        cell: ({ row }) => {
+          const uniqueTypes = Array.from(new Set(assignments
+            .map(a => (a._Type || '').trim())
+            .filter(t => t.length > 0)
+          ));
+          const curType = row.original._Type && row.original._Type.trim().length > 0
+            ? row.original._Type
+            : (uniqueTypes[0] || '');
+
+          if (!hypotheticalMode || uniqueTypes.length < 2) {
+            return (
+              <Badge className={`${getTypeColor(curType || 'Uncategorized')}`}>
+                {curType || 'Uncategorized'}
+              </Badge>
+            );
+          }
+
+          return (
+            <Select
+              value={curType}
+              onValueChange={(val) => onEditType?.(row.original._GradebookID, val)}
+            >
+              <SelectTrigger size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {uniqueTypes.map(t => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        },
       },
       {
         id: "date",
@@ -448,6 +485,9 @@ function AssignmentsTableBase({
       handleDraftChange,
       flushUpdate,
       draftNames,
+      assignments,
+      onEditType,
+      onEditName,
     ]
   );
 
@@ -495,6 +535,11 @@ function AssignmentsTableBase({
           <p>Hypothetical Mode is a powerful mode allowing you to see how certain grades on assignments will affect your grade.</p>
         </TooltipContent>
       </Tooltip>
+      {hypotheticalMode && (
+        <Button variant="outline" size="sm" onClick={() => onCreateHypothetical?.()}>
+          Create Assignment
+        </Button>
+      )}
       <Input
         placeholder="Filter assignments..."
         value={
