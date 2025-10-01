@@ -184,7 +184,7 @@ export default function SchedulePage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={TODAY_SENTINEL.toString()}>Today ( {new Date().toLocaleDateString()} )</SelectItem>
+              <SelectItem value={TODAY_SENTINEL.toString()}>Today ({new Date().toLocaleDateString()})</SelectItem>
               {terms.map((term) => (
                 <SelectItem
                   key={term.termIndex}
