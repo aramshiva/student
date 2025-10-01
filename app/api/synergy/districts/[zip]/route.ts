@@ -3,8 +3,9 @@ import { SynergyClient } from "@/lib/synergy";
 
 const ZIP_REGEX = /^[0-9]{5}$/;
 
-export async function GET(_req: NextRequest, context: { params: { zip: string } }) {
-  const zip = (context.params.zip || "").trim();
+export async function GET(_req: NextRequest, context: { params: Promise<{ zip: string }> }) {
+  const params = await context.params;
+  const zip = (params.zip || "").trim();
   if (!zip) {
     return NextResponse.json({ error: "Missing zip" }, { status: 400 });
   }
