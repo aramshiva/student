@@ -155,9 +155,11 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
     return "bg-gray-100 text-gray-800";
   };
 
+  const [chartSticky, setChartSticky] = React.useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b sticky top-0 z-20">
+      <div className="bg-white shadow-sm border-b sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <button
@@ -166,39 +168,47 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
             >
               ← Back to Dashboard
             </button>
-
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-4">
-                <span className="text-3xl">{icon}</span>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
+            <div className={`flex ${chartSticky ? 'items-center' : 'items-start'} justify-between gap-4`}>                
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-2xl md:text-3xl shrink-0">{icon}</span>
+                <div className="min-w-0">
+                  <h1 className="text-xl md:text-2xl font-semibold text-gray-900 truncate">
                     {course._CourseName}
                   </h1>
-                  <p className="text-gray-600">
-                    {course._CourseID} • Period {course._Period} • Room{" "}
-                    {course._Room}
-                  </p>
-                  <p className="text-gray-600">
-                    {course._Staff} • {course._StaffEMail}
-                  </p>
+                  {!chartSticky && (
+                    <>
+                      <p className="text-gray-600 text-sm">
+                        {course._CourseID} • Period {course._Period} • Room {course._Room}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        {course._Staff} • {course._StaffEMail}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
-
-              <div className="text-right">
-                <div className={`inline-flex px-4 py-2 rounded-lg text-lg font-bold ${gradeColorClass}`}>
-                  {hypotheticalMode ? (simulatedLetter || currentMark?._CalculatedScoreString || "N/A") : (currentMark?._CalculatedScoreString || "N/A")}
+              <div className="text-right shrink-0">
+                <div className={`inline-flex px-3 py-1.5 rounded-md text-base md:text-lg font-bold ${gradeColorClass}`}>
+                  {hypotheticalMode ? (simulatedLetter || currentMark?._CalculatedScoreString || 'N/A') : (currentMark?._CalculatedScoreString || 'N/A')}
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs md:text-sm text-gray-600 mt-1">
                   {hypotheticalMode ? (Number.isFinite(recalcTotals.pct) ? `${Math.round(recalcTotals.pct)}%` : 'N/A') : (currentMark?._CalculatedScoreRaw || 'N/A') + '%'}
                 </p>
               </div>
             </div>
+            {chartSticky && (
+              <div className="mt-2 -mb-2 -mx-1">
+                <GradeChart assignments={workingAssignments} sticky={chartSticky} onStickyChange={setChartSticky} forceStickyInHeader minimal />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
-        <GradeChart assignments={workingAssignments} />
+        {!chartSticky && (
+          <GradeChart assignments={workingAssignments} sticky={chartSticky} onStickyChange={setChartSticky} />
+        )}
         {hypotheticalMode && recalculatedBreakdown ? (
           <GradeBreakdown calcs={recalculatedBreakdown} />
         ) : (currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
