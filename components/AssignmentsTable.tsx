@@ -212,7 +212,6 @@ function AssignmentsTableBase({
           const desc = a._MeasureDescription
             ? decodeEntities(a._MeasureDescription)
             : "";
-          const notes = a._Notes ? decodeEntities(a._Notes) : "";
           const id = String(a._GradebookID ?? row.id);
           const isExpanded = expanded.has(id);
           const shouldTruncate =
@@ -234,7 +233,7 @@ function AssignmentsTableBase({
                   placeholder="Assignment name"
                 />
               ) : (
-                <div className="font-medium text-gray-900 break-words whitespace-pre-line leading-snug">
+                <div className="font-medium text-black break-words whitespace-pre-line leading-snug">
                   {originalMeasure}
                 </div>
               )}
@@ -262,7 +261,7 @@ function AssignmentsTableBase({
                       <button
                         type="button"
                         onClick={() => toggleExpanded(id)}
-                        className="px-1 py-0.5 rounded text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300"
+                        className="px-1 py-0.5 rounded text-gray-500 hover:text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300"
                         aria-label="Expand full description"
                       >
                         …
@@ -283,20 +282,6 @@ function AssignmentsTableBase({
                     )}
                 </div>
               )}
-              {notes &&
-                (() => {
-                  const lower = notes.trim().toLowerCase();
-                  const isMissing = lower === "missing";
-                  return (
-                    <div
-                      className={`text-sm ${
-                        isMissing ? "text-red-600" : "text-blue-600"
-                      } italic break-words whitespace-pre-line leading-snug`}
-                    >
-                      Note: {notes}
-                    </div>
-                  );
-                })()}
             </div>
           );
         },
@@ -364,7 +349,7 @@ function AssignmentsTableBase({
           return av === bv ? 0 : av < bv ? -1 : 1;
         },
         cell: ({ row }) => (
-          <span className="text-sm text-gray-900">
+          <span className="text-sm text-black">
             {formatDate(row.original._Date)}
           </span>
         ),
@@ -384,7 +369,7 @@ function AssignmentsTableBase({
           if (!hypotheticalMode) {
             return (
               <div className="text-sm">
-                <div className="font-medium text-gray-900">
+                <div className="font-medium text-black">
                   {a._DisplayScore}
                 </div>
               </div>
@@ -466,7 +451,7 @@ function AssignmentsTableBase({
                   style={{ width: `${Math.min(pct, 100)}%` }}
                 />
               </div>
-              <span className="text-sm font-medium text-gray-900 min-w-[3rem]">{pct}%</span>
+              <span className="text-sm font-medium text-black min-w-[3rem]">{pct}%</span>
             </div>
           );
         },
@@ -476,7 +461,7 @@ function AssignmentsTableBase({
         accessorFn: (row) => row._DueDate,
         header: "Due Date",
         cell: ({ row }) => (
-          <span className="text-sm text-gray-900">
+          <span className="text-sm text-black">
             {formatDate(row.original._DueDate)}
           </span>
         ),
@@ -487,9 +472,20 @@ function AssignmentsTableBase({
         header: "Notes",
         cell: ({ row }) => {
           const decoded = decodeEntities(row.original._Notes);
+          const lower = decoded.trim().toLowerCase();
+          const isMissing = lower === "missing";
           return (
-            <span className="text-sm text-gray-900 break-words whitespace-pre-line">
+            <span className="text-sm text-black break-words whitespace-pre-line">
               {decoded}
+              {isMissing && (
+                <div
+                  className={`text-sm ${
+                    isMissing ? "text-red-600" : "text-blue-600"
+                  } italic break-words whitespace-pre-line leading-snug`}
+                >
+                  Note: {decoded}
+                </div>
+              )}
             </span>
           );
         },
@@ -512,7 +508,7 @@ function AssignmentsTableBase({
           }
           if (!display) display = '—';
           return (
-            <span className="text-sm text-gray-900">
+            <span className="text-sm text-black">
               {display}
             </span>
           );
@@ -632,7 +628,7 @@ function AssignmentsTableBase({
                     className="hover:bg-gray-50"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="py-3">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),

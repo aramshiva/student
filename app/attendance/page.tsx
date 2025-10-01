@@ -390,7 +390,7 @@ export default function AttendancePage() {
           })}
         </div>
       )}
-      <p className="text-xs text-gray-400 mt-4">
+      <p className="text-xs text-gray-500 mt-4">
         Rendered {dataShape?.absenceDays.length || 0} absence day(s).
       </p>
     </div>

@@ -45,7 +45,7 @@ export default function GradebookPage() {
 
   const computeAndStoreQuickStats = useCallback((root: GradebookLike) => {
     try {
-      const gbRoot: GradebookLike = root?.Gradebook ? (root as GradebookLike).Gradebook! : root || {};
+      const gbRoot: GradebookLike = root?.Gradebook ? (root as GradebookLike).Gradebook! : root || {}; // tf is this
       const courses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
       const gpaScale = loadCustomGPAScale();
       let gradedCourses = 0;

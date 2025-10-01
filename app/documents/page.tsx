@@ -353,7 +353,7 @@ export default function DocumentsPage() {
           </Table>
         </Card>
       )}
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-gray-500">
         Showing {docs.length} document(s).
       </p>
     </div>

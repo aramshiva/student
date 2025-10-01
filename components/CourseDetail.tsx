@@ -269,7 +269,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
           <div className="py-6">
             <button
               onClick={onBack}
-              className="mb-4 flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="mb-4 flex items-center text-sm text-gray-500 hover:text-black transition-colors"
             >
               ← Back to Dashboard
             </button>
@@ -279,16 +279,16 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-2xl md:text-3xl shrink-0">{icon}</span>
                 <div className="min-w-0">
-                  <h1 className="text-xl md:text-2xl font-semibold text-gray-900 truncate">
+                  <h1 className="text-xl md:text-2xl font-semibold text-black truncate">
                     {course._CourseName}
                   </h1>
                   {!chartSticky && (
                     <>
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-gray-500 text-sm">
                         {course._CourseID} • Period {course._Period} • Room{" "}
                         {course._Room}
                       </p>
-                      <p className="text-gray-600 text-sm">
+                      <p className="text-gray-500 text-sm">
                         {course._Staff} • {course._StaffEMail}
                       </p>
                     </>
@@ -305,7 +305,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                       "N/A"
                     : currentMark?._CalculatedScoreString || "N/A"}
                 </div>
-                <p className="text-xs md:text-sm text-gray-600 mt-1">
+                <p className="text-xs md:text-sm text-gray-500 mt-1">
                   {hypotheticalMode
                     ? Number.isFinite(recalcTotals.pct)
                       ? `${Math.round(recalcTotals.pct)}%`

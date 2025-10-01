@@ -112,7 +112,7 @@ export default function Dashboard({
           </div>
           <div className="flex items-center space-x-4 md:self-start">
             <div className="text-right">
-              <div className="text-sm text-gray-600">GPA</div>
+              <div className="text-sm text-gray-500">GPA</div>
               <div className="text-2xl font-bold">{gpa}</div>
             </div>
           </div>
@@ -138,10 +138,10 @@ export default function Dashboard({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex flex-row space-x-5">
-                      <span className="font-semibold text-gray-900 text-lg">
+                      <span className="font-semibold text-black text-lg">
                         {course._Period}: {course._Title}
                       </span>
-                      <span className="text-gray-600 text-sm mt-1">
+                      <span className="text-gray-500 text-sm mt-1">
                         {course._Staff} • Room {course._Room}
                       </span>
                     </div>
@@ -150,7 +150,7 @@ export default function Dashboard({
                     <div className="text-3xl font-bold text-left">
                       {calculatedScore || "N/A"}
                     </div>
-                    <div className="text-sm text-gray-600 text-left">
+                    <div className="text-sm text-gray-500 text-left">
                       {rawScore > 0 ? `${rawScore.toFixed(1)}%` : "No grade"}
                     </div>
                   </div>

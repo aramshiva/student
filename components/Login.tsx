@@ -262,7 +262,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                         !districtSearchLoading &&
                         districts.length === 0 &&
                         !districtSearchError && (
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-gray-500">
                             No districts found. Try another ZIP or use a custom
                             URL.
                           </p>
@@ -298,7 +298,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                               >
                                 <div>
                                   <p className="font-medium">{d.name}</p>
-                                  <p className="text-[10px] text-gray-600">
+                                  <p className="text-[10px] text-gray-500">
                                     {d.address}
                                   </p>
                                 </div>
@@ -317,7 +317,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                         <button
                           type="button"
                           onClick={() => setShowCustomUrl(true)}
-                          className="text-xs underline text-gray-600 hover:text-black"
+                          className="text-xs underline text-gray-500 hover:text-black"
                         >
                           Use custom URL
                         </button>
@@ -391,7 +391,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           )}
           <LoginButton />
         </form>
-        <p className="text-gray-400 text-xs pt-5 w-full max-w-md mb-4">
+        <p className="text-gray-500 text-xs pt-5 w-full max-w-md mb-4">
           StudentVUE is a registered trademark of Edupoint Educational Systems,
           LLC. This project is not affiliated with Edupoint, or Synergy.
         </p>
