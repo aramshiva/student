@@ -317,7 +317,6 @@ export default function StudentDashboard() {
           <p className="text-sm text-muted-foreground">
             Here are your recent activity messages.
           </p>
-          {/* Optionally render more student info fields here if desired */}
         </div>
       </div>
 

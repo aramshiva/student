@@ -29,9 +29,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface GradeChartProps {
   assignments: Assignment[];
   onStickyChange?: (val: boolean) => void;
-  forceStickyInHeader?: boolean; // if true, do not render outer Card container styling beyond content wrapper
-  sticky?: boolean; // controlled sticky state from parent
-  minimal?: boolean; // compact, no header, reduced padding/height
+  forceStickyInHeader?: boolean; 
+  sticky?: boolean;
+  minimal?: boolean;
 }
 
 const chartConfig = {

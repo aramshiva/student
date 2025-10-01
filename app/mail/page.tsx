@@ -155,7 +155,6 @@ export default function MailPage() {
         </Card>
       </div>
 
-      {/* raw JSON debugger removed per request */}
     </div>
   );
 }
