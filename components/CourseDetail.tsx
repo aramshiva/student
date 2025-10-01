@@ -52,21 +52,43 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const recalcTotals = React.useMemo(() => {
     let earned = 0;
     let possible = 0;
+    const parsePoints = (pointsStr: string | undefined) => {
+      if (!pointsStr) return null;
+      const cleaned = pointsStr.replace(/of/i, "/");
+      const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+      if (!m) return null;
+      return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
+    };
     workingAssignments.forEach((a) => {
-      const score = a._Score ? parseFloat(a._Score) : NaN;
-      const max = a._ScoreMaxValue
-        ? parseFloat(a._ScoreMaxValue)
-        : a._PointPossible
-          ? parseFloat(a._PointPossible)
-          : NaN;
-      if (Number.isFinite(score) && Number.isFinite(max) && max > 0) {
+      let score: number | null = null;
+      let max: number | null = null;
+      if (hypotheticalMode) {
+        const parsed = parsePoints(a._Points);
+        if (parsed) {
+          score = parsed.e;
+          max = parsed.p;
+        }
+      }
+      if (score === null || max === null) {
+        const s = a._Score ? parseFloat(a._Score) : NaN;
+        const m = a._ScoreMaxValue
+          ? parseFloat(a._ScoreMaxValue)
+          : a._PointPossible
+            ? parseFloat(a._PointPossible)
+            : NaN;
+        if (Number.isFinite(s) && Number.isFinite(m)) {
+          score = s;
+          max = m;
+        }
+      }
+      if (score !== null && max !== null && Number.isFinite(score) && Number.isFinite(max) && max > 0) {
         earned += score;
         possible += max;
       }
     });
     const pct = possible > 0 ? (earned / possible) * 100 : NaN;
     return { earned, possible, pct };
-  }, [workingAssignments]);
+  }, [workingAssignments, hypotheticalMode]);
 
   const simulatedLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
   const gradeColorClass = getGradeColor(
@@ -92,13 +114,29 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       });
       workingAssignments.forEach((a) => {
         const type = a._Type || "Other";
-        const score = a._Score ? parseFloat(a._Score) : NaN;
-        const max = a._ScoreMaxValue
-          ? parseFloat(a._ScoreMaxValue)
-          : a._PointPossible
-            ? parseFloat(a._PointPossible)
-            : NaN;
-        if (!Number.isFinite(score) || !Number.isFinite(max) || max <= 0)
+        const parsePoints = (pointsStr: string | undefined) => {
+          if (!pointsStr) return null;
+          const cleaned = pointsStr.replace(/of/i, "/");
+          const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+          if (!m) return null;
+          return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
+        };
+        let score: number | null = null;
+        let max: number | null = null;
+        if (hypotheticalMode) {
+          const parsed = parsePoints(a._Points);
+            if (parsed) { score = parsed.e; max = parsed.p; }
+        }
+        if (score === null || max === null) {
+          const s = a._Score ? parseFloat(a._Score) : NaN;
+          const m = a._ScoreMaxValue
+            ? parseFloat(a._ScoreMaxValue)
+            : a._PointPossible
+              ? parseFloat(a._PointPossible)
+              : NaN;
+          if (Number.isFinite(s) && Number.isFinite(m)) { score = s; max = m; }
+        }
+        if (!Number.isFinite(score) || !Number.isFinite(max) || (max as number) <= 0)
           return;
         if (!byType[type]) {
           const original = originals.find((o) => o._Type === type);
@@ -108,8 +146,8 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
             weight: original?._Weight || "0%",
           };
         }
-        byType[type].points += score;
-        byType[type].possible += max;
+        byType[type].points += score as number;
+        byType[type].possible += max as number;
       });
       const weightSum =
         Object.values(byType).reduce(

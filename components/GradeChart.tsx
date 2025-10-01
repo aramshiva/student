@@ -72,23 +72,40 @@ export function GradeChart({
       let total = 0;
       let possible = 0;
       upTo.forEach((a) => {
-        const pts = a._Score
-          ? parseFloat(a._Score)
-          : a._Point
-            ? parseFloat(a._Point)
-            : NaN;
-        const ptsPossible = a._ScoreMaxValue
-          ? parseFloat(a._ScoreMaxValue)
-          : a._PointPossible
-            ? parseFloat(a._PointPossible)
-            : NaN;
+        let pts: number | null = null;
+        let ptsPossible: number | null = null;
+        if (typeof a._Points === 'string' && a._Points.includes('/')) {
+          const cleaned = a._Points.replace(/of/i, '/');
+          const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+          if (m) {
+            pts = parseFloat(m[1]);
+            ptsPossible = parseFloat(m[2]);
+          }
+        }
+        if (pts === null || ptsPossible === null) {
+          const scoreVal = a._Score
+            ? parseFloat(a._Score)
+            : a._Point
+              ? parseFloat(a._Point)
+              : NaN;
+          const maxVal = a._ScoreMaxValue
+            ? parseFloat(a._ScoreMaxValue)
+            : a._PointPossible
+              ? parseFloat(a._PointPossible)
+              : NaN;
+          if (Number.isFinite(scoreVal) && Number.isFinite(maxVal)) {
+            pts = scoreVal;
+            ptsPossible = maxVal;
+          }
+        }
         if (
+          pts !== null && ptsPossible !== null &&
           Number.isFinite(pts) &&
           Number.isFinite(ptsPossible) &&
-          ptsPossible > 0
+          (ptsPossible as number) > 0
         ) {
-          total += pts;
-          possible += ptsPossible;
+          total += pts as number;
+          possible += ptsPossible as number;
         }
       });
       const grade = possible > 0 ? Math.round((total / possible) * 100) : 0;
