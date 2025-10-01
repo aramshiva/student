@@ -201,7 +201,6 @@ export default function SchedulePage() {
         <div className="p-8">No schedule found.</div>
       ) : (
         <Table>
-          <TableCaption>Your current class schedule.</TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Period</TableHead>
