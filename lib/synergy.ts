@@ -10,6 +10,12 @@ export type Attachment = Record<string, unknown>;
 export type AuthToken = Record<string, unknown>;
 export type Schedule = Record<string, unknown>;
 
+export interface DistrictInfo {
+  name: string;
+  address: string;
+  host: string; // synergy server url
+}
+
 const alwaysArray = new Set<string>([
   "SynergyMailDataXML.FolderListViews.FolderListViewXML",
   "SynergyMailDataXML.InboxItemListings.MessageXML",
@@ -43,15 +49,21 @@ const escapeXmlText = (s: string) =>
 const sanitizeDomain = (raw: string) =>
   raw.replace(/^https?:\/\//i, "").replace(/\/+$/g, "");
 
+interface MinimalFetchInit {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string | ArrayBuffer | Uint8Array;
+  signal?: AbortSignal;
+}
 async function fetchWithTimeout(
   input: RequestInfo,
-  init: RequestInit = {},
+  init: MinimalFetchInit = {},
   ms = 15000,
 ) {
   const c = new AbortController();
   const id = setTimeout(() => c.abort(), ms);
   try {
-    return await fetch(input, { ...init, signal: c.signal });
+    return await fetch(input, { ...(init as any), signal: c.signal }); // eslint-disable-line @typescript-eslint/no-explicit-any
   } finally {
     clearTimeout(id);
   }
@@ -70,6 +82,66 @@ export class SynergyClient {
     this.domain = sanitizeDomain(domain);
     this.userID = userID;
     this.password = password;
+  }
+
+  static async districtLookup(zip: string | number): Promise<DistrictInfo[]> {
+    const zipStr = String(zip).trim();
+    if (!/^\d{5}$/.test(zipStr)) {
+      throw new Error("Invalid ZIP code (expect 5 digits)");
+    }
+    const paramStr = `&lt;Parms&gt;&lt;Key&gt;5E4B7859-B805-474B-A833-FDB15D205D40&lt;/Key&gt;&lt;MatchToDistrictZipCode&gt;${zipStr}&lt;/MatchToDistrictZipCode&gt;&lt;/Parms&gt;`;
+    const soapBody = `<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <ProcessWebServiceRequest xmlns=\"http://edupoint.com/webservices/\">\n      <userID>EdupointDistrictInfo</userID>\n      <password>Edup01nt</password>\n      <skipLoginLog>1</skipLoginLog>\n      <parent>0</parent>\n      <webServiceHandleName>HDInfoServices</webServiceHandleName>\n      <methodName>GetMatchingDistrictList</methodName>\n      <paramStr>${paramStr}</paramStr>\n    </ProcessWebServiceRequest>\n  </soap:Body>\n</soap:Envelope>`;
+
+    const res = await fetch("https://support.edupoint.com/Service/HDInfoCommunication.asmx", {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        SOAPAction: "http://edupoint.com/webservices/ProcessWebServiceRequest",
+      },
+      body: soapBody,
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(`District lookup failed HTTP ${res.status}`);
+    }
+    const outerParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "_" });
+    let outer: unknown;
+    try {
+      outer = outerParser.parse(text);
+    } catch {
+      throw new Error("Failed to parse district SOAP response");
+    }
+    const resultStr = (outer as any)?.["soap:Envelope"]?.["soap:Body"]?.ProcessWebServiceRequestResponse?.ProcessWebServiceRequestResult as unknown; // eslint-disable-line @typescript-eslint/no-explicit-any
+    if (!resultStr || typeof resultStr !== "string") {
+      return [];
+    }
+    const unescaped = (resultStr as string)
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&");
+    let inner: unknown;
+    try {
+      inner = outerParser.parse(unescaped);
+    } catch {
+      return [];
+    }
+    const districtContainer = (inner as any)?.DistrictLists?.DistrictList || (inner as any)?.DistrictLists?.DistrictInfos; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const rawNodes: unknown = districtContainer?.DistrictInfo;
+    const districtNodes: unknown[] = Array.isArray(rawNodes)
+      ? rawNodes
+      : rawNodes
+        ? [rawNodes]
+        : [];
+    const districts = districtNodes
+      .map((d) => {
+        const obj = d as Record<string, unknown>;
+        const name = (obj._Name || obj.Name || "") as string;
+        const address = (obj._Address || obj.Address || "") as string;
+        const host = (obj._PvueURL || obj.PvueURL || "") as string;
+        return { name, address, host } satisfies DistrictInfo;
+      })
+      .filter((d) => d.name && d.host);
+    return districts;
   }
 
   private endpoint() {
