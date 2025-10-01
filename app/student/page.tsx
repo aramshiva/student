@@ -115,7 +115,9 @@ export default function StudentDashboard() {
   const [photoBase64, setPhotoBase64] = useState("");
   const [permId, setPermId] = useState("");
   const [todaySchedule, setTodaySchedule] = useState<TodayScheduleClass[]>([]);
-  const [todayScheduleError, setTodayScheduleError] = useState<string | null>(null);
+  const [todayScheduleError, setTodayScheduleError] = useState<string | null>(
+    null,
+  );
   useEffect(() => {
     (async () => {
       const credsRaw = localStorage.getItem("studentvue-creds");
@@ -248,11 +250,14 @@ export default function StudentDashboard() {
         } else {
           const schedJson = await scheduleRes.json();
           const scheduleRoot =
-            schedJson?.StudentClassSchedule ?? schedJson?.StudentClassList ?? schedJson;
+            schedJson?.StudentClassSchedule ??
+            schedJson?.StudentClassList ??
+            schedJson;
           const normalize = <T,>(v: T | T[] | undefined | null): T[] =>
             !v ? [] : Array.isArray(v) ? v : [v];
           const todayClassesRaw = normalize(
-            scheduleRoot?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes?.ClassInfo,
+            scheduleRoot?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo
+              ?.Classes?.ClassInfo,
           );
 
           if (todayClassesRaw.length) {
@@ -361,10 +366,10 @@ export default function StudentDashboard() {
             {todayScheduleError
               ? todayScheduleError
               : todaySchedule.length
-              ? `Showing ${todaySchedule.length} classes`
-              : loading
-              ? "Loading..."
-              : "No classes found for today"}
+                ? `Showing ${todaySchedule.length} classes`
+                : loading
+                  ? "Loading..."
+                  : "No classes found for today"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -376,9 +381,12 @@ export default function StudentDashboard() {
                     {c.period.toString().padStart(2, "0")}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate" title={c.className}>{c.className}</p>
+                    <p className="font-medium truncate" title={c.className}>
+                      {c.className}
+                    </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {c.teacher}{c.room ? ` • Rm ${c.room}` : ""}
+                      {c.teacher}
+                      {c.room ? ` • Rm ${c.room}` : ""}
                     </p>
                   </div>
                   <div className="text-xs text-muted-foreground w-24 text-right">
@@ -387,7 +395,9 @@ export default function StudentDashboard() {
                         {c.start} –<br />
                         {c.end}
                       </>
-                    ) : ''}
+                    ) : (
+                      ""
+                    )}
                   </div>
                 </li>
               ))}

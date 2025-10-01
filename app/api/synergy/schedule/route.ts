@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     if (!body)
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
 
-  const { district_url, username, password, reportPeriod, term_index } = body;
+    const { district_url, username, password, reportPeriod, term_index } = body;
 
     if (!district_url || !username || !password) {
       return NextResponse.json(
@@ -24,10 +24,10 @@ export async function POST(req: Request) {
       String(password),
     );
 
-  const param: Record<string, unknown> = {};
-  if (term_index != null) param.TermIndex = Number(term_index);
-  else if (reportPeriod != null) param.ReportPeriod = reportPeriod;
-  const raw = await client.call("StudentClassList", param);
+    const param: Record<string, unknown> = {};
+    if (term_index != null) param.TermIndex = Number(term_index);
+    else if (reportPeriod != null) param.ReportPeriod = reportPeriod;
+    const raw = await client.call("StudentClassList", param);
 
     const schedule =
       raw && typeof raw === "object" && "StudentClassList" in raw

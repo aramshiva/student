@@ -265,81 +265,77 @@ export default function AttendancePage() {
             <span>{dataShape.absenceDays.length} days absent total.</span>
           </div>
 
-            <Table className="px-8">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Period</TableHead>
-                  <TableHead>Activities</TableHead>
-                  <TableHead>Excused</TableHead>
-                  <TableHead>Tardies</TableHead>
-                  <TableHead>Unexcused</TableHead>
-                  <TableHead>Unexcused Tardies</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(() => {
-                  const nums = new Set<number>();
-                  const pushNums = (
-                    list?: { number: number; total: number }[],
-                  ) => list?.forEach((l) => nums.add(l.number));
-                  pushNums(dataShape?.totals.activities);
-                  pushNums(dataShape?.totals.excused);
-                  pushNums(dataShape?.totals.tardies);
-                  pushNums(dataShape?.totals.unexcused);
-                  pushNums(dataShape?.totals.unexcusedTardies);
-                  Object.keys(periodNameMap).forEach((k) =>
-                    nums.add(Number(k)),
-                  );
-                  dataShape?.absenceDays.forEach((day) =>
-                    day.periods.forEach((p) => nums.add(p.number)),
-                  );
-                  const activePeriodNums = new Set<number>();
-                  Object.keys(periodNameMap).forEach((k) =>
-                    activePeriodNums.add(Number(k)),
-                  );
-                  dataShape?.absenceDays.forEach((day) =>
-                    day.periods.forEach((p) => activePeriodNums.add(p.number)),
-                  );
-                  const sorted = Array.from(nums).sort((a, b) => a - b);
-                  return sorted
-                    .map((n) => {
-                      const find = (
-                        list?: { number: number; total: number }[],
-                      ) => list?.find((l) => l.number === n)?.total ?? 0;
-                      const a = find(dataShape?.totals.activities);
-                      const e = find(dataShape?.totals.excused);
-                      const t = find(dataShape?.totals.tardies);
-                      const u = find(dataShape?.totals.unexcused);
-                      const ut = find(dataShape?.totals.unexcusedTardies);
-                      if (
-                        !periodNameMap[n] &&
-                        a + e + t + u + ut === 0 &&
-                        !activePeriodNums.has(n)
-                      )
-                        return null;
-                      const label = periodNameMap[n]
-                        ? `${n} – ${periodNameMap[n]}`
-                        : String(n);
-                      return (
-                        <TableRow key={n}>
-                          <TableCell
-                            className="max-w-[260px] truncate"
-                            title={label}
-                          >
-                            {label}
-                          </TableCell>
-                          <TableCell>{a}</TableCell>
-                          <TableCell>{e}</TableCell>
-                          <TableCell>{t}</TableCell>
-                          <TableCell>{u}</TableCell>
-                          <TableCell>{ut}</TableCell>
-                        </TableRow>
-                      );
-                    })
-                    .filter(Boolean);
-                })()}
-              </TableBody>
-            </Table>
+          <Table className="px-8">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Period</TableHead>
+                <TableHead>Activities</TableHead>
+                <TableHead>Excused</TableHead>
+                <TableHead>Tardies</TableHead>
+                <TableHead>Unexcused</TableHead>
+                <TableHead>Unexcused Tardies</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(() => {
+                const nums = new Set<number>();
+                const pushNums = (list?: { number: number; total: number }[]) =>
+                  list?.forEach((l) => nums.add(l.number));
+                pushNums(dataShape?.totals.activities);
+                pushNums(dataShape?.totals.excused);
+                pushNums(dataShape?.totals.tardies);
+                pushNums(dataShape?.totals.unexcused);
+                pushNums(dataShape?.totals.unexcusedTardies);
+                Object.keys(periodNameMap).forEach((k) => nums.add(Number(k)));
+                dataShape?.absenceDays.forEach((day) =>
+                  day.periods.forEach((p) => nums.add(p.number)),
+                );
+                const activePeriodNums = new Set<number>();
+                Object.keys(periodNameMap).forEach((k) =>
+                  activePeriodNums.add(Number(k)),
+                );
+                dataShape?.absenceDays.forEach((day) =>
+                  day.periods.forEach((p) => activePeriodNums.add(p.number)),
+                );
+                const sorted = Array.from(nums).sort((a, b) => a - b);
+                return sorted
+                  .map((n) => {
+                    const find = (list?: { number: number; total: number }[]) =>
+                      list?.find((l) => l.number === n)?.total ?? 0;
+                    const a = find(dataShape?.totals.activities);
+                    const e = find(dataShape?.totals.excused);
+                    const t = find(dataShape?.totals.tardies);
+                    const u = find(dataShape?.totals.unexcused);
+                    const ut = find(dataShape?.totals.unexcusedTardies);
+                    if (
+                      !periodNameMap[n] &&
+                      a + e + t + u + ut === 0 &&
+                      !activePeriodNums.has(n)
+                    )
+                      return null;
+                    const label = periodNameMap[n]
+                      ? `${n} – ${periodNameMap[n]}`
+                      : String(n);
+                    return (
+                      <TableRow key={n}>
+                        <TableCell
+                          className="max-w-[260px] truncate"
+                          title={label}
+                        >
+                          {label}
+                        </TableCell>
+                        <TableCell>{a}</TableCell>
+                        <TableCell>{e}</TableCell>
+                        <TableCell>{t}</TableCell>
+                        <TableCell>{u}</TableCell>
+                        <TableCell>{ut}</TableCell>
+                      </TableRow>
+                    );
+                  })
+                  .filter(Boolean);
+              })()}
+            </TableBody>
+          </Table>
           {dataShape.absenceDays.map((a) => {
             const isOpen = expanded[a.date] ?? false;
             return (

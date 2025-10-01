@@ -94,14 +94,14 @@ export default function Dashboard({
                   }
                 >
                   <SelectTrigger className="w-[260px]">
-                    <SelectValue className="text-xs" placeholder="Select period" />
+                    <SelectValue
+                      className="text-xs"
+                      placeholder="Select period"
+                    />
                   </SelectTrigger>
                   <SelectContent className="p-1">
                     {reportingPeriods.map((rp) => (
-                      <SelectItem
-                        key={rp.index}
-                        value={rp.index.toString()}
-                      >
+                      <SelectItem key={rp.index} value={rp.index.toString()}>
                         {rp.label} ({rp.start} – {rp.end})
                       </SelectItem>
                     ))}

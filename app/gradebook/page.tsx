@@ -7,72 +7,92 @@ import Loading from "@/components/loadingfunc";
 import { GradebookData, Course } from "@/types/gradebook";
 
 export default function GradebookPage() {
-  const [gradebookData, setGradebookData] = useState<GradebookData | null>(null);
+  const [gradebookData, setGradebookData] = useState<GradebookData | null>(
+    null,
+  );
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reportingPeriods, setReportingPeriods] = useState<{
-    index: number;
-    label: string;
-    start: string;
-    end: string;
-  }[]>([]);
-  const [selectedReportingPeriod, setSelectedReportingPeriod] = useState<number | null>(null);
+  const [reportingPeriods, setReportingPeriods] = useState<
+    {
+      index: number;
+      label: string;
+      start: string;
+      end: string;
+    }[]
+  >([]);
+  const [selectedReportingPeriod, setSelectedReportingPeriod] = useState<
+    number | null
+  >(null);
   const REPORTING_PERIOD_STORAGE_KEY = "studentvue-last-reporting-period";
 
-  const fetchGradebook = useCallback(async (reportPeriodIndex: number | null = null) => {
-    const creds = localStorage.getItem("studentvue-creds");
-    if (!creds) {
-      window.location.href = "/";
-      return;
-    }
-    const credentials = JSON.parse(creds);
-    setIsLoading(true);
-    setError(null);
-    try {
-      const body = reportPeriodIndex != null
-        ? { ...credentials, reportPeriod: reportPeriodIndex }
-        : credentials;
-      const res = await fetch('/api/synergy/gradebook', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      const data = await res.json();
-      if (data["@ErrorMessage"]) {
-        throw new Error(data["@ErrorMessage"]);
+  const fetchGradebook = useCallback(
+    async (reportPeriodIndex: number | null = null) => {
+      const creds = localStorage.getItem("studentvue-creds");
+      if (!creds) {
+        window.location.href = "/";
+        return;
       }
-      const periodArrayRaw = data?.ReportingPeriods?.ReportPeriod;
-      type RawRP = { _Index?: string; _GradePeriod?: string; _StartDate?: string; _EndDate?: string };
-      const periodsRaw: RawRP[] = periodArrayRaw
-        ? (Array.isArray(periodArrayRaw) ? periodArrayRaw : [periodArrayRaw])
-        : [];
-      const mapped = periodsRaw.map((p) => ({
-        index: Number(p?._Index || 0),
-        label: p?._GradePeriod || `Period ${p?._Index}`,
-        start: p?._StartDate || '',
-        end: p?._EndDate || '',
-      }));
-      setReportingPeriods(mapped);
-      const currentIndex = reportPeriodIndex != null
-        ? reportPeriodIndex
-        : (data?.ReportingPeriod?._Index != null ? Number(data.ReportingPeriod._Index) : (mapped[0]?.index ?? 0));
-      setSelectedReportingPeriod(currentIndex);
+      const credentials = JSON.parse(creds);
+      setIsLoading(true);
+      setError(null);
       try {
-        localStorage.setItem(
-          REPORTING_PERIOD_STORAGE_KEY,
-          String(currentIndex)
-        );
-      } catch {}
-      setGradebookData({ data });
-      setSelectedCourse(null);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        const body =
+          reportPeriodIndex != null
+            ? { ...credentials, reportPeriod: reportPeriodIndex }
+            : credentials;
+        const res = await fetch("/api/synergy/gradebook", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        if (data["@ErrorMessage"]) {
+          throw new Error(data["@ErrorMessage"]);
+        }
+        const periodArrayRaw = data?.ReportingPeriods?.ReportPeriod;
+        type RawRP = {
+          _Index?: string;
+          _GradePeriod?: string;
+          _StartDate?: string;
+          _EndDate?: string;
+        };
+        const periodsRaw: RawRP[] = periodArrayRaw
+          ? Array.isArray(periodArrayRaw)
+            ? periodArrayRaw
+            : [periodArrayRaw]
+          : [];
+        const mapped = periodsRaw.map((p) => ({
+          index: Number(p?._Index || 0),
+          label: p?._GradePeriod || `Period ${p?._Index}`,
+          start: p?._StartDate || "",
+          end: p?._EndDate || "",
+        }));
+        setReportingPeriods(mapped);
+        const currentIndex =
+          reportPeriodIndex != null
+            ? reportPeriodIndex
+            : data?.ReportingPeriod?._Index != null
+              ? Number(data.ReportingPeriod._Index)
+              : (mapped[0]?.index ?? 0);
+        setSelectedReportingPeriod(currentIndex);
+        try {
+          localStorage.setItem(
+            REPORTING_PERIOD_STORAGE_KEY,
+            String(currentIndex),
+          );
+        } catch {}
+        setGradebookData({ data });
+        setSelectedCourse(null);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     let stored: number | null = null;
@@ -91,7 +111,12 @@ export default function GradebookPage() {
   if (!gradebookData) return null;
 
   if (selectedCourse) {
-    return <CourseDetail course={selectedCourse} onBack={() => setSelectedCourse(null)} />;
+    return (
+      <CourseDetail
+        course={selectedCourse}
+        onBack={() => setSelectedCourse(null)}
+      />
+    );
   }
   return (
     <Dashboard
@@ -103,7 +128,7 @@ export default function GradebookPage() {
       }}
       reportingPeriods={reportingPeriods}
       selectedReportingPeriod={selectedReportingPeriod}
-  onSelectReportingPeriod={(idx: number) => fetchGradebook(idx)}
+      onSelectReportingPeriod={(idx: number) => fetchGradebook(idx)}
       isLoading={isLoading}
     />
   );

@@ -40,8 +40,14 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select";
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "./ui/select";
 
 interface AssignmentsTableProps {
   assignments: Assignment[];
@@ -91,7 +97,7 @@ function AssignmentsTableBase({
         return map[ent] ?? full;
       });
     },
-    []
+    [],
   );
 
   const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
@@ -108,7 +114,9 @@ function AssignmentsTableBase({
   const [draftScores, setDraftScores] = React.useState<
     Record<string, { score: string; max: string }>
   >({});
-  const [draftNames, setDraftNames] = React.useState<Record<string, string>>({});
+  const [draftNames, setDraftNames] = React.useState<Record<string, string>>(
+    {},
+  );
   const debounceTimers = React.useRef<
     Record<string, ReturnType<typeof setTimeout>>
   >({});
@@ -131,10 +139,10 @@ function AssignmentsTableBase({
       const next: Record<string, string> = { ...prev };
       assignments.forEach((a) => {
         const id = a._GradebookID;
-        if (next[id] == null) next[id] = a._Measure ?? '';
+        if (next[id] == null) next[id] = a._Measure ?? "";
       });
-      Object.keys(next).forEach(k => {
-        if (!assignments.some(a => a._GradebookID === k)) delete next[k];
+      Object.keys(next).forEach((k) => {
+        if (!assignments.some((a) => a._GradebookID === k)) delete next[k];
       });
       return next;
     });
@@ -146,7 +154,7 @@ function AssignmentsTableBase({
       if (!data) return;
       onEditScore?.(id, data.score, data.max);
     },
-    [onEditScore]
+    [onEditScore],
   );
 
   const handleDraftChange = React.useCallback(
@@ -161,7 +169,7 @@ function AssignmentsTableBase({
         flushUpdate(id);
       }, DEBOUNCE_MS);
     },
-    [flushUpdate]
+    [flushUpdate],
   );
 
   const draftScoresRef = React.useRef(draftScores);
@@ -169,7 +177,9 @@ function AssignmentsTableBase({
     draftScoresRef.current = draftScores;
   }, [draftScores]);
   const draftNamesRef = React.useRef(draftNames);
-  React.useEffect(() => { draftNamesRef.current = draftNames; }, [draftNames]);
+  React.useEffect(() => {
+    draftNamesRef.current = draftNames;
+  }, [draftNames]);
   React.useEffect(() => {
     const timersSnapshot = { ...debounceTimers.current };
     return () => {
@@ -215,7 +225,10 @@ function AssignmentsTableBase({
                   value={renamed}
                   onChange={(e) => {
                     const value = e.target.value;
-                    setDraftNames(prev => ({ ...prev, [a._GradebookID]: value }));
+                    setDraftNames((prev) => ({
+                      ...prev,
+                      [a._GradebookID]: value,
+                    }));
                     onEditName?.(a._GradebookID, value);
                   }}
                   placeholder="Assignment name"
@@ -293,18 +306,22 @@ function AssignmentsTableBase({
         accessorFn: (row) => row._Type,
         header: "Type",
         cell: ({ row }) => {
-          const uniqueTypes = Array.from(new Set(assignments
-            .map(a => (a._Type || '').trim())
-            .filter(t => t.length > 0)
-          ));
-          const curType = row.original._Type && row.original._Type.trim().length > 0
-            ? row.original._Type
-            : (uniqueTypes[0] || '');
+          const uniqueTypes = Array.from(
+            new Set(
+              assignments
+                .map((a) => (a._Type || "").trim())
+                .filter((t) => t.length > 0),
+            ),
+          );
+          const curType =
+            row.original._Type && row.original._Type.trim().length > 0
+              ? row.original._Type
+              : uniqueTypes[0] || "";
 
           if (!hypotheticalMode || uniqueTypes.length < 2) {
             return (
-              <Badge className={`${getTypeColor(curType || 'Uncategorized')}`}>
-                {curType || 'Uncategorized'}
+              <Badge className={`${getTypeColor(curType || "Uncategorized")}`}>
+                {curType || "Uncategorized"}
               </Badge>
             );
           }
@@ -312,14 +329,18 @@ function AssignmentsTableBase({
           return (
             <Select
               value={curType}
-              onValueChange={(val) => onEditType?.(row.original._GradebookID, val)}
+              onValueChange={(val) =>
+                onEditType?.(row.original._GradebookID, val)
+              }
             >
               <SelectTrigger size="sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {uniqueTypes.map(t => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                {uniqueTypes.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -397,11 +418,11 @@ function AssignmentsTableBase({
         sortingFn: (a, b) => {
           const pctA = calculatePercentage(
             Number(a.original._Score),
-            Number(a.original._ScoreMaxValue)
+            Number(a.original._ScoreMaxValue),
           );
           const pctB = calculatePercentage(
             Number(b.original._Score),
-            Number(b.original._ScoreMaxValue)
+            Number(b.original._ScoreMaxValue),
           );
           return pctA === pctB ? 0 : pctA < pctB ? -1 : 1;
         },
@@ -435,12 +456,12 @@ function AssignmentsTableBase({
                     pct >= 90
                       ? "bg-green-500"
                       : pct >= 80
-                      ? "bg-blue-500"
-                      : pct >= 70
-                      ? "bg-yellow-500"
-                      : pct >= 60
-                      ? "bg-orange-500"
-                      : "bg-red-500"
+                        ? "bg-blue-500"
+                        : pct >= 70
+                          ? "bg-yellow-500"
+                          : pct >= 60
+                            ? "bg-orange-500"
+                            : "bg-red-500"
                   }`}
                   style={{ width: `${Math.min(pct, 100)}%` }}
                 />
@@ -488,14 +509,14 @@ function AssignmentsTableBase({
       assignments,
       onEditType,
       onEditName,
-    ]
+    ],
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "date", desc: true },
   ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -516,42 +537,50 @@ function AssignmentsTableBase({
       <CardHeader>
         <CardTitle>Assignments ({assignments.length})</CardTitle>
         <CardDescription>List of all assignments</CardDescription>
-  <CardAction>
-    <div className="flex items-center gap-2">
-      <Tooltip>
-        <TooltipTrigger>
-            <div className="flex items-center gap-2 whitespace-nowrap">
-            <Checkbox
-              defaultChecked={hypotheticalMode}
-              onCheckedChange={(val) => {
-              const next = val === "indeterminate" ? false : Boolean(val);
-              onToggleHypothetical?.(next);
-              }}
+        <CardAction>
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <Checkbox
+                    defaultChecked={hypotheticalMode}
+                    onCheckedChange={(val) => {
+                      const next =
+                        val === "indeterminate" ? false : Boolean(val);
+                      onToggleHypothetical?.(next);
+                    }}
+                  />
+                  <p className="text-sm pr-2">Hypothetical Mode</p>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="w-96">
+                <p>
+                  Hypothetical Mode is a powerful mode allowing you to see how
+                  certain grades on assignments will affect your grade.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+            {hypotheticalMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onCreateHypothetical?.()}
+              >
+                Create Assignment
+              </Button>
+            )}
+            <Input
+              placeholder="Filter assignments..."
+              value={
+                (table.getColumn("measure")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(e) =>
+                table.getColumn("measure")?.setFilterValue(e.target.value)
+              }
+              className="h-8"
             />
-            <p className="text-sm pr-2">Hypothetical Mode</p>
-            </div>
-        </TooltipTrigger>
-        <TooltipContent className="w-96">
-          <p>Hypothetical Mode is a powerful mode allowing you to see how certain grades on assignments will affect your grade.</p>
-        </TooltipContent>
-      </Tooltip>
-      {hypotheticalMode && (
-        <Button variant="outline" size="sm" onClick={() => onCreateHypothetical?.()}>
-          Create Assignment
-        </Button>
-      )}
-      <Input
-        placeholder="Filter assignments..."
-        value={
-          (table.getColumn("measure")?.getFilterValue() as string) ?? ""
-        }
-        onChange={(e) =>
-          table.getColumn("measure")?.setFilterValue(e.target.value)
-        }
-        className="h-8"
-      />
-    </div>
-  </CardAction>
+          </div>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -565,7 +594,7 @@ function AssignmentsTableBase({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   ))}
@@ -584,7 +613,7 @@ function AssignmentsTableBase({
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}

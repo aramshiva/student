@@ -67,34 +67,45 @@ export function calculatePercentage(score: number, maxScore: number): number {
   return Math.round((score / maxScore) * 100);
 }
 
-export interface GradeBound { letter: string; min: number }
+export interface GradeBound {
+  letter: string;
+  min: number;
+}
 const DEFAULT_GRADE_BOUNDS: GradeBound[] = [
-  { letter: 'A', min: 93 },
-  { letter: 'A-', min: 90 },
-  { letter: 'B+', min: 87 },
-  { letter: 'B', min: 83 },
-  { letter: 'B-', min: 80 },
-  { letter: 'C+', min: 77 },
-  { letter: 'C', min: 73 },
-  { letter: 'C-', min: 70 },
-  { letter: 'D+', min: 67 },
-  { letter: 'D', min: 60 },
-  { letter: 'F', min: 40 },
+  { letter: "A", min: 93 },
+  { letter: "A-", min: 90 },
+  { letter: "B+", min: 87 },
+  { letter: "B", min: 83 },
+  { letter: "B-", min: 80 },
+  { letter: "C+", min: 77 },
+  { letter: "C", min: 73 },
+  { letter: "C-", min: 70 },
+  { letter: "D+", min: 67 },
+  { letter: "D", min: 60 },
+  { letter: "F", min: 40 },
 ];
 
-const GRADE_BOUNDS_STORAGE_KEY = 'studentvue-custom-grade-bounds';
+const GRADE_BOUNDS_STORAGE_KEY = "studentvue-custom-grade-bounds";
 
 export function loadCustomGradeBounds(): GradeBound[] {
-  if (typeof window === 'undefined') return [...DEFAULT_GRADE_BOUNDS];
+  if (typeof window === "undefined") return [...DEFAULT_GRADE_BOUNDS];
   try {
     const raw = localStorage.getItem(GRADE_BOUNDS_STORAGE_KEY);
     if (!raw) return [...DEFAULT_GRADE_BOUNDS];
     const parsed = JSON.parse(raw) as GradeBound[];
-    if (!Array.isArray(parsed) || !parsed.length) return [...DEFAULT_GRADE_BOUNDS];
+    if (!Array.isArray(parsed) || !parsed.length)
+      return [...DEFAULT_GRADE_BOUNDS];
     const cleaned = parsed
-      .filter(p => p && typeof p.letter === 'string' && typeof p.min === 'number' && !isNaN(p.min))
-      .sort((a,b) => b.min - a.min);
-    if (!cleaned.some(c => c.letter === 'F')) cleaned.push({ letter: 'F', min: 0 });
+      .filter(
+        (p) =>
+          p &&
+          typeof p.letter === "string" &&
+          typeof p.min === "number" &&
+          !isNaN(p.min),
+      )
+      .sort((a, b) => b.min - a.min);
+    if (!cleaned.some((c) => c.letter === "F"))
+      cleaned.push({ letter: "F", min: 0 });
     return cleaned;
   } catch {
     return [...DEFAULT_GRADE_BOUNDS];
@@ -102,27 +113,35 @@ export function loadCustomGradeBounds(): GradeBound[] {
 }
 
 export function saveCustomGradeBounds(bounds: GradeBound[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     const sanitized = bounds
-      .filter(b => b && typeof b.letter === 'string' && typeof b.min === 'number' && !isNaN(b.min))
-      .sort((a,b) => b.min - a.min);
+      .filter(
+        (b) =>
+          b &&
+          typeof b.letter === "string" &&
+          typeof b.min === "number" &&
+          !isNaN(b.min),
+      )
+      .sort((a, b) => b.min - a.min);
     localStorage.setItem(GRADE_BOUNDS_STORAGE_KEY, JSON.stringify(sanitized));
   } catch {}
 }
 
 export function resetCustomGradeBounds() {
-  if (typeof window === 'undefined') return;
-  try { localStorage.removeItem(GRADE_BOUNDS_STORAGE_KEY); } catch {}
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(GRADE_BOUNDS_STORAGE_KEY);
+  } catch {}
 }
 
 export function numericToLetterGrade(pct: number): string {
-  if (!Number.isFinite(pct)) return 'N/A';
+  if (!Number.isFinite(pct)) return "N/A";
   const bounds = loadCustomGradeBounds();
   for (const b of bounds) {
     if (pct >= b.min) return b.letter;
   }
-  return bounds[bounds.length - 1]?.letter || 'F';
+  return bounds[bounds.length - 1]?.letter || "F";
 }
 
 export function parseWeightString(weight: string | undefined): number {
@@ -132,31 +151,31 @@ export function parseWeightString(weight: string | undefined): number {
 }
 
 const DEFAULT_LETTER_GPA: Record<string, number> = {
-  'A': 4.0,
-  'A-': 3.7,
-  'B+': 3.3,
-  'B': 3.0,
-  'B-': 2.7,
-  'C+': 2.3,
-  'C': 2.0,
-  'C-': 1.7,
-  'D+': 1.3,
-  'D': 1.0,
-  'F': 0.0,
+  A: 4.0,
+  "A-": 3.7,
+  "B+": 3.3,
+  B: 3.0,
+  "B-": 2.7,
+  "C+": 2.3,
+  C: 2.0,
+  "C-": 1.7,
+  "D+": 1.3,
+  D: 1.0,
+  F: 0.0,
 };
-const GPA_STORAGE_KEY = 'studentvue-custom-gpa-scale';
+const GPA_STORAGE_KEY = "studentvue-custom-gpa-scale";
 
 export type GPAScaleEntry = { letter: string; value: number };
 
 export function loadCustomGPAScale(): Record<string, number> {
-  if (typeof window === 'undefined') return { ...DEFAULT_LETTER_GPA };
+  if (typeof window === "undefined") return { ...DEFAULT_LETTER_GPA };
   try {
     const raw = localStorage.getItem(GPA_STORAGE_KEY);
     if (!raw) return { ...DEFAULT_LETTER_GPA };
     const parsed = JSON.parse(raw) as GPAScaleEntry[];
     const map: Record<string, number> = {};
     for (const e of parsed) {
-      if (e && typeof e.letter === 'string' && typeof e.value === 'number') {
+      if (e && typeof e.letter === "string" && typeof e.value === "number") {
         map[e.letter] = e.value;
       }
     }
@@ -170,15 +189,17 @@ export function loadCustomGPAScale(): Record<string, number> {
 }
 
 export function saveCustomGPAScale(entries: GPAScaleEntry[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     localStorage.setItem(GPA_STORAGE_KEY, JSON.stringify(entries));
   } catch {}
 }
 
 export function resetCustomGPAScale() {
-  if (typeof window === 'undefined') return;
-  try { localStorage.removeItem(GPA_STORAGE_KEY); } catch {}
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(GPA_STORAGE_KEY);
+  } catch {}
 }
 
 export function letterToGPA(letter: string): number | null {

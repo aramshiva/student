@@ -106,12 +106,13 @@ export default function SchedulePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...JSON.parse(creds),
-            term_index: selectedTerm === TODAY_SENTINEL ? undefined : selectedTerm,
+            term_index:
+              selectedTerm === TODAY_SENTINEL ? undefined : selectedTerm,
           }),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const raw: APIRawStudentClassScheduleRoot = await res.json();
-  const root = raw?.StudentClassSchedule;
+        const root = raw?.StudentClassSchedule;
         if (!root) {
           setClasses([]);
           setTerms([]);
@@ -122,18 +123,19 @@ export default function SchedulePage() {
         let classArr: ClassListing[] = [];
         if (selectedTerm === TODAY_SENTINEL) {
           const todayClasses = normalize<TodayClassInfo>(
-            root?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes?.ClassInfo,
+            root?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes
+              ?.ClassInfo,
           );
-            classArr = todayClasses
-              .map((c) => ({
-                period: Number(c._Period || 0),
-                courseTitle: c._ClassName || '',
-                room: c._RoomName || '',
-                teacher: c._TeacherName || '',
-                teacherEmail: c._TeacherEmail || '',
-                excludePortal: false,
-              }))
-              .sort((a, b) => a.period - b.period);
+          classArr = todayClasses
+            .map((c) => ({
+              period: Number(c._Period || 0),
+              courseTitle: c._ClassName || "",
+              room: c._RoomName || "",
+              teacher: c._TeacherName || "",
+              teacherEmail: c._TeacherEmail || "",
+              excludePortal: false,
+            }))
+            .sort((a, b) => a.period - b.period);
         } else {
           classArr = normalize(root.ClassLists?.ClassListing)
             .map((c) => ({
@@ -142,7 +144,8 @@ export default function SchedulePage() {
               room: c._RoomName,
               teacher: c._Teacher,
               teacherEmail: c._TeacherEmail,
-              excludePortal: (c._ExcludePVUE || "false").toLowerCase() === "true",
+              excludePortal:
+                (c._ExcludePVUE || "false").toLowerCase() === "true",
             }))
             .sort((a, b) => a.period - b.period);
         }
@@ -184,7 +187,9 @@ export default function SchedulePage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={TODAY_SENTINEL.toString()}>Today ({new Date().toLocaleDateString()})</SelectItem>
+              <SelectItem value={TODAY_SENTINEL.toString()}>
+                Today ({new Date().toLocaleDateString()})
+              </SelectItem>
               {terms.map((term) => (
                 <SelectItem
                   key={term.termIndex}
