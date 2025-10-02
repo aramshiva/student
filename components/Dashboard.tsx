@@ -75,7 +75,7 @@ export default function Dashboard({
 
   return (
     <>
-      <div className="min-h-screen bg-white dark:bg-black p-9">
+      <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 py-6">
           <div className="flex-1">
             <p className="text-xl font-medium pb-3">Gradebook</p>
@@ -119,7 +119,7 @@ export default function Dashboard({
         </div>
 
         <div>
-          <div className="bg-white dark:bg-black rounded-lg shadow-sm border border-gray-200 dark:border-gray-900">
+          <div className="bg-white dark:bg-neutral-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900">
             {courses.map((course: Course, index: number) => {
               const currentMark = getCurrentMark(course.Marks.Mark);
               const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
