@@ -1,0 +1,193 @@
+"use client";
+
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Assignment, Course, Mark, GradebookData } from "@/types/gradebook";
+import { formatDate, calculatePercentage } from "@/utils/gradebook";
+import Loading from "@/components/loadingfunc";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+
+interface InternalGradebookRoot {
+  Gradebook?: { Courses?: { Course?: Course[] } };
+  Courses?: { Course?: Course[] };
+  [k: string]: unknown;
+}
+
+function extractCourses(data: any): Course[] { // eslint-disable-line @typescript-eslint/no-explicit-any
+  if (!data) return [];
+  const root: InternalGradebookRoot = data.Gradebook ? data.Gradebook : data;
+  return (root?.Courses?.Course as Course[]) || [];
+}
+
+function getCurrentMark(m: Mark | Mark[] | undefined): Mark | null {
+  if (!m) return null;
+  if (Array.isArray(m)) return m[m.length - 1] || null;
+  return m;
+}
+
+export default function AssignmentDetailPage() {
+  const params = useParams<{ assignmentId: string }>();
+  const router = useRouter();
+  const assignmentId = params.assignmentId;
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reportingPeriod, setReportingPeriod] = useState<number | null>(null);
+  const inFlightRef = useRef(false);
+
+  const REPORTING_PERIOD_STORAGE_KEY = "studentvue-last-reporting-period";
+
+  const fetchGradebook = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    const creds = localStorage.getItem("studentvue-creds");
+    if (!creds) {
+      router.push("/");
+      return;
+    }
+    const credentials = JSON.parse(creds);
+    let stored: number | null = null;
+    try {
+      const raw = localStorage.getItem(REPORTING_PERIOD_STORAGE_KEY);
+      if (raw != null && raw !== "") {
+        const parsed = Number(raw);
+        if (!isNaN(parsed)) stored = parsed;
+      }
+    } catch {}
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const body = stored != null ? { ...credentials, reportPeriod: stored } : credentials;
+      const res = await fetch("/api/synergy/gradebook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+  const data: GradebookData["data"] = await res.json();
+  const maybeErr = (data as Record<string, unknown>)["@ErrorMessage"];
+  if (typeof maybeErr === 'string' && maybeErr) throw new Error(maybeErr);
+      const courses = extractCourses(data);
+      // Search all assignments across current marks
+      for (const c of courses) {
+        const mark = getCurrentMark(c?.Marks?.Mark);
+        const assignments: Assignment[] = mark?.Assignments?.Assignment || [];
+        const found = assignments.find((a) => String(a._GradebookID) === assignmentId);
+        if (found) {
+          setAssignment(found);
+          setCourse(c);
+          break;
+        }
+      }
+      setReportingPeriod(stored);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIsLoading(false);
+      inFlightRef.current = false;
+    }
+  }, [assignmentId, router]);
+
+  useEffect(() => {
+    fetchGradebook();
+  }, [fetchGradebook]);
+
+  if (isLoading) return <Loading />;
+  if (error) return <div className="p-8 text-red-600">{error}</div>;
+  if (!assignment) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto space-y-4">
+        <Button variant="ghost" onClick={() => router.back()}>&larr; Back</Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>Assignment Not Found</CardTitle>
+            <CardDescription>
+              No assignment with ID {assignmentId} could be located{reportingPeriod != null ? ` in reporting period ${reportingPeriod}` : ''}.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  const score = assignment._Score && assignment._ScoreMaxValue
+    ? `${assignment._Score} / ${assignment._ScoreMaxValue}`
+    : assignment._DisplayScore || "—";
+
+  let percent: string = "—";
+  if (assignment._Score && assignment._ScoreMaxValue) {
+    const pct = calculatePercentage(Number(assignment._Score), Number(assignment._ScoreMaxValue));
+    if (Number.isFinite(pct)) percent = `${pct}%`;
+  }
+
+  const pointsRaw = assignment._Points?.replace(/of/i, '/');
+  let pointsDisplay = assignment._Points || "—";
+  if (pointsRaw) {
+    const m = pointsRaw.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+    if (m) {
+      const s = parseFloat(m[1]);
+      const p = parseFloat(m[2]);
+      const pct = calculatePercentage(s, p);
+      if (Number.isFinite(pct)) percent = `${pct}%`;
+      pointsDisplay = `${s} / ${p}`;
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white border-b">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
+          <Button variant="ghost" onClick={() => router.back()}>&larr; Back</Button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg md:text-xl font-semibold text-black truncate">{assignment._Measure || 'Assignment'}</h1>
+            <p className="text-xs text-gray-500 mt-0.5">ID: {assignmentId}{course ? ` • ${course._CourseName}` : ''}</p>
+          </div>
+          {percent !== '—' && (
+            <div className="text-right">
+              <div className="text-xl font-bold text-black">{percent}</div>
+              {assignment._Score && assignment._ScoreMaxValue && (
+                <p className="text-xs text-gray-500">{score}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Details</CardTitle>
+            <CardDescription>Assignment specific information</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-black">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+              <Info label="Type" value={assignment._Type || '—'} />
+              <Info label="Date" value={formatDate(assignment._Date)} />
+              <Info label="Due" value={formatDate(assignment._DueDate)} />
+              <Info label="Score" value={score} />
+              <Info label="Points" value={pointsDisplay} />
+              <Info label="Notes" value={assignment._Notes || '—'} />
+            </div>
+            {assignment._MeasureDescription && (
+              <div>
+                <h3 className="text-sm font-medium mb-1">Description</h3>
+                <p className="whitespace-pre-line leading-snug text-gray-700">{assignment._MeasureDescription}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium">{label}</p>
+      <div className="text-sm text-black break-words">{value}</div>
+    </div>
+  );
+}
