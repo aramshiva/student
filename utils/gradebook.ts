@@ -16,27 +16,27 @@ export function getGradeColor(grade: string): string {
     case "A":
     case "A+":
     case "A-":
-      return "text-green-700 bg-green-200";
+      return "text-green-700 bg-green-200 dark:text-green-300 dark:bg-green-800";
     case "B":
     case "B+":
     case "B-":
-      return "text-blue-700 bg-blue-200";
+      return "text-blue-700 bg-blue-200 dark:text-blue-300 dark:bg-blue-800";
     case "C":
     case "C+":
     case "C-":
-      return "text-yellow-700 bg-yellow-200";
+      return "text-yellow-700 bg-yellow-200 dark:text-yellow-300 dark:bg-yellow-800";
     case "D":
     case "D+":
     case "D-":
-      return "text-orange-700 bg-orange-200";
+      return "text-orange-700 bg-orange-200 dark:text-orange-300 dark:bg-orange-800";
     case "F":
-      return "text-red-700 bg-red-200";
+      return "text-red-700 bg-red-200 dark:text-red-300 dark:bg-red-800";
     case "E":
-      return "text-red-700 bg-red-200";
+      return "text-red-700 bg-red-200 dark:text-red-300 dark:bg-red-800";
     case "P":
-      return "text-green-700 bg-green-200";
+      return "text-green-700 bg-green-200 dark:text-green-300 dark:bg-green-800";
     default:
-      return "text-gray-700 bg-gray-200";
+      return "text-gray-700 bg-gray-200 dark:text-gray-300 dark:bg-gray-700";
   }
 }
 

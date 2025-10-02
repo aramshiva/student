@@ -263,8 +263,8 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const [chartSticky, setChartSticky] = React.useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b sticky top-0 z-30">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
+      <div className="bg-white dark:bg-neutral-950 shadow-sm border-b sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <button
@@ -279,7 +279,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-2xl md:text-3xl shrink-0">{icon}</span>
                 <div className="min-w-0">
-                  <h1 className="text-xl md:text-2xl font-semibold text-black truncate">
+                  <h1 className="text-xl md:text-2xl font-semibold text-black dark:text-white truncate">
                     {course._CourseName}
                   </h1>
                   {!chartSticky && (

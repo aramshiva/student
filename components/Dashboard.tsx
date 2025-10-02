@@ -75,7 +75,7 @@ export default function Dashboard({
 
   return (
     <>
-      <div className="min-h-screen bg-white p-9">
+      <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 py-6">
           <div className="flex-1">
             <p className="text-xl font-medium pb-3">Gradebook</p>
@@ -119,7 +119,7 @@ export default function Dashboard({
         </div>
 
         <div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-neutral-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900">
             {courses.map((course: Course, index: number) => {
               const currentMark = getCurrentMark(course.Marks.Mark);
               const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
@@ -129,16 +129,16 @@ export default function Dashboard({
               return (
                 <div
                   key={course._CourseID}
-                  className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                  className={`p-4 cursor-pointer transition-colors rounded-xl ${
                     index !== courses.length - 1
-                      ? "border-b border-gray-200"
+                      ? "border-b border-gray-200 dark:border-zinc-900"
                       : ""
                   }`}
                   onClick={() => onCourseSelect(course)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex flex-row space-x-5">
-                      <span className="font-semibold text-black text-lg">
+                      <span className="font-semibold text-black dark:text-white text-lg">
                         {course._Period}: {course._Title}
                       </span>
                       <span className="text-gray-500 text-sm mt-1">

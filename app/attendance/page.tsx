@@ -344,7 +344,7 @@ export default function AttendancePage() {
                         type="button"
                         aria-label={isOpen ? "Collapse" : "Expand"}
                         onClick={() => toggleExpand(a.date)}
-                        className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 transition"
+                        className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:hover:bg-gray-950 transition"
                       >
                         {isOpen ? "−" : "+"}
                       </button>
