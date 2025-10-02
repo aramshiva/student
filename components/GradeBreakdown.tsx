@@ -44,7 +44,7 @@ export function GradeBreakdown({ calcs }: GradeBreakdownProps) {
                 const fraction = `${calc._Points}/${calc._PointsPossible}`;
                 return (
                   <TableRow key={idx}>
-                    <TableCell className="font-medium text-black">
+                    <TableCell className="font-medium text-black dark:text-white">
                       {calc._Type}
                     </TableCell>
                     <TableCell>{calc._CalculatedMark}</TableCell>

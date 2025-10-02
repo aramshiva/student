@@ -48,6 +48,7 @@ import {
   SelectContent,
   SelectItem,
 } from "./ui/select";
+import Link from "next/link";
 
 interface AssignmentsTableProps {
   assignments: Assignment[];
@@ -235,7 +236,7 @@ function AssignmentsTableBase({
                   placeholder="Assignment name"
                 />
               ) : (
-                <div className="font-medium text-black break-words whitespace-pre-line leading-snug">
+                <div className="font-medium text-black dark:text-white break-words whitespace-pre-line leading-snug">
                   {originalMeasure}
                 </div>
               )}
@@ -259,11 +260,11 @@ function AssignmentsTableBase({
                     {desc}
                   </div>
                   {shouldTruncate && (
-                    <div className="absolute bottom-0 right-0 flex items-end justify-end pl-4 text-xs bg-gradient-to-l from-white via-white/80 to-transparent h-6">
+                    <div className="absolute bottom-0 right-0 flex items-end justify-end pl-4 text-xs bg-gradient-to-l from-white via-white/80 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent h-6">
                       <button
                         type="button"
                         onClick={() => toggleExpanded(id)}
-                        className="px-1 py-0.5 rounded text-gray-500 hover:text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300"
+                        className="hover:cursor-pointer px-1 py-0.5 rounded text-gray-500 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300"
                         aria-label="Expand full description"
                       >
                         …
@@ -351,7 +352,7 @@ function AssignmentsTableBase({
           return av === bv ? 0 : av < bv ? -1 : 1;
         },
         cell: ({ row }) => (
-          <span className="text-sm text-black">
+          <span className="text-sm text-black dark:text-white ">
             {formatDate(row.original._Date)}
           </span>
         ),
@@ -371,14 +372,17 @@ function AssignmentsTableBase({
           if (!hypotheticalMode) {
             return (
               <div className="text-sm">
-                <div className="font-medium text-black">
-                  {a._DisplayScore}
-                </div>
+                <Link
+                  href={`/gradebook/${a._GradebookID}`}
+                  className="font-medium text-black dark:text-white hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-sm"
+                >
+                  {a._DisplayScore || "View"}
+                </Link>
               </div>
             );
           }
           return (
-            <div className="flex items-center gap-1 text-sm w-[130px]">
+            <div className="flex items-center gap-1 text-sm w-[130px] text-black dark:text-white">
               <Input
                 type="number"
                 className="w-16 p-1"
@@ -453,7 +457,7 @@ function AssignmentsTableBase({
                   style={{ width: `${Math.min(pct, 100)}%` }}
                 />
               </div>
-              <span className="text-sm font-medium text-black min-w-[3rem]">{pct}%</span>
+              <span className="text-black dark:text-white text-sm font-medium min-w-[3rem]">{pct}%</span>
             </div>
           );
         },
@@ -463,7 +467,7 @@ function AssignmentsTableBase({
         accessorFn: (row) => row._DueDate,
         header: "Due Date",
         cell: ({ row }) => (
-          <span className="text-sm text-black">
+          <span className="text-sm text-black dark:text-white">
             {formatDate(row.original._DueDate)}
           </span>
         ),
@@ -477,7 +481,7 @@ function AssignmentsTableBase({
           const lower = decoded.trim().toLowerCase();
           const isMissing = lower === "missing";
           return (
-            <span className="text-sm text-black break-words whitespace-pre-line">
+            <span className="text-sm text-black dark:text-white break-words whitespace-pre-line">
               {decoded}
               {isMissing && (
                 <div
@@ -510,7 +514,7 @@ function AssignmentsTableBase({
           }
           if (!display) display = '—';
           return (
-            <span className="text-sm text-black">
+            <span className="text-sm text-black dark:text-white ">
               {display}
             </span>
           );
@@ -656,14 +660,14 @@ function AssignmentsTableBase({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="hover:bg-gray-50"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-950"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                       </TableCell>
                     ))}
                   </TableRow>
