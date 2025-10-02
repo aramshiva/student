@@ -260,7 +260,7 @@ function AssignmentsTableBase({
                     {desc}
                   </div>
                   {shouldTruncate && (
-                    <div className="absolute bottom-0 right-0 flex items-end justify-end pl-4 text-xs bg-gradient-to-l from-white via-white/80 to-transparent dark:from-gray-950 dark:via-gray-950 dark:to-transparent h-6">
+                    <div className="absolute bottom-0 right-0 flex items-end justify-end pl-4 text-xs bg-gradient-to-l from-white via-white/80 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent h-6">
                       <button
                         type="button"
                         onClick={() => toggleExpanded(id)}
