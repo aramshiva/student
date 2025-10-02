@@ -13,15 +13,17 @@ import {
   Calendar,
   CalendarClock,
   File,
+  Home,
   Mail
 } from "lucide-react";
 
 const items = [
+  { title: "Home", url: "/student", icon: Home },
   { title: "Gradebook", url: "/gradebook", icon: BookUser },
   { title: "Schedule", url: "/schedule", icon: Calendar },
   { title: "Attendance", url: "/attendance", icon: CalendarClock },
   { title: "Documents", url: "/documents", icon: File },
-  { title: "Mail", url: "/mail", icon: Mail },
+  { title: "Mail", url: "/mail", icon: Mail }
 ];
 
 export function AppSidebar() {

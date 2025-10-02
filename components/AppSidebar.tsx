@@ -11,6 +11,7 @@ import {
   Mail,
   Settings as SettingsIcon,
   ChevronUp,
+  Home,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const primaryNav = [
+{ name: "Home", href: "/student", icon: Home },
   { name: "Gradebook", href: "/gradebook", icon: BookUser },
   { name: "Schedule", href: "/schedule", icon: Calendar },
   { name: "Attendance", href: "/attendance", icon: CalendarClock },
