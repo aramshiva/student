@@ -129,7 +129,7 @@ export default function Dashboard({
               return (
                 <div
                   key={course._CourseID}
-                  className={`p-4 cursor-pointer transition-colors rounded-xl ${
+                  className={`p-4 cursor-pointer transition-colors ${
                     index !== courses.length - 1
                       ? "border-b border-gray-200 dark:border-zinc-900"
                       : ""

@@ -19,6 +19,27 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
   const showSidebar = pathname !== "/" && pathname !== "/privacy";
+  const pageTitle = React.useMemo(() => {
+    if (!pathname) return '';
+    const p = pathname === '/' ? '/' : pathname.replace(/\/+$/,'');
+    const map: Record<string,string> = {
+      '/student': 'Dashboard',
+      '/attendance': 'Attendance',
+      '/documents': 'Documents',
+      '/gradebook': 'Gradebook',
+      '/mail': 'Mail',
+      '/schedule': 'Schedule',
+      '/settings': 'Settings',
+      '/student_info': 'Student Info',
+    };
+    if (map[p]) return map[p];
+    if (p.startsWith('/gradebook/')) return 'Assignment';
+    const seg = p.split('/').filter(Boolean).pop();
+    if (!seg) return '';
+    return seg
+      .replace(/[-_]+/g,' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }, [pathname]);
   return showSidebar ? (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -26,6 +47,11 @@ export default function ClientLayout({
         <div className="flex flex-col flex-1 min-w-0">
           <header className="p-2 border-b flex items-center gap-2 bg-white/60 dark:bg-neutral-950/60 backdrop-blur dark:supports-[backdrop-filter]:bg-neutral-950/50 supports-[backdrop-filter]:bg-white/50 sticky top-0 z-10">
             <SidebarTrigger />
+            {pageTitle && (
+              <div className="font-semibold md:text-base tracking-tight text-neutral-700 dark:text-neutral-200">
+                <p>{pageTitle}</p>
+              </div>
+            )}
             <div className="ml-auto">
               <ThemeToggle />
             </div>
