@@ -337,8 +337,8 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                 </p>
               </div>
             </div>
-            {recalcTotals.pct !==
-              parseFloat(currentMark?._CalculatedScoreRaw || "0") && (
+            {(recalcTotals.pct !==
+              parseFloat(currentMark?._CalculatedScoreRaw || "0") && (!hypotheticalMode)) && (
               <>
                 <div className="pt-5" />
                 <Alert variant="destructive">
