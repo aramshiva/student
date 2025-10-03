@@ -27,7 +27,7 @@ export default function InstallPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ol className="list-decimal list-inside space-y-3 text-neutral-700">
+            <ol className="list-decimal list-inside space-y-3 text-neutral-500">
               <li>Open Safari and navigate to the Student website.</li>
               <li>
                 Tap the {'"'}Share{'"'} button (the square with an arrow
@@ -49,7 +49,7 @@ export default function InstallPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ol className="list-decimal list-inside space-y-3 text-neutral-700">
+            <ol className="list-decimal list-inside space-y-3 text-neutral-500">
               <li>Open Chrome and navigate to the Student website.</li>
               <li>Tap the three-dot menu in the top-right corner.</li>
               <li>
@@ -62,6 +62,7 @@ export default function InstallPage() {
           </CardContent>
         </Card>
       </div>
+      <p className="text-neutral-500 text-xs">iOS, iPhone and iPad are registered trademarks of Apple Inc. Android is a trademark of Google LLC.</p>
     </div>
   );
 }
