@@ -14,6 +14,7 @@ import {
   Home,
   MessageCircle,
   Smartphone,
+  BookCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -44,6 +45,7 @@ const primaryNav = [
   { name: "Attendance", href: "/attendance", icon: CalendarClock },
   { name: "Documents", href: "/documents", icon: File },
   { name: "Mail", href: "/mail", icon: Mail },
+  { name: "Test History", href: "/tests", icon: BookCheck },
 ];
 
 export function AppSidebar() {

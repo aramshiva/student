@@ -130,7 +130,7 @@ export default function StudentDashboard() {
       setError(null);
       try {
         const creds = JSON.parse(credsRaw);
-        const studentInfoReq = fetch("/api/synergy/student_info", {
+        const studentInfoReq = fetch("/api/synergy/student", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(creds),
