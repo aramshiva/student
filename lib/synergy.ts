@@ -185,7 +185,11 @@ export class SynergyClient {
 
     const raw = await res.text().catch(() => "");
     if (!res.ok)
-      throw new Error(`HTTP ${res.status} from Synergy: ${raw.slice(0, 400)}`);
+      throw new Error(
+        process.env.NODE_ENV === 'development' 
+          ? `HTTP ${res.status} from Synergy: ${raw.slice(0, 400)}`
+          : `HTTP ${res.status} from Synergy`
+      );
 
     const outer = parser.parse(raw);
     const responseNode =

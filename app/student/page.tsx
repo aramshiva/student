@@ -114,6 +114,7 @@ export default function StudentDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState("");
   const [permId, setPermId] = useState("");
+  const [studentName, setStudentName] = useState("");
   const [todaySchedule, setTodaySchedule] = useState<TodayScheduleClass[]>([]);
   const [todayScheduleError, setTodayScheduleError] = useState<string | null>(
     null,
@@ -190,6 +191,25 @@ export default function StudentDashboard() {
           if (flat.CurrentSchool) {
             localStorage.setItem("studentSchool", flat.CurrentSchool);
           }
+        }
+
+        try {
+          const nameRes = await fetch("/api/synergy/name", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: creds.username || creds.user || creds.userId,
+              password: creds.password || creds.pass,
+              district_url: creds.district_url || creds.district || creds.host,
+            }),
+          });
+          if (nameRes.ok) {
+            const nameJson = await nameRes.json();
+            if (nameJson && typeof nameJson.name === "string" && nameJson.name.trim()) {
+              setStudentName(nameJson.name.trim());
+            }
+          }
+        } catch {
         }
         const messagesJson: PXPMessagesApiResponse = await messagesRes.json();
         const listingsRaw =
@@ -312,7 +332,7 @@ export default function StudentDashboard() {
         <div>
           <h1 className="text-2xl font-medium">
             {greeting}
-            {permId ? `, ${permId}` : ""}
+            {studentName ? `, ${studentName}` : permId ? `, ${permId}` : ""}
           </h1>
           <p className="text-sm text-muted-foreground">
             Here are your recent activity messages.

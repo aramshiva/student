@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Mail } from "lucide-react";
 import Link from "next/link";
 import { SiGithub } from "react-icons/si";
