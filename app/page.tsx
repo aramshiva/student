@@ -61,7 +61,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-white min-h-screen text-black">
+    <div className="bg-white min-h-screen text-black px-9">
       <Login onLogin={handleLogin} isLoading={isLoading} error={error} />
     </div>
   );
