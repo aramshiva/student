@@ -49,6 +49,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const [studentPhoto, setStudentPhoto] = React.useState<string>("");
   const [permId, setPermId] = React.useState<string>("");
+  const [studentName, setStudentName] = React.useState<string>("");
   const [school, setSchool] = React.useState<string>("");
   const [quickStats, setQuickStats] = React.useState<{
     gpa: string;
@@ -83,8 +84,44 @@ export function AppSidebar() {
       setStudentPhoto(localStorage.getItem("studentPhoto") || "");
       setPermId(localStorage.getItem("studentPermId") || "");
       setSchool(localStorage.getItem("studentSchool") || "");
+      const existingName = localStorage.getItem("studentName") || "";
+      if (existingName) setStudentName(existingName);
     } catch {}
   }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (studentName) return;
+    const credsRaw = localStorage.getItem("studentvue-creds");
+    if (!credsRaw) return;
+    let aborted = false;
+    (async () => {
+      try {
+        const creds = JSON.parse(credsRaw);
+        const res = await fetch("/api/synergy/name", {
+          method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: creds.username || creds.user || creds.userId,
+              password: creds.password || creds.pass,
+              district_url: creds.district_url || creds.district || creds.host,
+            }),
+          });
+        if (!aborted && res.ok) {
+          const data = await res.json();
+          if (data && typeof data.name === "string" && data.name.trim()) {
+            const nm = data.name.trim();
+            setStudentName(nm);
+            localStorage.setItem("studentName", nm);
+          }
+        }
+      } catch {
+      }
+    })();
+    return () => {
+      aborted = true;
+    };
+  }, [studentName]);
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
@@ -179,13 +216,13 @@ export function AppSidebar() {
                   />
                 ) : (
                   <div className="size-9 shrink-0 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-medium uppercase group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:text-sm">
-                    {(permId || school || "").slice(0, 2) || "U"}
+                    {(studentName || permId || school || "U").slice(0, 2)}
                   </div>
                 )}
                 <div className="min-w-0 text-left hidden group-data-[collapsible=icon]:hidden md:block">
-                  {permId && (
+                  {(studentName || permId) && (
                     <p className="truncate text-xs font-medium leading-tight">
-                      {permId}
+                      {studentName || permId}
                     </p>
                   )}
                   {school && (

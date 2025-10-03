@@ -69,7 +69,11 @@ export default function AssignmentDetailPage() {
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
   const data: GradebookData["data"] = await res.json();
   const maybeErr = (data as Record<string, unknown>)["@ErrorMessage"];
-  if (typeof maybeErr === 'string' && maybeErr) throw new Error(maybeErr);
+  if (typeof maybeErr === 'string' && maybeErr) {
+    if (process.env.NODE_ENV === 'development') {
+      throw new Error(maybeErr);
+    }
+  }
       const courses = extractCourses(data);
       for (const c of courses) {
         const mark = getCurrentMark(c?.Marks?.Mark);
