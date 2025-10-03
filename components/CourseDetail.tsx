@@ -290,7 +290,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
           <div className="py-6">
             <button
               onClick={onBack}
-              className="mb-4 flex items-center text-sm text-gray-500 hover:text-black transition-colors"
+              className="mb-4 flex items-center text-sm text-gray-500 hover:text-black dark:hover:text-white transition-colors"
             >
               ← Back to Dashboard
             </button>
@@ -350,7 +350,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                     assignments that aren{"'"}t marked as visible, or that
                     Student isn{"'"}t isn{"'"}t calculating your grade
                     correctly. Your overall grade is still correct, but other
-                    things like the grade might be off.
+                    areas might be off
                   </AlertDescription>
                 </Alert>
               </>
