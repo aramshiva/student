@@ -42,14 +42,18 @@ export function GradeBreakdown({ calcs }: GradeBreakdownProps) {
             <TableBody>
               {calcs.map((calc, idx) => {
                 const fraction = `${calc._Points}/${calc._PointsPossible}`;
+                const hasAssignments = parseFloat(calc._PointsPossible) > 0;
+
                 return (
                   <TableRow key={idx}>
                     <TableCell className="font-medium text-black dark:text-white">
                       {calc._Type}
                     </TableCell>
-                    <TableCell>{calc._CalculatedMark}</TableCell>
+                    <TableCell>
+                      {hasAssignments ? calc._CalculatedMark : "N/A"}
+                    </TableCell>
                     <TableCell>{calc._Weight}</TableCell>
-                    <TableCell>{fraction}</TableCell>
+                    <TableCell>{hasAssignments ? fraction : "N/A"}</TableCell>
                   </TableRow>
                 );
               })}
