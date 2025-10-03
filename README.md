@@ -1,7 +1,5 @@
-<img width="5068" height="3540" alt="image" src="https://github.com/user-attachments/assets/6fb0f523-8423-4ed1-872d-c4dc04d57555" />
+<img width="2096" height="1260" alt="ScreenShot 2025-10-02 at 17 14 01@2x" src="https://github.com/user-attachments/assets/1406286e-8741-4bcb-85fb-d1fd519e79c6" />
 
 # 📚 Student
 
-Student is a StudentVUE wrapper made in Next.js. It is powered by the StudentVUE REST API, which I developed (previously known as APIVUE).
-
-Currently, it only features a gradebook with plans for other pages (coming soon), and a schoology integration (unofficial, coming soon).
+A alternative client for StudentVUE, with a refreshed UI and more powerful features to help maintain academics.

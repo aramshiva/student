@@ -216,7 +216,7 @@ export function AppSidebar() {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/settings" className="flex items-center gap-2">
+                <Link href="/settings" className="cursor-pointer flex items-center gap-2">
                   <SettingsIcon className="size-4" />
                   <span>Settings</span>
                 </Link>
