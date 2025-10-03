@@ -350,7 +350,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                     assignments that aren{"'"}t marked as visible, or that
                     Student isn{"'"}t isn{"'"}t calculating your grade
                     correctly. Your overall grade is still correct, but other
-                    things like the grade might be off.
+                    areas might be off
                   </AlertDescription>
                 </Alert>
               </>
