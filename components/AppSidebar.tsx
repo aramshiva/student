@@ -12,6 +12,7 @@ import {
   Settings as SettingsIcon,
   ChevronUp,
   Home,
+  MessageCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -36,7 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const primaryNav = [
-{ name: "Home", href: "/student", icon: Home },
+  { name: "Home", href: "/student", icon: Home },
   { name: "Gradebook", href: "/gradebook", icon: BookUser },
   { name: "Schedule", href: "/schedule", icon: Calendar },
   { name: "Attendance", href: "/attendance", icon: CalendarClock },
@@ -69,8 +70,7 @@ export function AppSidebar() {
           if (!prev || prev.ts !== parsed.ts) return parsed;
           return prev;
         });
-      } catch {
-      }
+      } catch {}
     };
     read();
     const id = setInterval(read, 5000);
@@ -139,9 +139,7 @@ export function AppSidebar() {
                   <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
                     <div className="flex items-baseline justify-between">
                       <p className="font-medium tracking-tight">GPA</p>
-                      <p className="text-sm font-semibold">
-                        {quickStats.gpa}
-                      </p>
+                      <p className="text-sm font-semibold">{quickStats.gpa}</p>
                     </div>
                     <div className="flex items-baseline justify-between">
                       <p className="font-medium tracking-tight">Missing</p>
@@ -204,9 +202,7 @@ export function AppSidebar() {
               <DropdownMenuLabel className="text-xs">Account</DropdownMenuLabel>
               <div className="px-2 pb-1 pt-0.5">
                 {permId && (
-                  <p className="text-xs font-medium truncate">
-                    ID: {permId}
-                  </p>
+                  <p className="text-xs font-medium truncate">ID: {permId}</p>
                 )}
                 {school && (
                   <p className="text-xs text-muted-foreground truncate">
@@ -216,7 +212,19 @@ export function AppSidebar() {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/settings" className="cursor-pointer flex items-center gap-2">
+                <Link
+                  href="/feedback"
+                  className="cursor-pointer flex items-center gap-2"
+                >
+                  <MessageCircle className="size-4" />
+                  <span>Feedback</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/settings"
+                  className="cursor-pointer flex items-center gap-2"
+                >
                   <SettingsIcon className="size-4" />
                   <span>Settings</span>
                 </Link>
