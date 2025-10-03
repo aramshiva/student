@@ -3,13 +3,16 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Dashboard from "@/components/Dashboard";
 import CourseDetail from "@/components/CourseDetail";
-import Loading from "@/components/loadingfunc";
 import { GradebookData, Course, Mark, Assignment } from "@/types/gradebook";
 import { loadCustomGPAScale, numericToLetterGrade } from "@/utils/gradebook";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import { useTheme } from 'next-themes'
 
 export default function GradebookPage() {
+  const { theme } = useTheme()
   const [gradebookData, setGradebookData] = useState<GradebookData | null>(
-    null,
+    null
   );
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +48,9 @@ export default function GradebookPage() {
 
   const computeAndStoreQuickStats = useCallback((root: GradebookLike) => {
     try {
-      const gbRoot: GradebookLike = root?.Gradebook ? (root as GradebookLike).Gradebook! : root || {}; // tf is this
+      const gbRoot: GradebookLike = root?.Gradebook
+        ? (root as GradebookLike).Gradebook!
+        : root || {}; // tf is this
       const courses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
       const gpaScale = loadCustomGPAScale();
       let gradedCourses = 0;
@@ -61,14 +66,18 @@ export default function GradebookPage() {
           const letter = numericToLetterGrade(raw);
           totalGPAPoints += gpaScale[letter] ?? 0;
         }
-        const assignments: Assignment[] = currentMark?.Assignments?.Assignment || [];
+        const assignments: Assignment[] =
+          currentMark?.Assignments?.Assignment || [];
         for (const a of assignments) {
           const note = (a._Notes || "").trim().toLowerCase();
           if (note === "missing") missingCount++;
         }
       }
 
-      const overallGPA = gradedCourses > 0 ? (totalGPAPoints / gradedCourses).toFixed(2) : "0.00";
+      const overallGPA =
+        gradedCourses > 0
+          ? (totalGPAPoints / gradedCourses).toFixed(2)
+          : "0.00";
       const payload = {
         gpa: overallGPA,
         missing: missingCount,
@@ -77,8 +86,7 @@ export default function GradebookPage() {
         ts: Date.now(),
       };
       localStorage.setItem(QUICK_STATS_STORAGE_KEY, JSON.stringify(payload));
-    } catch {
-    }
+    } catch {}
   }, []);
 
   const inFlightRef = useRef(false);
@@ -133,13 +141,13 @@ export default function GradebookPage() {
           reportPeriodIndex != null
             ? reportPeriodIndex
             : data?.ReportingPeriod?._Index != null
-              ? Number(data.ReportingPeriod._Index)
-              : (mapped[0]?.index ?? 0);
+            ? Number(data.ReportingPeriod._Index)
+            : mapped[0]?.index ?? 0;
         setSelectedReportingPeriod(currentIndex);
         try {
           localStorage.setItem(
             REPORTING_PERIOD_STORAGE_KEY,
-            String(currentIndex),
+            String(currentIndex)
           );
         } catch {}
         setGradebookData({ data });
@@ -152,7 +160,7 @@ export default function GradebookPage() {
         inFlightRef.current = false;
       }
     },
-    [computeAndStoreQuickStats],
+    [computeAndStoreQuickStats]
   );
 
   useEffect(() => {
@@ -167,7 +175,49 @@ export default function GradebookPage() {
     fetchGradebook(stored);
   }, [fetchGradebook]);
 
-  if (isLoading) return <Loading />;
+  if (isLoading) {
+    const isLightMode = theme === 'light'
+    if (!isLightMode) {
+      return <p className="text-white dark:text-black p-20">Loading...</p>;
+    } else {
+    return (
+      <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6">
+          <div className="flex-1 space-y-3">
+            <Skeleton height={24} width={160} />
+            <div className="flex items-center gap-3">
+              <Skeleton height={20} width={110} />
+              <Skeleton height={36} width={260} />
+            </div>
+          </div>
+          <div className="flex items-center space-x-10 md:self-start">
+            <div className="text-right space-y-2">
+              <Skeleton height={16} width={34} style={{ marginLeft: "auto" }} />
+              <Skeleton height={28} width={70} />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-neutral-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900 divide-y divide-gray-200 dark:divide-gray-900">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-row space-x-6 items-center">
+                  <Skeleton height={20} width={180} />
+                  <Skeleton height={16} width={220} />
+                </div>
+                <Skeleton height={20} width={56} />
+              </div>
+              <div className="ml-4 pt-1 space-y-2">
+                <Skeleton height={32} width={90} />
+                <Skeleton height={16} width={80} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  }
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!gradebookData) return null;
 
