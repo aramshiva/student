@@ -13,6 +13,7 @@ import {
   ChevronUp,
   Home,
   MessageCircle,
+  Smartphone,
 } from "lucide-react";
 import {
   Sidebar,
@@ -248,6 +249,15 @@ export function AppSidebar() {
                 )}
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/install"
+                  className="cursor-pointer flex items-center gap-2"
+                >
+                  <Smartphone className="size-4" />
+                  <span>Install Mobile App</span>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href="/feedback"
