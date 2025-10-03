@@ -71,7 +71,6 @@ export default function AssignmentDetailPage() {
   const maybeErr = (data as Record<string, unknown>)["@ErrorMessage"];
   if (typeof maybeErr === 'string' && maybeErr) throw new Error(maybeErr);
       const courses = extractCourses(data);
-      // Search all assignments across current marks
       for (const c of courses) {
         const mark = getCurrentMark(c?.Marks?.Mark);
         const assignments: Assignment[] = mark?.Assignments?.Assignment || [];
@@ -137,17 +136,17 @@ export default function AssignmentDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
+      <div className="border-b">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
           <Button variant="ghost" onClick={() => router.back()}>&larr; Back</Button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg md:text-xl font-semibold text-black truncate">{assignment._Measure || 'Assignment'}</h1>
+            <h1 className="text-lg md:text-xl font-semibold text-black dark:text-white truncate">{assignment._Measure || 'Assignment'}</h1>
             <p className="text-xs text-gray-500 mt-0.5">ID: {assignmentId}{course ? ` • ${course._CourseName}` : ''}</p>
           </div>
           {percent !== '—' && (
             <div className="text-right">
-              <div className="text-xl font-bold text-black">{percent}</div>
+              <div className="text-xl font-bold text-black dark:text-white">{percent}</div>
               {assignment._Score && assignment._ScoreMaxValue && (
                 <p className="text-xs text-gray-500">{score}</p>
               )}
@@ -161,7 +160,7 @@ export default function AssignmentDetailPage() {
             <CardTitle>Details</CardTitle>
             <CardDescription>Assignment specific information</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm text-black">
+          <CardContent className="space-y-4 text-sm dark:text-white text-black">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
               <Info label="Type" value={assignment._Type || '—'} />
               <Info label="Date" value={formatDate(assignment._Date)} />
@@ -187,7 +186,7 @@ function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="space-y-0.5">
       <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium">{label}</p>
-      <div className="text-sm text-black break-words">{value}</div>
+      <div className="text-sm dark:text-white text-black break-words">{value}</div>
     </div>
   );
 }
