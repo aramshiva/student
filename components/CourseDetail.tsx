@@ -16,6 +16,8 @@ import * as React from "react";
 import { GradeChart } from "@/components/GradeChart";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { AssignmentsTable } from "@/components/AssignmentsTable";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
@@ -34,7 +36,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const currentMark = getCurrentMark(marks);
   const originalAssignments = React.useMemo(
     () => currentMark?.Assignments?.Assignment || [],
-    [currentMark],
+    [currentMark]
   );
   const [editableAssignments, setEditableAssignments] = React.useState<
     Assignment[]
@@ -55,7 +57,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
     const parsePoints = (pointsStr: string | undefined) => {
       if (!pointsStr) return null;
       const cleaned = pointsStr.replace(/of/i, "/");
-      const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+      const m = cleaned.match(
+        /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/
+      );
       if (!m) return null;
       return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
     };
@@ -74,14 +78,20 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
         const m = a._ScoreMaxValue
           ? parseFloat(a._ScoreMaxValue)
           : a._PointPossible
-            ? parseFloat(a._PointPossible)
-            : NaN;
+          ? parseFloat(a._PointPossible)
+          : NaN;
         if (Number.isFinite(s) && Number.isFinite(m)) {
           score = s;
           max = m;
         }
       }
-      if (score !== null && max !== null && Number.isFinite(score) && Number.isFinite(max) && max > 0) {
+      if (
+        score !== null &&
+        max !== null &&
+        Number.isFinite(score) &&
+        Number.isFinite(max) &&
+        max > 0
+      ) {
         earned += score;
         possible += max;
       }
@@ -94,7 +104,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const gradeColorClass = getGradeColor(
     hypotheticalMode
       ? simulatedLetter || ""
-      : currentMark?._CalculatedScoreString || "",
+      : currentMark?._CalculatedScoreString || ""
   );
 
   const recalculatedBreakdown: AssignmentGradeCalc[] | null =
@@ -117,7 +127,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
         const parsePoints = (pointsStr: string | undefined) => {
           if (!pointsStr) return null;
           const cleaned = pointsStr.replace(/of/i, "/");
-          const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+          const m = cleaned.match(
+            /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/
+          );
           if (!m) return null;
           return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
         };
@@ -125,18 +137,28 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
         let max: number | null = null;
         if (hypotheticalMode) {
           const parsed = parsePoints(a._Points);
-            if (parsed) { score = parsed.e; max = parsed.p; }
+          if (parsed) {
+            score = parsed.e;
+            max = parsed.p;
+          }
         }
         if (score === null || max === null) {
           const s = a._Score ? parseFloat(a._Score) : NaN;
           const m = a._ScoreMaxValue
             ? parseFloat(a._ScoreMaxValue)
             : a._PointPossible
-              ? parseFloat(a._PointPossible)
-              : NaN;
-          if (Number.isFinite(s) && Number.isFinite(m)) { score = s; max = m; }
+            ? parseFloat(a._PointPossible)
+            : NaN;
+          if (Number.isFinite(s) && Number.isFinite(m)) {
+            score = s;
+            max = m;
+          }
         }
-        if (!Number.isFinite(score) || !Number.isFinite(max) || (max as number) <= 0)
+        if (
+          !Number.isFinite(score) ||
+          !Number.isFinite(max) ||
+          (max as number) <= 0
+        )
           return;
         if (!byType[type]) {
           const original = originals.find((o) => o._Type === type);
@@ -152,7 +174,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       const weightSum =
         Object.values(byType).reduce(
           (acc, v) => acc + parseWeightString(v.weight),
-          0,
+          0
         ) || 1;
       const rows = Object.entries(byType).map(([type, v]) => {
         const pct = v.possible > 0 ? (v.points / v.possible) * 100 : NaN;
@@ -183,25 +205,25 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
         prev.map((a) =>
           a._GradebookID === id
             ? { ...a, _Score: score, _ScoreMaxValue: max }
-            : a,
-        ),
+            : a
+        )
       );
     },
-    [],
+    []
   );
 
   const onEditAssignmentType = React.useCallback(
     (id: string, newType: string) => {
       setEditableAssignments((prev) =>
-        prev.map((a) => (a._GradebookID === id ? { ...a, _Type: newType } : a)),
+        prev.map((a) => (a._GradebookID === id ? { ...a, _Type: newType } : a))
       );
     },
-    [],
+    []
   );
 
   const onEditAssignmentName = React.useCallback((id: string, name: string) => {
     setEditableAssignments((prev) =>
-      prev.map((a) => (a._GradebookID === id ? { ...a, _Measure: name } : a)),
+      prev.map((a) => (a._GradebookID === id ? { ...a, _Measure: name } : a))
     );
   }, []);
 
@@ -217,8 +239,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       _GradebookID: newId,
       _HasDropBox: "false",
       _Measure: "Untitled Assignment",
-      _MeasureDescription:
-        "Hypothetical Assignment",
+      _MeasureDescription: "Hypothetical Assignment",
       _Notes: "",
       _Point: "",
       _PointPossible: "",
@@ -274,7 +295,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
               ← Back to Dashboard
             </button>
             <div
-              className={`flex ${chartSticky ? "items-center" : "items-start"} justify-between gap-4`}
+              className={`flex ${
+                chartSticky ? "items-center" : "items-start"
+              } justify-between gap-4`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-2xl md:text-3xl shrink-0">{icon}</span>
@@ -314,6 +337,24 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                 </p>
               </div>
             </div>
+            {recalcTotals.pct !==
+              parseFloat(currentMark?._CalculatedScoreRaw || "0") && (
+              <>
+                <div className="pt-5" />
+                <Alert variant="destructive">
+                  <AlertTriangle />
+                  <AlertTitle>Grade Calculation Error</AlertTitle>
+                  <AlertDescription>
+                    Your class{"'"}s official grade does not match Student{"'"}s
+                    calculated grade percentage. This could be because of hidden
+                    assignments that aren{"'"}t marked as visible, or that
+                    Student isn{"'"}t isn{"'"}t calculating your grade
+                    correctly. Your overall grade is still correct, but other
+                    things like the grade might be off.
+                  </AlertDescription>
+                </Alert>
+              </>
+            )}
             {chartSticky && (
               <div className="mt-2 -mb-2 -mx-1">
                 <GradeChart
@@ -356,7 +397,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
           onEditName={onEditAssignmentName}
           onCreateHypothetical={onCreateHypothetical}
           onDeleteHypothetical={(id) => {
-            setEditableAssignments((prev) => prev.filter(a => a._GradebookID !== id));
+            setEditableAssignments((prev) =>
+              prev.filter((a) => a._GradebookID !== id)
+            );
           }}
         />
       </div>
