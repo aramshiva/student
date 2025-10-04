@@ -211,3 +211,29 @@ export function percentToGPA(pct: number): number | null {
   const letter = numericToLetterGrade(pct);
   return letterToGPA(letter);
 }
+const CALC_GRADES_STORAGE_KEY = "studentvue-calc-grades";
+
+export function loadCalculateGradesEnabled(): boolean {
+  if (typeof window === "undefined") return false; // default off
+  try {
+    const raw = localStorage.getItem(CALC_GRADES_STORAGE_KEY);
+    if (raw === null) return false;
+    return raw === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveCalculateGradesEnabled(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CALC_GRADES_STORAGE_KEY, enabled ? "1" : "0");
+  } catch {}
+}
+
+export function resetCalculateGradesEnabled() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(CALC_GRADES_STORAGE_KEY);
+  } catch {}
+}

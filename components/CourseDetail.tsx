@@ -11,6 +11,7 @@ import {
   getCourseIcon,
   numericToLetterGrade,
   parseWeightString,
+  loadCalculateGradesEnabled,
 } from "@/utils/gradebook";
 import * as React from "react";
 import { GradeChart } from "@/components/GradeChart";
@@ -101,10 +102,20 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   }, [workingAssignments, hypotheticalMode]);
 
   const simulatedLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
+  const calcGrades = loadCalculateGradesEnabled();
+  let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
+  let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw ? parseFloat(currentMark._CalculatedScoreRaw) : undefined;
+  if (calcGrades && !hypotheticalMode) {
+    if (Number.isFinite(recalcTotals.pct)) {
+      effectivePct = recalcTotals.pct;
+      effectiveLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
+    }
+  } else if (hypotheticalMode) {
+    effectivePct = Number.isFinite(recalcTotals.pct) ? recalcTotals.pct : effectivePct;
+    effectiveLetter = simulatedLetter || effectiveLetter;
+  }
   const gradeColorClass = getGradeColor(
-    hypotheticalMode
-      ? simulatedLetter || ""
-      : currentMark?._CalculatedScoreString || ""
+    hypotheticalMode ? simulatedLetter || "" : effectiveLetter || ""
   );
 
   const recalculatedBreakdown: AssignmentGradeCalc[] | null =
@@ -323,22 +334,21 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                   className={`inline-flex px-3 py-1.5 rounded-md text-base md:text-lg font-bold ${gradeColorClass}`}
                 >
                   {hypotheticalMode
-                    ? simulatedLetter ||
-                      currentMark?._CalculatedScoreString ||
-                      "N/A"
-                    : currentMark?._CalculatedScoreString || "N/A"}
+                    ? simulatedLetter || currentMark?._CalculatedScoreString || "N/A"
+                    : effectiveLetter || "N/A"}
                 </div>
                 <p className="text-xs md:text-sm text-gray-500 mt-1">
                   {hypotheticalMode
                     ? Number.isFinite(recalcTotals.pct)
                       ? `${Math.round(recalcTotals.pct)}%`
                       : "N/A"
-                    : (currentMark?._CalculatedScoreRaw || "N/A") + "%"}
+                    : effectivePct != null && Number.isFinite(effectivePct)
+                    ? `${Math.round(effectivePct)}%`
+                    : "N/A"}
                 </p>
               </div>
             </div>
-            {(recalcTotals.pct !==
-              parseFloat(currentMark?._CalculatedScoreRaw || "0") && (!hypotheticalMode)) && (
+            {(!calcGrades && !hypotheticalMode && Number.isFinite(recalcTotals.pct) && currentMark?._CalculatedScoreRaw && Math.round(recalcTotals.pct) !== Math.round(parseFloat(currentMark._CalculatedScoreRaw || "0"))) && (
               <>
                 <div className="pt-5" />
                 <Alert variant="destructive">

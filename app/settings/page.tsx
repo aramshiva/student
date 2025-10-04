@@ -9,6 +9,9 @@ import {
   saveCustomGradeBounds,
   resetCustomGradeBounds,
   GradeBound,
+  loadCalculateGradesEnabled,
+  saveCalculateGradesEnabled,
+  resetCalculateGradesEnabled,
 } from "@/utils/gradebook";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +23,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ORDER = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"];
 
@@ -29,11 +33,13 @@ export default function SettingsPage() {
   const [dirty, setDirty] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
+  const [calcGrades, setCalcGrades] = useState(false);
 
   useEffect(() => {
     const scale = loadCustomGPAScale();
     setEntries(ORDER.map((letter) => ({ letter, value: scale[letter] })));
     setBounds(loadCustomGradeBounds());
+    setCalcGrades(loadCalculateGradesEnabled());
   }, []);
 
   const updateValue = (letter: string, val: string) => {
@@ -104,6 +110,7 @@ export default function SettingsPage() {
       .sort((a, b) => b.min - a.min);
     saveCustomGradeBounds(sanitized);
     setBounds(sanitized);
+    saveCalculateGradesEnabled(calcGrades);
     setDirty(false);
     setSavedMsg("Saved");
     setTimeout(() => setSavedMsg(null), 1500);
@@ -112,9 +119,11 @@ export default function SettingsPage() {
   const handleResetAll = () => {
     resetCustomGPAScale();
     resetCustomGradeBounds();
+    resetCalculateGradesEnabled();
     const scale = loadCustomGPAScale();
     setEntries(ORDER.map((letter) => ({ letter, value: scale[letter] })));
     setBounds(loadCustomGradeBounds());
+    setCalcGrades(loadCalculateGradesEnabled());
     setDirty(false);
     setSavedMsg("Reset to default");
     setTimeout(() => setSavedMsg(null), 1500);
@@ -142,6 +151,28 @@ export default function SettingsPage() {
             Edit thresholds based on your schools grading policy
           </p>
         </header>
+        <div className="pl-5 pt-1">
+        <div className="flex items-start rounded">
+          <Checkbox
+            id="calc-grades"
+            checked={calcGrades}
+            onCheckedChange={(checked) => {
+              const isChecked = checked === true;
+              setCalcGrades(isChecked);
+              setDirty(true);
+              setSavedMsg(null);
+            }}
+          />
+          <div className="w-5" />
+          <label htmlFor="calc-grades" className="text-sm leading-tight cursor-pointer select-none">
+            <span className="font-medium">Calculate Grades</span>
+            <br />
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              When enabled, grades are recomputed locally using assignments and your custom bounds instead of accepting the portal&apos;s reported mark. This may be less accurate if your school uses hidden or excluded assignments, complex weighting, or other rules. GPA points are always calculated locally.
+            </span>
+          </label>
+        </div>
+        <div className="h-3"/>
         <Table className="min-w-[520px]">
           <TableHeader>
             <TableRow>
@@ -197,6 +228,7 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+        </div>
         <div className="flex gap-3 items-center">
           <Button
             disabled={!dirty || validationErrors.length > 0}

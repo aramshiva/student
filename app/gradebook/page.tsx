@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Dashboard from "@/components/Dashboard";
 import CourseDetail from "@/components/CourseDetail";
 import { GradebookData, Course, Mark, Assignment } from "@/types/gradebook";
-import { loadCustomGPAScale, numericToLetterGrade } from "@/utils/gradebook";
+import { loadCustomGPAScale, numericToLetterGrade, loadCalculateGradesEnabled } from "@/utils/gradebook";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useTheme } from 'next-themes'
@@ -53,6 +53,7 @@ export default function GradebookPage() {
         : root || {}; // tf is this
       const courses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
       const gpaScale = loadCustomGPAScale();
+      const calcFlag = loadCalculateGradesEnabled();
       let gradedCourses = 0;
       let totalGPAPoints = 0;
       let missingCount = 0;
@@ -60,10 +61,22 @@ export default function GradebookPage() {
       for (const course of courses) {
         const currentMark = getCurrentMark(course?.Marks?.Mark);
         if (!currentMark) continue;
-        const raw = Number(currentMark?._CalculatedScoreRaw) || 0;
-        if (raw > 0) {
+        const portalRaw = Number(currentMark?._CalculatedScoreRaw) || 0;
+        let effectivePct = portalRaw;
+        if (calcFlag) {
+          const assignments: Assignment[] =
+            currentMark?.Assignments?.Assignment || [];
+            let earned = 0; let possible = 0;
+            assignments.forEach(a => {
+              const s = a._Score ? parseFloat(a._Score) : NaN;
+              const m = a._ScoreMaxValue ? parseFloat(a._ScoreMaxValue) : a._PointPossible ? parseFloat(a._PointPossible) : NaN;
+              if (Number.isFinite(s) && Number.isFinite(m) && m > 0) { earned += s; possible += m; }
+            });
+            if (possible > 0) effectivePct = (earned / possible) * 100;
+        }
+        if (effectivePct > 0) {
           gradedCourses++;
-          const letter = numericToLetterGrade(raw);
+          const letter = numericToLetterGrade(effectivePct);
           totalGPAPoints += gpaScale[letter] ?? 0;
         }
         const assignments: Assignment[] =
