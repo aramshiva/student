@@ -2,4 +2,34 @@
 
 # 📚 Student
 
-A alternative client for StudentVUE, with a refreshed UI and more powerful features to help maintain academics.
+An alternative client for StudentVUE, with a refreshed UI and more powerful features to help maintain academics. 
+
+The app features student messages, gradebook, schedule, attendance, documents, mail and test history.
+
+## Development
+
+### Stack
+Student is built in Next.js, Tailwind CSS, shadcn/ui, and Typescript. It is powered by a internal Synergy API.
+
+### Running locally.
+Student has no needed env variables, to run a development instance, run the following commands:
+
+```
+bun i
+bun dev
+```
+
+### Running a production enviorment/building.
+To build the app, simply run:
+
+```
+bun run build
+```
+
+To start the build, run
+
+```
+bun start
+```
+
+This app is hosted by [Vercel](https://vercel.com), all commits to the repository will be pushed to Student through Vercel.
