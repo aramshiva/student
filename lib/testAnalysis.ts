@@ -1,3 +1,13 @@
+// how this code works:
+// 1. we send a SOAP request to the StudentInfo method with creds, 
+// this gives us StudentInfo BUT more importantly a session cookie.
+// 2. we extract the ASP.NET_SessionId from the Set-Cookie header
+// 3. we send a second request to the /api/GB/ClientSideData/Transfer?action=pxp.test.analysis-get endpoint
+//    with a JSON body requesting the test analysis data
+// 4. this provides us a response with all tests the user has taken
+// and scores
+// 5. we return this data to the caller
+
 export interface TestAnalysisTest {
   GU?: string;
   Name?: string;

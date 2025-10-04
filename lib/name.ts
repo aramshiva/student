@@ -1,5 +1,16 @@
+// how this code works:
+// 1. we send a SOAP request to the StudentInfo method with creds, 
+// this gives us StudentInfo BUT more importantly a session cookie.
+// 2. we extract the ASP.NET_SessionId from the Set-Cookie header
+// 3. we send a second request to the RTCommunication.asmx/XMLDoRequest endpoint
+//    with an XML body requesting PXP_Get_StudentSummary
+// 4. this provides us a response with various data, but more importantly the student name.
+// 5. we extract the student name and return it to the caller.
+// the reason we do this is, because with the SOAP api, the name is not provided
+// and for whatever reason is blank
+
 export async function getStudentNameFromDistrict(params: {
-  districtBase: string; // e.g. https://wa-nor-psv.edupoint.com
+  districtBase: string;
   userId: string;
   password: string;
   timeoutMs?: number;
