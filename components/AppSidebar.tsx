@@ -4,10 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  BookUser,
-  Calendar,
-  CalendarClock,
-  File,
   Mail,
   Settings as SettingsIcon,
   ChevronUp,
@@ -15,6 +11,10 @@ import {
   MessageCircle,
   Smartphone,
   BookCheck,
+  FileText,
+  Table2,
+  CalendarDays,
+  BookOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,10 +40,10 @@ import {
 
 const primaryNav = [
   { name: "Home", href: "/student", icon: Home },
-  { name: "Gradebook", href: "/gradebook", icon: BookUser },
-  { name: "Schedule", href: "/schedule", icon: Calendar },
-  { name: "Attendance", href: "/attendance", icon: CalendarClock },
-  { name: "Documents", href: "/documents", icon: File },
+  { name: "Gradebook", href: "/gradebook", icon: BookOpen },
+  { name: "Schedule", href: "/schedule", icon: CalendarDays },
+  { name: "Attendance", href: "/attendance", icon: Table2 },
+  { name: "Documents", href: "/documents", icon: FileText },
   { name: "Mail", href: "/mail", icon: Mail },
   { name: "Test History", href: "/tests", icon: BookCheck },
 ];
@@ -103,13 +103,13 @@ export function AppSidebar() {
         const creds = JSON.parse(credsRaw);
         const res = await fetch("/api/synergy/name", {
           method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: creds.username || creds.user || creds.userId,
-              password: creds.password || creds.pass,
-              district_url: creds.district_url || creds.district || creds.host,
-            }),
-          });
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: creds.username || creds.user || creds.userId,
+            password: creds.password || creds.pass,
+            district_url: creds.district_url || creds.district || creds.host,
+          }),
+        });
         if (!aborted && res.ok) {
           const data = await res.json();
           if (data && typeof data.name === "string" && data.name.trim()) {
@@ -118,8 +118,7 @@ export function AppSidebar() {
             localStorage.setItem("studentName", nm);
           }
         }
-      } catch {
-      }
+      } catch {}
     })();
     return () => {
       aborted = true;
