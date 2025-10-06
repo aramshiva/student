@@ -9,9 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 interface APIAbsencePeriod {
   _Number: string;

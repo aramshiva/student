@@ -95,7 +95,7 @@ export default function TestsPage() {
             const rv = row[col];
             if (ev && rv && ev !== rv) return false;
           }
-            return true;
+          return true;
         });
         if (idx === -1) {
           acc.push({ ...row });

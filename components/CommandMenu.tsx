@@ -109,7 +109,11 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           action: () => setTheme("dark"),
           icon: <Moon className="size-4" />,
         },
-        { label: "System Theme", action: () => setTheme("system"), icon: <SunMoon className="size-4" /> },
+        {
+          label: "System Theme",
+          action: () => setTheme("system"),
+          icon: <SunMoon className="size-4" />,
+        },
       ],
     },
     {

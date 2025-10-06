@@ -14,7 +14,7 @@ import {
   CalendarClock,
   File,
   Home,
-  Mail
+  Mail,
 } from "lucide-react";
 
 const items = [
@@ -23,7 +23,7 @@ const items = [
   { title: "Schedule", url: "/schedule", icon: Calendar },
   { title: "Attendance", url: "/attendance", icon: CalendarClock },
   { title: "Documents", url: "/documents", icon: File },
-  { title: "Mail", url: "/mail", icon: Mail }
+  { title: "Mail", url: "/mail", icon: Mail },
 ];
 
 export function AppSidebar() {
@@ -31,9 +31,9 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-      <div className="font-bold font-[Gosha] flex flex-col pt-8 pb-4 px-4 top-0 left-0 z-20 text-xl">
-        <Link href="/student">student</Link>
-      </div>
+          <div className="font-bold font-[Gosha] flex flex-col pt-8 pb-4 px-4 top-0 left-0 z-20 text-xl">
+            <Link href="/student">student</Link>
+          </div>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

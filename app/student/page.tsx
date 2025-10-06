@@ -205,12 +205,15 @@ export default function StudentDashboard() {
           });
           if (nameRes.ok) {
             const nameJson = await nameRes.json();
-            if (nameJson && typeof nameJson.name === "string" && nameJson.name.trim()) {
+            if (
+              nameJson &&
+              typeof nameJson.name === "string" &&
+              nameJson.name.trim()
+            ) {
               setStudentName(nameJson.name.trim());
             }
           }
-        } catch {
-        }
+        } catch {}
         const messagesJson: PXPMessagesApiResponse = await messagesRes.json();
         const listingsRaw =
           messagesJson?.PXPMessagesData?.SynergyMailMessageListingByStudents

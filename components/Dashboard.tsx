@@ -1,7 +1,11 @@
 "use client";
 
 import { Course, Mark } from "@/types/gradebook";
-import { loadCustomGPAScale, numericToLetterGrade, loadCalculateGradesEnabled } from "@/utils/gradebook";
+import {
+  loadCustomGPAScale,
+  numericToLetterGrade,
+  loadCalculateGradesEnabled,
+} from "@/utils/gradebook";
 import {
   Select,
   SelectTrigger,
@@ -65,8 +69,8 @@ export default function Dashboard({
       const m = a._ScoreMaxValue
         ? parseFloat(a._ScoreMaxValue)
         : a._PointPossible
-        ? parseFloat(a._PointPossible)
-        : NaN;
+          ? parseFloat(a._PointPossible)
+          : NaN;
       if (Number.isFinite(s) && Number.isFinite(m) && m > 0) {
         earned += s;
         possible += m;
@@ -86,11 +90,11 @@ export default function Dashboard({
     return { course, effectivePct, letter };
   });
   const validCourses = computationBasis.filter(
-    (c) => Number.isFinite(c.effectivePct) && (c.effectivePct as number) > 0
+    (c) => Number.isFinite(c.effectivePct) && (c.effectivePct as number) > 0,
   );
   const totalPoints = validCourses.reduce(
     (acc, c) => acc + (gpaScale[c.letter] ?? 0),
-    0
+    0,
   );
   const gpa = validCourses.length
     ? (totalPoints / validCourses.length).toFixed(2)
@@ -181,13 +185,13 @@ export default function Dashboard({
                             ? `${(effectivePct as number).toFixed(1)}%`
                             : "No grade"
                           : portalRaw > 0
-                          ? `${portalRaw.toFixed(1)}%`
-                          : "No grade"}
+                            ? `${portalRaw.toFixed(1)}%`
+                            : "No grade"}
                       </div>
                     </div>
                   </div>
                 );
-              }
+              },
             )}
           </div>
         </div>

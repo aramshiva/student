@@ -62,7 +62,10 @@ export default function InstallPage() {
           </CardContent>
         </Card>
       </div>
-      <p className="text-neutral-500 text-xs">iOS, iPhone and iPad are registered trademarks of Apple Inc. Android is a trademark of Google LLC.</p>
+      <p className="text-neutral-500 text-xs">
+        iOS, iPhone and iPad are registered trademarks of Apple Inc. Android is
+        a trademark of Google LLC.
+      </p>
     </div>
   );
 }

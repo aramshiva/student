@@ -152,82 +152,89 @@ export default function SettingsPage() {
           </p>
         </header>
         <div className="pl-5 pt-1">
-        <div className="flex items-start rounded">
-          <Checkbox
-            id="calc-grades"
-            checked={calcGrades}
-            onCheckedChange={(checked) => {
-              const isChecked = checked === true;
-              setCalcGrades(isChecked);
-              setDirty(true);
-              setSavedMsg(null);
-            }}
-          />
-          <div className="w-5" />
-          <label htmlFor="calc-grades" className="text-sm leading-tight cursor-pointer select-none">
-            <span className="font-medium">Calculate Grades</span>
-            <br />
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              When enabled, grades are recomputed locally using assignments and your custom bounds instead of accepting the portal&apos;s reported mark. This may be less accurate if your school uses hidden or excluded assignments, complex weighting, or other rules. GPA points are always calculated locally.
-            </span>
-          </label>
-        </div>
-        <div className="h-3"/>
-        <Table className="min-w-[520px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-24">Letter</TableHead>
-              <TableHead className="w-40">GPA Points</TableHead>
-              <TableHead className="w-40">Min % (inclusive)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ORDER.map((letter) => {
-              const entry = entries.find((e) => e.letter === letter);
-              const bound = bounds.find((b) => b.letter === letter) || {
-                letter,
-                min: 0,
-              };
-              return (
-                <TableRow
-                  key={letter}
-                  className={isInvalidLetter(letter) ? "bg-red-50/60" : ""}
-                >
-                  <TableCell className="font-medium">{letter}</TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min={0}
-                      max={5}
-                      value={entry?.value ?? 0}
-                      onChange={(ev) => updateValue(letter, ev.target.value)}
-                      className={`w-28 h-8 ${entry && (entry.value < 0 || entry.value > 5 || !Number.isFinite(entry.value)) ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      step="0.1"
-                      value={bound.min}
-                      onChange={(ev) => updateBound(letter, ev.target.value)}
-                      className={`w-28 h-8 ${bound.min < 0 || bound.min > 100 || !Number.isFinite(bound.min) ? "border-red-500 focus-visible:ring-red-500" : ""}`}
-                    />
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-        {showErrors && validationErrors.length > 0 && (
-          <div className="text-sm text-red-600 space-y-1 border border-red-300 rounded p-2 bg-red-50">
-            {validationErrors.map((e, i) => (
-              <div key={i}>• {e}</div>
-            ))}
+          <div className="flex items-start rounded">
+            <Checkbox
+              id="calc-grades"
+              checked={calcGrades}
+              onCheckedChange={(checked) => {
+                const isChecked = checked === true;
+                setCalcGrades(isChecked);
+                setDirty(true);
+                setSavedMsg(null);
+              }}
+            />
+            <div className="w-5" />
+            <label
+              htmlFor="calc-grades"
+              className="text-sm leading-tight cursor-pointer select-none"
+            >
+              <span className="font-medium">Calculate Grades</span>
+              <br />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                When enabled, grades are recomputed locally using assignments
+                and your custom bounds instead of accepting the portal&apos;s
+                reported mark. This may be less accurate if your school uses
+                hidden or excluded assignments, complex weighting, or other
+                rules. GPA points are always calculated locally.
+              </span>
+            </label>
           </div>
-        )}
+          <div className="h-3" />
+          <Table className="min-w-[520px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-24">Letter</TableHead>
+                <TableHead className="w-40">GPA Points</TableHead>
+                <TableHead className="w-40">Min % (inclusive)</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ORDER.map((letter) => {
+                const entry = entries.find((e) => e.letter === letter);
+                const bound = bounds.find((b) => b.letter === letter) || {
+                  letter,
+                  min: 0,
+                };
+                return (
+                  <TableRow
+                    key={letter}
+                    className={isInvalidLetter(letter) ? "bg-red-50/60" : ""}
+                  >
+                    <TableCell className="font-medium">{letter}</TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min={0}
+                        max={5}
+                        value={entry?.value ?? 0}
+                        onChange={(ev) => updateValue(letter, ev.target.value)}
+                        className={`w-28 h-8 ${entry && (entry.value < 0 || entry.value > 5 || !Number.isFinite(entry.value)) ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step="0.1"
+                        value={bound.min}
+                        onChange={(ev) => updateBound(letter, ev.target.value)}
+                        className={`w-28 h-8 ${bound.min < 0 || bound.min > 100 || !Number.isFinite(bound.min) ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          {showErrors && validationErrors.length > 0 && (
+            <div className="text-sm text-red-600 space-y-1 border border-red-300 rounded p-2 bg-red-50">
+              {validationErrors.map((e, i) => (
+                <div key={i}>• {e}</div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex gap-3 items-center">
           <Button

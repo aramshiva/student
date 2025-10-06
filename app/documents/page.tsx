@@ -90,11 +90,11 @@ export default function DocumentsPage() {
           };
         });
         mapped = mapped.sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
         );
         setDocs(mapped);
         const distinct = Array.from(
-          new Set(mapped.map((m) => m.type).filter(Boolean))
+          new Set(mapped.map((m) => m.type).filter(Boolean)),
         );
         setTypes(distinct);
       })
@@ -130,15 +130,15 @@ export default function DocumentsPage() {
       base64 = base64.$;
     }
     const fileName: string = String(
-      docNode?._DocumentFileName ?? docNode?._FileName ?? "document.pdf"
+      docNode?._DocumentFileName ?? docNode?._FileName ?? "document.pdf",
     );
     const fallback = json?.pdf as unknown;
     const b64 =
       typeof base64 === "string" && base64.length > 50
         ? base64
         : typeof fallback === "string"
-        ? fallback
-        : null;
+          ? fallback
+          : null;
     if (!b64) return null;
     return { base64: b64, fileName };
   };
@@ -183,15 +183,15 @@ export default function DocumentsPage() {
           base64 = base64.$;
         }
         const fileName: string = String(
-          docNode?._DocumentFileName ?? docNode._FileName ?? "document.pdf"
+          docNode?._DocumentFileName ?? docNode._FileName ?? "document.pdf",
         );
         const fallback = json?.pdf as unknown;
         const b64 =
           typeof base64 === "string" && base64.length > 50
             ? base64
             : typeof fallback === "string"
-            ? fallback
-            : null;
+              ? fallback
+              : null;
         if (b64) {
           const objectUrl = base64PdfToObjectUrl(b64);
           const pdfUrl = objectUrl || `data:application/pdf;base64,${b64}`;

@@ -37,7 +37,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const currentMark = getCurrentMark(marks);
   const originalAssignments = React.useMemo(
     () => currentMark?.Assignments?.Assignment || [],
-    [currentMark]
+    [currentMark],
   );
   const [editableAssignments, setEditableAssignments] = React.useState<
     Assignment[]
@@ -53,8 +53,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
     : originalAssignments;
 
   const isRubric = React.useCallback(
-    (a: Assignment | undefined | null) => !!a && /rubric/i.test(a._ScoreType || ""),
-    []
+    (a: Assignment | undefined | null) =>
+      !!a && /rubric/i.test(a._ScoreType || ""),
+    [],
   );
 
   const extractScoreMax = React.useCallback(
@@ -62,7 +63,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       const parsePoints = (pointsStr: string | undefined) => {
         if (!pointsStr) return null;
         const cleaned = pointsStr.replace(/of/i, "/");
-        const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+        const m = cleaned.match(
+          /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/,
+        );
         if (!m) return null;
         return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
       };
@@ -75,11 +78,11 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       const rawMax = a._ScoreMaxValue
         ? parseFloat(a._ScoreMaxValue)
         : a._PointPossible
-        ? parseFloat(a._PointPossible)
-        : NaN;
+          ? parseFloat(a._PointPossible)
+          : NaN;
 
       const deriveRubricMax = (): number => {
-        const type = (a._ScoreType || '').toLowerCase();
+        const type = (a._ScoreType || "").toLowerCase();
         const explicit = type.match(/(\d+)\s*point/);
         if (explicit) {
           const n = parseInt(explicit[1], 10);
@@ -89,7 +92,12 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
         if (parsedPts && parsedPts.p > 0 && parsedPts.p <= 20) {
           return parsedPts.p === 100 ? 4 : parsedPts.p;
         }
-        if (Number.isFinite(rawMax) && rawMax > 0 && rawMax <= 10 && rawMax !== 100) {
+        if (
+          Number.isFinite(rawMax) &&
+          rawMax > 0 &&
+          rawMax <= 10 &&
+          rawMax !== 100
+        ) {
           return rawMax;
         }
         return 4;
@@ -121,7 +129,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
 
       return { score, max };
     },
-    [isRubric]
+    [isRubric],
   );
 
   const recalcTotals = React.useMemo(() => {
@@ -146,15 +154,19 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
 
   const hasRubric = React.useMemo(
     () => workingAssignments.some((a) => isRubric(a)),
-    [workingAssignments, isRubric]
+    [workingAssignments, isRubric],
   );
 
   const simulatedLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
   const calcGrades = loadCalculateGradesEnabled();
   let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
-  let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw ? parseFloat(currentMark._CalculatedScoreRaw) : undefined;
+  let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw
+    ? parseFloat(currentMark._CalculatedScoreRaw)
+    : undefined;
   if (hypotheticalMode) {
-    effectivePct = Number.isFinite(recalcTotals.pct) ? recalcTotals.pct : effectivePct;
+    effectivePct = Number.isFinite(recalcTotals.pct)
+      ? recalcTotals.pct
+      : effectivePct;
     effectiveLetter = simulatedLetter || effectiveLetter;
   } else if (calcGrades) {
     if (Number.isFinite(recalcTotals.pct)) {
@@ -168,7 +180,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
     }
   }
   const gradeColorClass = getGradeColor(
-    hypotheticalMode ? simulatedLetter || "" : effectiveLetter || ""
+    hypotheticalMode ? simulatedLetter || "" : effectiveLetter || "",
   );
 
   const recalculatedBreakdown: AssignmentGradeCalc[] | null =
@@ -211,7 +223,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       const weightSum =
         Object.values(byType).reduce(
           (acc, v) => acc + parseWeightString(v.weight),
-          0
+          0,
         ) || 1;
       const rows = Object.entries(byType).map(([type, v]) => {
         const pct = v.possible > 0 ? (v.points / v.possible) * 100 : NaN;
@@ -234,7 +246,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
         } as AssignmentGradeCalc;
       });
       return rows.filter((r) => r._Type.toUpperCase() !== "TOTAL");
-  }, [workingAssignments, currentMark, hypotheticalMode, extractScoreMax]);
+    }, [workingAssignments, currentMark, hypotheticalMode, extractScoreMax]);
 
   const onUpdateAssignmentScore = React.useCallback(
     (id: string, score: string, max: string) => {
@@ -250,25 +262,25 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                     ? `${score} / ${max}`
                     : a._Points,
               }
-            : a
-        )
+            : a,
+        ),
       );
     },
-    []
+    [],
   );
 
   const onEditAssignmentType = React.useCallback(
     (id: string, newType: string) => {
       setEditableAssignments((prev) =>
-        prev.map((a) => (a._GradebookID === id ? { ...a, _Type: newType } : a))
+        prev.map((a) => (a._GradebookID === id ? { ...a, _Type: newType } : a)),
       );
     },
-    []
+    [],
   );
 
   const onEditAssignmentName = React.useCallback((id: string, name: string) => {
     setEditableAssignments((prev) =>
-      prev.map((a) => (a._GradebookID === id ? { ...a, _Measure: name } : a))
+      prev.map((a) => (a._GradebookID === id ? { ...a, _Measure: name } : a)),
     );
   }, []);
 
@@ -368,7 +380,9 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                   className={`inline-flex px-3 py-1.5 rounded-md text-base md:text-lg font-bold ${gradeColorClass}`}
                 >
                   {hypotheticalMode
-                    ? simulatedLetter || currentMark?._CalculatedScoreString || "N/A"
+                    ? simulatedLetter ||
+                      currentMark?._CalculatedScoreString ||
+                      "N/A"
                     : effectiveLetter || "N/A"}
                 </div>
                 <p className="text-xs md:text-sm text-gray-500 mt-1">
@@ -377,28 +391,36 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                       ? `${Math.round(recalcTotals.pct)}%`
                       : "N/A"
                     : effectivePct != null && Number.isFinite(effectivePct)
-                    ? `${Math.round(effectivePct)}%`
-                    : "N/A"}
+                      ? `${Math.round(effectivePct)}%`
+                      : "N/A"}
                 </p>
               </div>
             </div>
-            {(!hypotheticalMode && !calcGrades && !hasRubric && Number.isFinite(recalcTotals.pct) && currentMark?._CalculatedScoreRaw && Math.round(recalcTotals.pct) !== Math.round(parseFloat(currentMark._CalculatedScoreRaw || "0"))) && (
-              <>
-                <div className="pt-5" />
-                <Alert variant="destructive">
-                  <AlertTriangle />
-                  <AlertTitle>Grade Calculation Error</AlertTitle>
-                  <AlertDescription>
-                    Your class{"'"}s official grade does not match Student{"'"}s
-                    calculated grade percentage. This could be because of hidden
-                    assignments that aren{"'"}t marked as visible, or that
-                    Student isn{"'"}t isn{"'"}t calculating your grade
-                    correctly. Your overall grade is still correct, but other
-                    areas might be off
-                  </AlertDescription>
-                </Alert>
-              </>
-            )}
+            {!hypotheticalMode &&
+              !calcGrades &&
+              !hasRubric &&
+              Number.isFinite(recalcTotals.pct) &&
+              currentMark?._CalculatedScoreRaw &&
+              Math.round(recalcTotals.pct) !==
+                Math.round(
+                  parseFloat(currentMark._CalculatedScoreRaw || "0"),
+                ) && (
+                <>
+                  <div className="pt-5" />
+                  <Alert variant="destructive">
+                    <AlertTriangle />
+                    <AlertTitle>Grade Calculation Error</AlertTitle>
+                    <AlertDescription>
+                      Your class{"'"}s official grade does not match Student
+                      {"'"}s calculated grade percentage. This could be because
+                      of hidden assignments that aren{"'"}t marked as visible,
+                      or that Student isn{"'"}t isn{"'"}t calculating your grade
+                      correctly. Your overall grade is still correct, but other
+                      areas might be off
+                    </AlertDescription>
+                  </Alert>
+                </>
+              )}
             {chartSticky && (
               <div className="mt-2 -mb-2 -mx-1">
                 <GradeChart
@@ -442,7 +464,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
           onCreateHypothetical={onCreateHypothetical}
           onDeleteHypothetical={(id) => {
             setEditableAssignments((prev) =>
-              prev.filter((a) => a._GradebookID !== id)
+              prev.filter((a) => a._GradebookID !== id),
             );
           }}
         />

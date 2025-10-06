@@ -154,7 +154,6 @@ export default function MailPage() {
           )}
         </Card>
       </div>
-
     </div>
   );
 }

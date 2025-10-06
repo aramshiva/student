@@ -6,7 +6,13 @@ import { Assignment, Course, Mark, GradebookData } from "@/types/gradebook";
 import { formatDate, calculatePercentage } from "@/utils/gradebook";
 import Loading from "@/components/loadingfunc";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 
 interface InternalGradebookRoot {
   Gradebook?: { Courses?: { Course?: Course[] } };
@@ -14,7 +20,8 @@ interface InternalGradebookRoot {
   [k: string]: unknown;
 }
 
-function extractCourses(data: any): Course[] { // eslint-disable-line @typescript-eslint/no-explicit-any
+function extractCourses(data: any): Course[] {
+  // eslint-disable-line @typescript-eslint/no-explicit-any
   if (!data) return [];
   const root: InternalGradebookRoot = data.Gradebook ? data.Gradebook : data;
   return (root?.Courses?.Course as Course[]) || [];
@@ -60,25 +67,28 @@ export default function AssignmentDetailPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const body = stored != null ? { ...credentials, reportPeriod: stored } : credentials;
+      const body =
+        stored != null ? { ...credentials, reportPeriod: stored } : credentials;
       const res = await fetch("/api/synergy/gradebook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-  const data: GradebookData["data"] = await res.json();
-  const maybeErr = (data as Record<string, unknown>)["@ErrorMessage"];
-  if (typeof maybeErr === 'string' && maybeErr) {
-    if (process.env.NODE_ENV === 'development') {
-      throw new Error(maybeErr);
-    }
-  }
+      const data: GradebookData["data"] = await res.json();
+      const maybeErr = (data as Record<string, unknown>)["@ErrorMessage"];
+      if (typeof maybeErr === "string" && maybeErr) {
+        if (process.env.NODE_ENV === "development") {
+          throw new Error(maybeErr);
+        }
+      }
       const courses = extractCourses(data);
       for (const c of courses) {
         const mark = getCurrentMark(c?.Marks?.Mark);
         const assignments: Assignment[] = mark?.Assignments?.Assignment || [];
-        const found = assignments.find((a) => String(a._GradebookID) === assignmentId);
+        const found = assignments.find(
+          (a) => String(a._GradebookID) === assignmentId,
+        );
         if (found) {
           setAssignment(found);
           setCourse(c);
@@ -103,12 +113,18 @@ export default function AssignmentDetailPage() {
   if (!assignment) {
     return (
       <div className="p-8 max-w-2xl mx-auto space-y-4">
-        <Button variant="ghost" onClick={() => router.back()}>&larr; Back</Button>
+        <Button variant="ghost" onClick={() => router.back()}>
+          &larr; Back
+        </Button>
         <Card>
           <CardHeader>
             <CardTitle>Assignment Not Found</CardTitle>
             <CardDescription>
-              No assignment with ID {assignmentId} could be located{reportingPeriod != null ? ` in reporting period ${reportingPeriod}` : ''}.
+              No assignment with ID {assignmentId} could be located
+              {reportingPeriod != null
+                ? ` in reporting period ${reportingPeriod}`
+                : ""}
+              .
             </CardDescription>
           </CardHeader>
         </Card>
@@ -128,14 +144,19 @@ export default function AssignmentDetailPage() {
 
   let percent: string = "—";
   if (assignment._Score && assignment._ScoreMaxValue) {
-    const pct = calculatePercentage(Number(assignment._Score), Number(assignment._ScoreMaxValue));
+    const pct = calculatePercentage(
+      Number(assignment._Score),
+      Number(assignment._ScoreMaxValue),
+    );
     if (Number.isFinite(pct)) percent = `${pct}%`;
   }
 
-  const pointsRaw = assignment._Points?.replace(/of/i, '/');
+  const pointsRaw = assignment._Points?.replace(/of/i, "/");
   let pointsDisplay = assignment._Points || "—";
   if (pointsRaw) {
-    const m = pointsRaw.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+    const m = pointsRaw.match(
+      /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/,
+    );
     if (m) {
       const s = parseFloat(m[1]);
       const p = parseFloat(m[2]);
@@ -149,15 +170,24 @@ export default function AssignmentDetailPage() {
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
       <div className="border-b">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" onClick={() => router.back()}>&larr; Back</Button>
+          <Button variant="ghost" onClick={() => router.back()}>
+            &larr; Back
+          </Button>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg md:text-xl font-semibold text-black dark:text-white truncate">{assignment._Measure || 'Assignment'}</h1>
-            <p className="text-xs text-gray-500 mt-0.5">ID: {assignmentId}{course ? ` • ${course._CourseName}` : ''}</p>
+            <h1 className="text-lg md:text-xl font-semibold text-black dark:text-white truncate">
+              {assignment._Measure || "Assignment"}
+            </h1>
+            <p className="text-xs text-gray-500 mt-0.5">
+              ID: {assignmentId}
+              {course ? ` • ${course._CourseName}` : ""}
+            </p>
           </div>
-          {percent !== '—' && (
+          {percent !== "—" && (
             <div className="text-right">
-              <div className="text-xl font-bold text-black dark:text-white">{percent}</div>
-              {scoreDisplay !== '—' && (
+              <div className="text-xl font-bold text-black dark:text-white">
+                {percent}
+              </div>
+              {scoreDisplay !== "—" && (
                 <p className="text-xs text-gray-500">{scoreDisplay}</p>
               )}
             </div>
@@ -172,17 +202,19 @@ export default function AssignmentDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm dark:text-white text-black">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-              <Info label="Type" value={assignment._Type || '—'} />
+              <Info label="Type" value={assignment._Type || "—"} />
               <Info label="Date" value={formatDate(assignment._Date)} />
               <Info label="Due" value={formatDate(assignment._DueDate)} />
               <Info label="Score" value={scoreDisplay} />
               <Info label="Points" value={pointsDisplay} />
-              <Info label="Notes" value={assignment._Notes || '—'} />
+              <Info label="Notes" value={assignment._Notes || "—"} />
             </div>
             {assignment._MeasureDescription && (
               <div>
                 <h3 className="text-sm font-medium mb-1">Description</h3>
-                <p className="whitespace-pre-line leading-snug text-gray-700">{assignment._MeasureDescription}</p>
+                <p className="whitespace-pre-line leading-snug text-gray-700">
+                  {assignment._MeasureDescription}
+                </p>
               </div>
             )}
           </CardContent>
@@ -195,8 +227,12 @@ export default function AssignmentDetailPage() {
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium">{label}</p>
-      <div className="text-sm dark:text-white text-black break-words">{value}</div>
+      <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium">
+        {label}
+      </p>
+      <div className="text-sm dark:text-white text-black break-words">
+        {value}
+      </div>
     </div>
   );
 }
