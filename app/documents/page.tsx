@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileQuestionMark } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,6 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import Link from "next/link";
 
 interface StudentDocument {
   comment: string;
@@ -82,11 +90,11 @@ export default function DocumentsPage() {
           };
         });
         mapped = mapped.sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
         setDocs(mapped);
         const distinct = Array.from(
-          new Set(mapped.map((m) => m.type).filter(Boolean)),
+          new Set(mapped.map((m) => m.type).filter(Boolean))
         );
         setTypes(distinct);
       })
@@ -122,15 +130,15 @@ export default function DocumentsPage() {
       base64 = base64.$;
     }
     const fileName: string = String(
-      docNode?._DocumentFileName ?? docNode?._FileName ?? "document.pdf",
+      docNode?._DocumentFileName ?? docNode?._FileName ?? "document.pdf"
     );
     const fallback = json?.pdf as unknown;
     const b64 =
       typeof base64 === "string" && base64.length > 50
         ? base64
         : typeof fallback === "string"
-          ? fallback
-          : null;
+        ? fallback
+        : null;
     if (!b64) return null;
     return { base64: b64, fileName };
   };
@@ -175,15 +183,15 @@ export default function DocumentsPage() {
           base64 = base64.$;
         }
         const fileName: string = String(
-          docNode?._DocumentFileName ?? docNode._FileName ?? "document.pdf",
+          docNode?._DocumentFileName ?? docNode._FileName ?? "document.pdf"
         );
         const fallback = json?.pdf as unknown;
         const b64 =
           typeof base64 === "string" && base64.length > 50
             ? base64
             : typeof fallback === "string"
-              ? fallback
-              : null;
+            ? fallback
+            : null;
         if (b64) {
           const objectUrl = base64PdfToObjectUrl(b64);
           const pdfUrl = objectUrl || `data:application/pdf;base64,${b64}`;
@@ -256,7 +264,19 @@ export default function DocumentsPage() {
     <div className="p-8 space-y-6">
       <h1 className="text-xl font-semibold">Documents</h1>
       {!docs.length ? (
-        <div>No documents.</div>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <FileQuestionMark />
+            </EmptyMedia>
+          </EmptyHeader>
+          <EmptyTitle>No documents found</EmptyTitle>
+          <EmptyDescription>
+            No test documents found! If you believe this is an error, please
+            contact your district or open a{" "}
+            <Link href="/feedback">feedback issue</Link>
+          </EmptyDescription>
+        </Empty>
       ) : (
         <Card className="p-4">
           <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -353,9 +373,11 @@ export default function DocumentsPage() {
           </Table>
         </Card>
       )}
-      <p className="text-xs text-gray-500">
-        Showing {docs.length} document(s).
-      </p>
+      {docs.length > 0 && (
+        <p className="text-xs text-gray-500">
+          Showing {docs.length} document(s).
+        </p>
+      )}
     </div>
   );
 }

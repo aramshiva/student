@@ -12,6 +12,15 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { BadgeQuestionMark } from "lucide-react";
+import Link from "next/link";
 
 interface AnalysisTest {
   GU?: string;
@@ -99,7 +108,19 @@ export default function TestsPage() {
     }
     if (!data || data.length === 0) {
       return (
-        <div className="text-sm text-muted-foreground">No tests found.</div>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <BadgeQuestionMark />
+            </EmptyMedia>
+          </EmptyHeader>
+          <EmptyTitle>No tests found</EmptyTitle>
+          <EmptyDescription>
+            No test history found! If you believe this is an error, please
+            contact your district or open a{" "}
+            <Link href="/feedback">feedback issue</Link>
+          </EmptyDescription>
+        </Empty>
       );
     }
 
