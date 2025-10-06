@@ -46,8 +46,49 @@ const builder = new XMLBuilder({
 const escapeXmlText = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-const sanitizeDomain = (raw: string) =>
-  raw.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+const sanitizeDomain = (raw: string): string => {
+  // sanitize and validate a synergy host string
+  // this is due to CWE-1333, CWE-400 and CWE-730.
+  let s = (raw || "").trim();
+
+  const lower = s.toLowerCase();
+  if (lower.startsWith("http://")) s = s.slice(7);
+  else if (lower.startsWith("https://")) s = s.slice(8);
+
+  const atIdx = s.indexOf("@");
+  if (atIdx !== -1) {
+    s = s.slice(atIdx + 1);
+  }
+
+  for (const cut of ["/", "?", "#"]) {
+    const idx = s.indexOf(cut);
+    if (idx !== -1) {
+      s = s.slice(0, idx);
+      break;
+    }
+  }
+
+  while (s.endsWith("/")) s = s.slice(0, -1);
+  // no need for trailing slashes ^
+
+  while (s.endsWith(".")) s = s.slice(0, -1);
+  // also no need for trailing dots
+
+  s = s.toLowerCase();
+
+  if (!s) throw new Error("Host is empty");
+  if (s.length > 253) throw new Error("Host too long");
+
+  const labels = s.split('.');
+  for (const label of labels) {
+    if (label.length > 63) throw new Error("dns label too long");
+    if (label.startsWith('-') || label.endsWith('-')) {
+      throw new Error("dns label invalid");
+    }
+  }
+
+  return s;
+};
 
 interface MinimalFetchInit {
   method?: string;
