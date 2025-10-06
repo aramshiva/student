@@ -52,56 +52,83 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
     ? editableAssignments
     : originalAssignments;
 
-  const recalcTotals = React.useMemo(() => {
-    let earned = 0;
-    let possible = 0;
-    const parsePoints = (pointsStr: string | undefined) => {
-      if (!pointsStr) return null;
-      const cleaned = pointsStr.replace(/of/i, "/");
-      const m = cleaned.match(
-        /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/
-      );
-      if (!m) return null;
-      return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
-    };
-    workingAssignments.forEach((a) => {
+  const isRubric = React.useCallback(
+    (a: Assignment | undefined | null) => !!a && /rubric/i.test(a._ScoreType || ""),
+    []
+  );
+
+  const extractScoreMax = React.useCallback(
+    (a: Assignment): { score: number | null; max: number | null } => {
+      const parsePoints = (pointsStr: string | undefined) => {
+        if (!pointsStr) return null;
+        const cleaned = pointsStr.replace(/of/i, "/");
+        const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+        if (!m) return null;
+        return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
+      };
+
+      const rubric = isRubric(a);
       let score: number | null = null;
       let max: number | null = null;
-      if (hypotheticalMode) {
-        const s = a._Score ? parseFloat(a._Score) : NaN;
-        const mVal = a._ScoreMaxValue
-          ? parseFloat(a._ScoreMaxValue)
-          : a._PointPossible
-          ? parseFloat(a._PointPossible)
-          : NaN;
-        if (Number.isFinite(s) && Number.isFinite(mVal)) {
-          score = s;
-          max = mVal;
-        } else {
-          const parsed = parsePoints(a._Points);
-          if (parsed) {
-            score = parsed.e;
-            max = parsed.p;
-          }
+
+      const s = a._Score ? parseFloat(a._Score) : NaN;
+      const rawMax = a._ScoreMaxValue
+        ? parseFloat(a._ScoreMaxValue)
+        : a._PointPossible
+        ? parseFloat(a._PointPossible)
+        : NaN;
+
+      const deriveRubricMax = (): number => {
+        const type = (a._ScoreType || '').toLowerCase();
+        const explicit = type.match(/(\d+)\s*point/);
+        if (explicit) {
+          const n = parseInt(explicit[1], 10);
+          if (n > 0 && n <= 20) return n;
         }
+        const parsedPts = parsePoints(a._Points);
+        if (parsedPts && parsedPts.p > 0 && parsedPts.p <= 20) {
+          return parsedPts.p === 100 ? 4 : parsedPts.p;
+        }
+        if (Number.isFinite(rawMax) && rawMax > 0 && rawMax <= 10 && rawMax !== 100) {
+          return rawMax;
+        }
+        return 4;
+      };
+
+      let mVal = rawMax;
+      if (rubric) {
+        mVal = deriveRubricMax();
+      }
+
+      if (Number.isFinite(s) && Number.isFinite(mVal)) {
+        score = s;
+        max = mVal;
       } else {
-        const s = a._Score ? parseFloat(a._Score) : NaN;
-        const mVal = a._ScoreMaxValue
-          ? parseFloat(a._ScoreMaxValue)
-          : a._PointPossible
-          ? parseFloat(a._PointPossible)
-          : NaN;
-        if (Number.isFinite(s) && Number.isFinite(mVal)) {
-          score = s;
-          max = mVal;
-        } else {
-          const parsed = parsePoints(a._Points);
-          if (parsed) {
-            score = parsed.e;
+        const parsed = parsePoints(a._Points);
+        if (parsed) {
+          score = parsed.e;
+          if (rubric) {
+            max = deriveRubricMax();
+          } else {
             max = parsed.p;
           }
         }
       }
+
+      if (rubric && max === 100) {
+        max = deriveRubricMax();
+      }
+
+      return { score, max };
+    },
+    [isRubric]
+  );
+
+  const recalcTotals = React.useMemo(() => {
+    let earned = 0;
+    let possible = 0;
+    workingAssignments.forEach((a) => {
+      const { score, max } = extractScoreMax(a);
       if (
         score !== null &&
         max !== null &&
@@ -115,20 +142,30 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
     });
     const pct = possible > 0 ? (earned / possible) * 100 : NaN;
     return { earned, possible, pct };
-  }, [workingAssignments, hypotheticalMode]);
+  }, [workingAssignments, extractScoreMax]);
+
+  const hasRubric = React.useMemo(
+    () => workingAssignments.some((a) => isRubric(a)),
+    [workingAssignments, isRubric]
+  );
 
   const simulatedLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
   const calcGrades = loadCalculateGradesEnabled();
   let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
   let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw ? parseFloat(currentMark._CalculatedScoreRaw) : undefined;
-  if (calcGrades && !hypotheticalMode) {
+  if (hypotheticalMode) {
+    effectivePct = Number.isFinite(recalcTotals.pct) ? recalcTotals.pct : effectivePct;
+    effectiveLetter = simulatedLetter || effectiveLetter;
+  } else if (calcGrades) {
     if (Number.isFinite(recalcTotals.pct)) {
       effectivePct = recalcTotals.pct;
       effectiveLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
     }
-  } else if (hypotheticalMode) {
-    effectivePct = Number.isFinite(recalcTotals.pct) ? recalcTotals.pct : effectivePct;
-    effectiveLetter = simulatedLetter || effectiveLetter;
+  } else if (hasRubric) {
+    if (Number.isFinite(recalcTotals.pct)) {
+      effectivePct = recalcTotals.pct;
+      effectiveLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
+    }
   }
   const gradeColorClass = getGradeColor(
     hypotheticalMode ? simulatedLetter || "" : effectiveLetter || ""
@@ -151,56 +188,13 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       });
       workingAssignments.forEach((a) => {
         const type = a._Type || "Other";
-        const parsePoints = (pointsStr: string | undefined) => {
-          if (!pointsStr) return null;
-          const cleaned = pointsStr.replace(/of/i, "/");
-          const m = cleaned.match(
-            /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/
-          );
-          if (!m) return null;
-          return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
-        };
-        let score: number | null = null;
-        let max: number | null = null;
-        if (hypotheticalMode) {
-            const s = a._Score ? parseFloat(a._Score) : NaN;
-            const mVal = a._ScoreMaxValue
-              ? parseFloat(a._ScoreMaxValue)
-              : a._PointPossible
-              ? parseFloat(a._PointPossible)
-              : NaN;
-            if (Number.isFinite(s) && Number.isFinite(mVal)) {
-              score = s;
-              max = mVal;
-            } else {
-              const parsed = parsePoints(a._Points);
-              if (parsed) {
-                score = parsed.e;
-                max = parsed.p;
-              }
-            }
-        } else {
-          const s = a._Score ? parseFloat(a._Score) : NaN;
-          const mVal = a._ScoreMaxValue
-            ? parseFloat(a._ScoreMaxValue)
-            : a._PointPossible
-            ? parseFloat(a._PointPossible)
-            : NaN;
-          if (Number.isFinite(s) && Number.isFinite(mVal)) {
-            score = s;
-            max = mVal;
-          } else {
-            const parsed = parsePoints(a._Points);
-            if (parsed) {
-              score = parsed.e;
-              max = parsed.p;
-            }
-          }
-        }
+        const { score, max } = extractScoreMax(a);
         if (
+          score === null ||
+          max === null ||
           !Number.isFinite(score) ||
           !Number.isFinite(max) ||
-          (max as number) <= 0
+          max <= 0
         )
           return;
         if (!byType[type]) {
@@ -211,8 +205,8 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
             weight: original?._Weight || "0%",
           };
         }
-        byType[type].points += score as number;
-        byType[type].possible += max as number;
+        byType[type].points += score;
+        byType[type].possible += max;
       });
       const weightSum =
         Object.values(byType).reduce(
@@ -240,7 +234,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
         } as AssignmentGradeCalc;
       });
       return rows.filter((r) => r._Type.toUpperCase() !== "TOTAL");
-    }, [workingAssignments, currentMark, hypotheticalMode]);
+  }, [workingAssignments, currentMark, hypotheticalMode, extractScoreMax]);
 
   const onUpdateAssignmentScore = React.useCallback(
     (id: string, score: string, max: string) => {
@@ -388,7 +382,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                 </p>
               </div>
             </div>
-            {(!calcGrades && !hypotheticalMode && Number.isFinite(recalcTotals.pct) && currentMark?._CalculatedScoreRaw && Math.round(recalcTotals.pct) !== Math.round(parseFloat(currentMark._CalculatedScoreRaw || "0"))) && (
+            {(!hypotheticalMode && !calcGrades && !hasRubric && Number.isFinite(recalcTotals.pct) && currentMark?._CalculatedScoreRaw && Math.round(recalcTotals.pct) !== Math.round(parseFloat(currentMark._CalculatedScoreRaw || "0"))) && (
               <>
                 <div className="pt-5" />
                 <Alert variant="destructive">
