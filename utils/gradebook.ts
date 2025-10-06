@@ -50,10 +50,10 @@ export function getCourseIcon(imageType: string): string {
       return "🌍";
     case "phyeducation":
       return "⚽";
-    case "language":
+    case "language": // this includes english too fyi
       return "🌐";
     case "art":
-    case "arts":
+    case "arts": // this includes music and drama too fyi
       return "🎨";
     case "music":
       return "🎵";

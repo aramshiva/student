@@ -116,9 +116,15 @@ export default function AssignmentDetailPage() {
     );
   }
 
-  const score = assignment._Score && assignment._ScoreMaxValue
-    ? `${assignment._Score} / ${assignment._ScoreMaxValue}`
-    : assignment._DisplayScore || "—";
+  const isRubric = /rubric/i.test(assignment._ScoreType || "");
+  let scoreDisplay: string = "—";
+  if (isRubric) {
+    if (assignment._Score) scoreDisplay = assignment._Score;
+  } else if (assignment._Score && assignment._ScoreMaxValue) {
+    scoreDisplay = `${assignment._Score} / ${assignment._ScoreMaxValue}`;
+  } else if (assignment._Score) {
+    scoreDisplay = assignment._Score;
+  }
 
   let percent: string = "—";
   if (assignment._Score && assignment._ScoreMaxValue) {
@@ -151,8 +157,8 @@ export default function AssignmentDetailPage() {
           {percent !== '—' && (
             <div className="text-right">
               <div className="text-xl font-bold text-black dark:text-white">{percent}</div>
-              {assignment._Score && assignment._ScoreMaxValue && (
-                <p className="text-xs text-gray-500">{score}</p>
+              {scoreDisplay !== '—' && (
+                <p className="text-xs text-gray-500">{scoreDisplay}</p>
               )}
             </div>
           )}
@@ -169,7 +175,7 @@ export default function AssignmentDetailPage() {
               <Info label="Type" value={assignment._Type || '—'} />
               <Info label="Date" value={formatDate(assignment._Date)} />
               <Info label="Due" value={formatDate(assignment._DueDate)} />
-              <Info label="Score" value={score} />
+              <Info label="Score" value={scoreDisplay} />
               <Info label="Points" value={pointsDisplay} />
               <Info label="Notes" value={assignment._Notes || '—'} />
             </div>
