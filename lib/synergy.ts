@@ -60,6 +60,13 @@ async function fetchWithTimeout(
   init: MinimalFetchInit = {},
   ms = 15000,
 ) {
+  // validate url to prevent req forgery
+  const url = typeof input === 'string' ? input : input.url;
+  const parsedUrl = new URL(url);
+  
+  if (parsedUrl.protocol !== 'https:') { // only allow https!
+    throw new Error('Only HTTPS URLs are allowed');
+  }
   const c = new AbortController();
   const id = setTimeout(() => c.abort(), ms);
   try {
