@@ -68,22 +68,38 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       let score: number | null = null;
       let max: number | null = null;
       if (hypotheticalMode) {
-        const parsed = parsePoints(a._Points);
-        if (parsed) {
-          score = parsed.e;
-          max = parsed.p;
-        }
-      }
-      if (score === null || max === null) {
         const s = a._Score ? parseFloat(a._Score) : NaN;
-        const m = a._ScoreMaxValue
+        const mVal = a._ScoreMaxValue
           ? parseFloat(a._ScoreMaxValue)
           : a._PointPossible
           ? parseFloat(a._PointPossible)
           : NaN;
-        if (Number.isFinite(s) && Number.isFinite(m)) {
+        if (Number.isFinite(s) && Number.isFinite(mVal)) {
           score = s;
-          max = m;
+          max = mVal;
+        } else {
+          const parsed = parsePoints(a._Points);
+          if (parsed) {
+            score = parsed.e;
+            max = parsed.p;
+          }
+        }
+      } else {
+        const s = a._Score ? parseFloat(a._Score) : NaN;
+        const mVal = a._ScoreMaxValue
+          ? parseFloat(a._ScoreMaxValue)
+          : a._PointPossible
+          ? parseFloat(a._PointPossible)
+          : NaN;
+        if (Number.isFinite(s) && Number.isFinite(mVal)) {
+          score = s;
+          max = mVal;
+        } else {
+          const parsed = parsePoints(a._Points);
+          if (parsed) {
+            score = parsed.e;
+            max = parsed.p;
+          }
         }
       }
       if (
@@ -147,22 +163,38 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
         let score: number | null = null;
         let max: number | null = null;
         if (hypotheticalMode) {
-          const parsed = parsePoints(a._Points);
-          if (parsed) {
-            score = parsed.e;
-            max = parsed.p;
-          }
-        }
-        if (score === null || max === null) {
+            const s = a._Score ? parseFloat(a._Score) : NaN;
+            const mVal = a._ScoreMaxValue
+              ? parseFloat(a._ScoreMaxValue)
+              : a._PointPossible
+              ? parseFloat(a._PointPossible)
+              : NaN;
+            if (Number.isFinite(s) && Number.isFinite(mVal)) {
+              score = s;
+              max = mVal;
+            } else {
+              const parsed = parsePoints(a._Points);
+              if (parsed) {
+                score = parsed.e;
+                max = parsed.p;
+              }
+            }
+        } else {
           const s = a._Score ? parseFloat(a._Score) : NaN;
-          const m = a._ScoreMaxValue
+          const mVal = a._ScoreMaxValue
             ? parseFloat(a._ScoreMaxValue)
             : a._PointPossible
             ? parseFloat(a._PointPossible)
             : NaN;
-          if (Number.isFinite(s) && Number.isFinite(m)) {
+          if (Number.isFinite(s) && Number.isFinite(mVal)) {
             score = s;
-            max = m;
+            max = mVal;
+          } else {
+            const parsed = parsePoints(a._Points);
+            if (parsed) {
+              score = parsed.e;
+              max = parsed.p;
+            }
           }
         }
         if (
@@ -215,7 +247,15 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       setEditableAssignments((prev) =>
         prev.map((a) =>
           a._GradebookID === id
-            ? { ...a, _Score: score, _ScoreMaxValue: max }
+            ? {
+                ...a,
+                _Score: score,
+                _ScoreMaxValue: max,
+                _Points:
+                  score && max && Number(max) > 0
+                    ? `${score} / ${max}`
+                    : a._Points,
+              }
             : a
         )
       );

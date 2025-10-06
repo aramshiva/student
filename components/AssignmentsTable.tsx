@@ -73,6 +73,11 @@ function AssignmentsTableBase({
   onCreateHypothetical,
   onDeleteHypothetical,
 }: AssignmentsTableProps) {
+  const isRubric = React.useCallback(
+    (a: Pick<Assignment, '_ScoreType'> | Assignment | undefined | null) =>
+      !!a && /rubric/i.test(a._ScoreType || ""),
+    []
+  );
   const decodeEntities = React.useCallback(
     (input: string | undefined | null): string => {
       if (!input) return "";
@@ -130,9 +135,10 @@ function AssignmentsTableBase({
       assignments.forEach((a) => {
         const id = a._GradebookID;
         if (!next[id]) {
+          const derivedMax = isRubric(a) ? "4" : (a._ScoreMaxValue ?? a._PointPossible ?? "");
           next[id] = {
             score: a._Score ?? "",
-            max: a._ScoreMaxValue ?? a._PointPossible ?? "",
+            max: derivedMax,
           };
         }
       });
@@ -149,15 +155,17 @@ function AssignmentsTableBase({
       });
       return next;
     });
-  }, [assignments]);
+  }, [assignments, isRubric]);
 
   const flushUpdate = React.useCallback(
     (id: string) => {
       const data = draftScoresRef.current[id];
       if (!data) return;
-      onEditScore?.(id, data.score, data.max);
+      const assignment = assignments.find(a => a._GradebookID === id);
+      const forceMax = assignment && isRubric(assignment) ? '4' : data.max;
+      onEditScore?.(id, data.score, forceMax);
     },
-    [onEditScore],
+    [onEditScore, assignments, isRubric],
   );
 
   const handleDraftChange = React.useCallback(
@@ -369,6 +377,7 @@ function AssignmentsTableBase({
             score: a._Score ?? "",
             max: a._ScoreMaxValue ?? a._PointPossible ?? "",
           };
+          const rubric = isRubric(a);
           if (!hypotheticalMode) {
             return (
               <div className="text-sm">
@@ -376,7 +385,9 @@ function AssignmentsTableBase({
                   href={`/gradebook/${a._GradebookID}`}
                   className="font-medium text-black dark:text-white hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-sm"
                 >
-                  {a._DisplayScore || "View"}
+                  {rubric
+                    ? a._Score || a._ScoreCalValue || "View"
+                    : a._DisplayScore || "View"}
                 </Link>
               </div>
             );
@@ -389,14 +400,21 @@ function AssignmentsTableBase({
                 defaultValue={draft.score}
                 onChange={(e) => handleDraftChange(id, "score", e.target.value)}
                 onBlur={() => flushUpdate(id)}
+                aria-label="Score"
+                min={0}
+                step={rubric ? 1 : 0.01}
               />
               <span className="text-gray-500">/</span>
               <Input
                 type="number"
                 className="w-16 p-1"
-                defaultValue={draft.max}
-                onChange={(e) => handleDraftChange(id, "max", e.target.value)}
+                defaultValue={rubric ? '4' : draft.max}
+                disabled={rubric}
+                onChange={(e) => !rubric && handleDraftChange(id, "max", e.target.value)}
                 onBlur={() => flushUpdate(id)}
+                aria-label="Maximum points"
+                min={1}
+                step={rubric ? 1 : 0.01}
               />
             </div>
           );
@@ -408,16 +426,23 @@ function AssignmentsTableBase({
         sortingFn: (a, b) => {
           const pctFrom = (row: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
             const ra = row.original;
-            const usePoints = hypotheticalMode && typeof ra._Points === 'string' && ra._Points.includes('/');
-            let score = Number(ra._Score);
-            let max = Number(ra._ScoreMaxValue);
+            const rubric = isRubric(ra);
+            const usePoints = (hypotheticalMode && typeof ra._Points === 'string' && ra._Points.includes('/')) || rubric;
+            let score: number | undefined = undefined;
+            let max: number | undefined = undefined;
             if (usePoints) {
-              const cleaned = ra._Points.replace(/of/i, '/');
-              const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
-              if (m) {
-                score = parseFloat(m[1]);
-                max = parseFloat(m[2]);
+              const src = ra._Points && ra._Points.replace(/of/i, '/');
+              if (src) {
+                const m = src.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+                if (m) {
+                  score = parseFloat(m[1]);
+                  max = parseFloat(m[2]);
+                }
               }
+            }
+            if (score == null || max == null || !Number.isFinite(score) || !Number.isFinite(max)) {
+              score = Number(ra._Score);
+              max = rubric ? 4 : Number(ra._ScoreMaxValue);
             }
             return calculatePercentage(score, max);
           };
@@ -427,16 +452,23 @@ function AssignmentsTableBase({
         },
         cell: ({ row }) => {
           const a = row.original;
-          const usePoints = hypotheticalMode && typeof a._Points === 'string' && a._Points.includes('/');
-          let rawScore = Number(a._Score);
-            let rawMax = Number(a._ScoreMaxValue);
+          const rubric = isRubric(a);
+          const usePoints = (hypotheticalMode && typeof a._Points === 'string' && a._Points.includes('/')) || rubric;
+          let rawScore: number | undefined = undefined;
+          let rawMax: number | undefined = undefined;
           if (usePoints) {
-            const cleaned = a._Points.replace(/of/i, '/');
-            const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
-            if (m) {
-              rawScore = parseFloat(m[1]);
-              rawMax = parseFloat(m[2]);
+            const cleaned = a._Points && a._Points.replace(/of/i, '/');
+            if (cleaned) {
+              const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+              if (m) {
+                rawScore = parseFloat(m[1]);
+                rawMax = parseFloat(m[2]);
+              }
             }
+          }
+          if (rawScore == null || rawMax == null || !Number.isFinite(rawScore) || !Number.isFinite(rawMax)) {
+            rawScore = Number(a._Score);
+            rawMax = rubric ? 4 : Number(a._ScoreMaxValue);
           }
           const pct = calculatePercentage(rawScore, rawMax);
           const invalid = !Number.isFinite(rawScore) || !Number.isFinite(rawMax) || rawMax === 0 || Number.isNaN(pct);
@@ -501,16 +533,27 @@ function AssignmentsTableBase({
         header: "Points",
         cell: ({ row }) => {
           const a = row.original;
+          const rubric = isRubric(a);
           let display: string | null = null;
           const rawPts = typeof a._Points === 'string' ? a._Points.trim() : '';
           if (rawPts) {
             const normalized = rawPts.replace(/\s*\/\s*/g, ' / ').replace(/\s{2,}/g, ' ').trim();
-            display = /\bpts?\b|\bpoints?\b/i.test(normalized) ? normalized : `${normalized}`;
+            if (rubric) {
+              // For rubric, just show the left side (score) without the denominator
+              const m = normalized.match(/([0-9]+(?:\.[0-9]+)?)/);
+              display = m ? m[1] : normalized;
+            } else {
+              display = /\bpts?\b|\bpoints?\b/i.test(normalized) ? normalized : `${normalized}`;
+            }
           } else {
             const s = a._Score?.toString().trim();
             const m = (a._ScoreMaxValue || a._PointPossible || '').toString().trim();
-            if (s && m) display = `${parseFloat(s).toFixed(2)} / ${parseFloat(m).toFixed(2)}`;
-            else if (s) display = `${parseFloat(s).toFixed(2)}`;
+            if (rubric) {
+              if (s) display = `${parseFloat(s).toFixed(2)}`;
+            } else {
+              if (s && m) display = `${parseFloat(s).toFixed(2)} / ${parseFloat(m).toFixed(2)}`;
+              else if (s) display = `${parseFloat(s).toFixed(2)}`;
+            }
           }
           if (!display) display = '—';
           return (
@@ -562,6 +605,7 @@ function AssignmentsTableBase({
       onEditType,
       onEditName,
       onDeleteHypothetical,
+      isRubric,
     ],
   );
 
