@@ -83,6 +83,33 @@ export default function TestsPage() {
       spaced = spaced.replace(/([A-Z])([A-Z][a-z])/g, "$1 $2");
       return spaced.trim();
     };
+    const mergeSparseRows = (
+      rows: Record<string, string>[],
+      columns: string[],
+    ): Record<string, string>[] => {
+      const acc: Record<string, string>[] = [];
+      rows.forEach((row) => {
+        const idx = acc.findIndex((existing) => {
+          for (const col of columns) {
+            const ev = existing[col];
+            const rv = row[col];
+            if (ev && rv && ev !== rv) return false;
+          }
+            return true;
+        });
+        if (idx === -1) {
+          acc.push({ ...row });
+        } else {
+          const existing = acc[idx];
+          for (const col of columns) {
+            if ((!existing[col] || existing[col] === "") && row[col]) {
+              existing[col] = row[col];
+            }
+          }
+        }
+      });
+      return acc;
+    };
     if (loading) {
       return (
         <div className="space-y-4">
@@ -128,7 +155,8 @@ export default function TestsPage() {
       <div className="space-y-6">
         {data.map((test) => {
           const cols = test.GridColumns || [];
-          const rows = test.GridData || [];
+          const rawRows = test.GridData || [];
+          const rows = mergeSparseRows(rawRows, cols);
           const formatDate = (raw?: string) => {
             if (!raw) return "";
             const d = new Date(raw.replace(/ 00:00:00 AM$/i, ""));
