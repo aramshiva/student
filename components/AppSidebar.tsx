@@ -37,6 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const primaryNav = [
   { name: "Home", href: "/student", icon: Home },
@@ -209,13 +210,15 @@ export function AppSidebar() {
             <DropdownMenuTrigger asChild>
               <button className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md mt-1 flex items-center gap-2 p-2 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1">
                 {studentPhoto ? (
-                  <Image
-                    src={`data:image/png;base64,${studentPhoto}`}
-                    alt="Student Photo"
-                    width={36}
-                    height={36}
-                    className="rounded-full object-cover aspect-square group-data-[collapsible=icon]:size-8"
-                  />
+                  <Avatar>
+                    <AvatarImage
+                      className="rounded-full object-cover aspect-square group-data-[collapsible=icon]:size-8"
+                      src={`data:image/png;base64,${studentPhoto}`}
+                    />
+                    <AvatarFallback>
+                      {(studentName || permId || school || "U").slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
                 ) : (
                   <div className="size-9 shrink-0 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-medium uppercase group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:text-sm">
                     {(studentName || permId || school || "U").slice(0, 2)}
