@@ -89,7 +89,7 @@ function CommandButton() {
       >
         <KbdGroup>
           <Kbd>
-            {navigator?.platform?.toLowerCase().includes("mac") ? "⌘" : "Ctrl"}
+            {typeof navigator !== "undefined" && navigator.userAgent?.toLowerCase().includes("mac") ? "⌘" : "Ctrl"}
           </Kbd>
           <span>+</span>
           <Kbd>K</Kbd>
