@@ -47,7 +47,7 @@ const escapeXmlText = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const sanitizeDomain = (raw: string) =>
-  raw.replace(/^https?:\/\//i, "").replace(/\/+$/g, "");
+  raw.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
 
 interface MinimalFetchInit {
   method?: string;
