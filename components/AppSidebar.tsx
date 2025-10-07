@@ -126,7 +126,7 @@ export function AppSidebar() {
   }, [studentName]);
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar" side="left">
+    <Sidebar collapsible="icon" variant="sidebar" side="left" className="overflow-hidden">
       <SidebarHeader className="gap-1">
         <div className="flex items-center justify-between h-8 px-2">
           <Link
@@ -142,7 +142,7 @@ export function AppSidebar() {
           </Link>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="overflow-hidden"> // temp solution :/
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -175,7 +175,7 @@ export function AppSidebar() {
               <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
               <SidebarGroupContent>
                 <div className="grid grid-cols-1 gap-2 text-xs px-1">
-                  <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
+                  <div className="rounded-md border bg-sidebar-accent/50 py-2 pl-2 flex flex-col gap-1">
                     <div className="flex items-baseline justify-between">
                       <p className="font-medium tracking-tight">GPA</p>
                       <p className="text-sm font-semibold">{quickStats.gpa}</p>
