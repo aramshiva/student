@@ -20,10 +20,16 @@ interface InternalGradebookRoot {
   [k: string]: unknown;
 }
 
-function extractCourses(data: any): Course[] {
-  // eslint-disable-line @typescript-eslint/no-explicit-any
-  if (!data) return [];
-  const root: InternalGradebookRoot = data.Gradebook ? data.Gradebook : data;
+function extractCourses(data: unknown): Course[] {
+  if (!data || typeof data !== "object" || data === null) return [];
+  const hasGradebook =
+    typeof data === "object" &&
+    data !== null &&
+    "Gradebook" in data &&
+    typeof (data as InternalGradebookRoot).Gradebook === "object";
+  const root: InternalGradebookRoot = hasGradebook
+    ? ((data as InternalGradebookRoot).Gradebook ?? {})
+    : (data as InternalGradebookRoot);
   return (root?.Courses?.Course as Course[]) || [];
 }
 

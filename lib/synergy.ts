@@ -99,7 +99,7 @@ interface MinimalFetchInit {
 async function fetchWithTimeout(
   input: RequestInfo,
   init: MinimalFetchInit = {},
-  ms = 15000,
+  ms = 15000
 ) {
   // validate url to prevent req forgery
   const url = typeof input === "string" ? input : input.url;
@@ -151,7 +151,7 @@ export class SynergyClient {
             "http://edupoint.com/webservices/ProcessWebServiceRequest",
         },
         body: soapBody,
-      },
+      }
     );
     const text = await res.text();
     if (!res.ok) {
@@ -167,9 +167,15 @@ export class SynergyClient {
     } catch {
       throw new Error("Failed to parse district SOAP response");
     }
-    const resultStr = (outer as any)?.["soap:Envelope"]?.["soap:Body"]
-      ?.ProcessWebServiceRequestResponse
-      ?.ProcessWebServiceRequestResult as unknown; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const resultStr = (
+      (
+        (
+          (outer as Record<string, unknown>)?.["soap:Envelope"] as
+            | Record<string, unknown>
+            | undefined
+        )?.["soap:Body"] as Record<string, unknown> | undefined
+      )?.ProcessWebServiceRequestResponse as Record<string, unknown> | undefined
+    )?.ProcessWebServiceRequestResult as unknown;
     if (!resultStr || typeof resultStr !== "string") {
       return [];
     }
@@ -184,14 +190,24 @@ export class SynergyClient {
       return [];
     }
     const districtContainer =
-      (inner as any)?.DistrictLists?.DistrictList ||
-      (inner as any)?.DistrictLists?.DistrictInfos; // eslint-disable-line @typescript-eslint/no-explicit-any
-    const rawNodes: unknown = districtContainer?.DistrictInfo;
+      (
+        (inner as Record<string, unknown>)?.DistrictLists as
+          | Record<string, unknown>
+          | undefined
+      )?.DistrictList ||
+      (
+        (inner as Record<string, unknown>)?.DistrictLists as
+          | Record<string, unknown>
+          | undefined
+      )?.DistrictInfos;
+    const rawNodes: unknown = (
+      districtContainer as Record<string, unknown> | undefined
+    )?.DistrictInfo;
     const districtNodes: unknown[] = Array.isArray(rawNodes)
       ? rawNodes
       : rawNodes
-        ? [rawNodes]
-        : [];
+      ? [rawNodes]
+      : [];
     const districts = districtNodes
       .map((d) => {
         const obj = d as Record<string, unknown>;
@@ -211,7 +227,7 @@ export class SynergyClient {
   private buildEnvelope(
     operation: Operation,
     methodName: string,
-    params: unknown,
+    params: unknown
   ) {
     const paramXml = builder.build({ Params: params ?? {} });
     const paramStr = escapeXmlText(paramXml);
@@ -235,7 +251,7 @@ export class SynergyClient {
   private async soapRequest(
     operation: Operation,
     methodName: string,
-    params?: unknown,
+    params?: unknown
   ) {
     const res = await fetchWithTimeout(this.endpoint(), {
       method: "POST",
@@ -248,7 +264,7 @@ export class SynergyClient {
       throw new Error(
         process.env.NODE_ENV === "development"
           ? `HTTP ${res.status} from Synergy: ${raw.slice(0, 400)}`
-          : `HTTP ${res.status} from Synergy`,
+          : `HTTP ${res.status} from Synergy`
       );
 
     const outer = parser.parse(raw);
@@ -277,7 +293,7 @@ export class SynergyClient {
     return this.soapRequest(
       "ProcessWebServiceRequestMultiWeb",
       methodName,
-      params,
+      params
     );
   }
 
@@ -301,7 +317,7 @@ export class SynergyClient {
   async getGradebook(reportPeriod?: number): Promise<Gradebook> {
     const r = await this.request(
       "Gradebook",
-      reportPeriod ? { ReportPeriod: reportPeriod } : {},
+      reportPeriod ? { ReportPeriod: reportPeriod } : {}
     );
     return r?.Gradebook ?? {};
   }
@@ -347,7 +363,7 @@ export class SynergyClient {
   async getSchedule(termIndex?: number): Promise<Schedule> {
     const r = await this.request(
       "StudentClassList",
-      termIndex !== undefined ? { TermIndex: termIndex } : {},
+      termIndex !== undefined ? { TermIndex: termIndex } : {}
     );
     return r?.StudentClassList ?? {};
   }

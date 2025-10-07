@@ -84,10 +84,14 @@ export async function getStudentNameFromDistrict(params: {
       result = await postSummary(encoded);
     }
 
+    type StudentSummaryResponse = {
+      students: { name: string }[];
+      [key: string]: unknown;
+    };
+
     function extractStudentPayload(
       xmlText: string,
-    ): { ok: true; parsed: any } | { ok: false } {
-      // eslint-disable-line @typescript-eslint/no-explicit-any
+    ): { ok: true; parsed: StudentSummaryResponse } | { ok: false } {
       const startTag = "<JSON_RESPONSE><![CDATA[";
       const endTag = "]]></JSON_RESPONSE>";
       const startIdx = xmlText.indexOf(startTag);
@@ -97,15 +101,14 @@ export async function getStudentNameFromDistrict(params: {
       if (endIdx === -1) return { ok: false };
       const jsonRaw = xmlText.slice(afterStart, endIdx).trim();
       try {
-        const parsed = JSON.parse(jsonRaw);
+        const parsed: StudentSummaryResponse = JSON.parse(jsonRaw);
         return { ok: true, parsed };
       } catch {
         return { ok: false };
       }
     }
 
-    function fromParsed(obj: any): string {
-      // eslint-disable-line @typescript-eslint/no-explicit-any
+    function fromParsed(obj: StudentSummaryResponse): string {
       if (!obj || !Array.isArray(obj.students)) return "";
       const first = obj.students[0];
       if (first && typeof first.name === "string" && first.name.trim())

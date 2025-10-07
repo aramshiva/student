@@ -428,8 +428,7 @@ function AssignmentsTableBase({
         id: "percentage",
         header: "Percentage",
         sortingFn: (a, b) => {
-          const pctFrom = (row: any) => {
-            // eslint-disable-line @typescript-eslint/no-explicit-any
+          const pctFrom = (row: import("@tanstack/react-table").Row<Assignment>) => {
             const ra = row.original;
             const rubric = isRubric(ra);
             const usePoints =
