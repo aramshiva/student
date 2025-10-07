@@ -29,6 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="apple-mobile-web-app-title" content="Student" />
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="8056adb5-1611-47a9-a51e-4e85b51bf566"></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
