@@ -126,7 +126,7 @@ export function AppSidebar() {
   }, [studentName]);
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar" side="left" className="overflow-hidden">
+    <Sidebar collapsible="icon" variant="sidebar" side="left">
       <SidebarHeader className="gap-1">
         <div className="flex items-center justify-between h-8 px-2">
           <Link
