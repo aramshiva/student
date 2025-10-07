@@ -2,7 +2,9 @@
 
 # 📚 Student
 
-![Time Spent Coding](https://hackatime-badge.hackclub.com/U0616280E6P/student)
+![Time Spent Coding](https://hackatime-badge.hackclub.com/U0616280E6P/student) ![GitHub commit status](https://img.shields.io/github/checks-status/aramshiva/student/main) ![GitHub last commit](https://img.shields.io/github/last-commit/aramshiva/student) ![GitHub repo size](https://img.shields.io/github/repo-size/aramshiva/student)
+
+
 
 An alternative client for StudentVUE, with a refreshed UI and more powerful features to help maintain academics.
 
