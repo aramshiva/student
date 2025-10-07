@@ -85,7 +85,7 @@ const DEFAULT_GRADE_BOUNDS: GradeBound[] = [
   { letter: "F", min: 40 },
 ];
 
-const GRADE_BOUNDS_STORAGE_KEY = "studentvue-custom-grade-bounds";
+const GRADE_BOUNDS_STORAGE_KEY = "Student.customGradeBounds";
 
 export function loadCustomGradeBounds(): GradeBound[] {
   if (typeof window === "undefined") return [...DEFAULT_GRADE_BOUNDS];
@@ -163,7 +163,7 @@ const DEFAULT_LETTER_GPA: Record<string, number> = {
   D: 1.0,
   F: 0.0,
 };
-const GPA_STORAGE_KEY = "studentvue-custom-gpa-scale";
+const GPA_STORAGE_KEY = "Student.customGPAScale";
 
 export type GPAScaleEntry = { letter: string; value: number };
 
@@ -211,7 +211,7 @@ export function percentToGPA(pct: number): number | null {
   const letter = numericToLetterGrade(pct);
   return letterToGPA(letter);
 }
-const CALC_GRADES_STORAGE_KEY = "studentvue-calc-grades";
+const CALC_GRADES_STORAGE_KEY = "Student.calcGrades";
 
 export function loadCalculateGradesEnabled(): boolean {
   if (typeof window === "undefined") return false; // default off

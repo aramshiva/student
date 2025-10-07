@@ -91,7 +91,7 @@ export default function SchedulePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const creds = localStorage.getItem("studentvue-creds");
+    const creds = localStorage.getItem("Student.creds");
     if (!creds) {
       window.location.href = "/";
       return;

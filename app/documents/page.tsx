@@ -59,7 +59,7 @@ export default function DocumentsPage() {
   };
 
   useEffect(() => {
-    const credsRaw = localStorage.getItem("studentvue-creds");
+    const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) {
       window.location.href = "/";
       return;
@@ -103,7 +103,7 @@ export default function DocumentsPage() {
   }, []);
 
   const fetchDocumentBase64 = async (guid: string) => {
-    const credsRaw = localStorage.getItem("studentvue-creds");
+    const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) return null;
     const creds = JSON.parse(credsRaw);
     const res = await fetch("/api/synergy/document", {
@@ -155,7 +155,7 @@ export default function DocumentsPage() {
   const openDocument = async (guid: string) => {
     setDownloading(guid);
     try {
-      const credsRaw = localStorage.getItem("studentvue-creds");
+      const credsRaw = localStorage.getItem("Student.creds");
       if (!credsRaw) return;
       const creds = JSON.parse(credsRaw);
       const res = await fetch("/api/synergy/document", {

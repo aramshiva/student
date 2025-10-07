@@ -33,7 +33,7 @@ export default function MailPage() {
   const [selected, setSelected] = useState<MailMessage | null>(null);
 
   useEffect(() => {
-    const credsRaw = localStorage.getItem("studentvue-creds");
+    const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) {
       window.location.href = "/";
       return;

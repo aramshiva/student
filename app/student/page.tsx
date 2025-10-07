@@ -121,7 +121,7 @@ export default function StudentDashboard() {
   );
   useEffect(() => {
     (async () => {
-      const credsRaw = localStorage.getItem("studentvue-creds");
+      const credsRaw = localStorage.getItem("Student.creds");
       if (!credsRaw) {
         window.location.href = "/";
         return;
@@ -181,15 +181,15 @@ export default function StudentDashboard() {
         if (flat) {
           if (flat.Photo) {
             setPhotoBase64(flat.Photo);
-            localStorage.setItem("studentPhoto", flat.Photo);
+            localStorage.setItem("Student.studentPhoto", flat.Photo);
           }
           if (flat.PermID !== undefined) {
             const pid = String(flat.PermID);
             setPermId(pid);
-            localStorage.setItem("studentPermId", pid);
+            localStorage.setItem("Student.studentPermId", pid);
           }
           if (flat.CurrentSchool) {
-            localStorage.setItem("studentSchool", flat.CurrentSchool);
+            localStorage.setItem("Student.studentSchool", flat.CurrentSchool);
           }
         }
 
@@ -367,7 +367,7 @@ export default function StudentDashboard() {
                     </span>
                   </div>
                   <p
-                    className={`text-sm mt-1 truncate ${
+                    className={`text-sm mt-1 ${
                       !m.read ? "font-medium" : ""
                     }`}
                     title={m.subject}

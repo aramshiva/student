@@ -32,8 +32,8 @@ export default function GradebookPage() {
   const [selectedReportingPeriod, setSelectedReportingPeriod] = useState<
     number | null
   >(null);
-  const REPORTING_PERIOD_STORAGE_KEY = "studentvue-last-reporting-period";
-  const QUICK_STATS_STORAGE_KEY = "studentvue-quick-stats";
+  const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
+  const QUICK_STATS_STORAGE_KEY = "Student.quickStats";
 
   function getCurrentMark(m: Mark | Mark[] | undefined): Mark | null {
     if (!m) return null;
@@ -120,7 +120,7 @@ export default function GradebookPage() {
     async (reportPeriodIndex: number | null = null) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
-      const creds = localStorage.getItem("studentvue-creds");
+      const creds = localStorage.getItem("Student.creds");
       if (!creds) {
         window.location.href = "/";
         return;
@@ -263,7 +263,7 @@ export default function GradebookPage() {
       gradebookData={gradebookData}
       onCourseSelect={setSelectedCourse}
       onLogout={() => {
-        localStorage.removeItem("studentvue-creds");
+        localStorage.removeItem("Student.creds");
         window.location.href = "/";
       }}
       reportingPeriods={reportingPeriods}

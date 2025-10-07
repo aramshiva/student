@@ -50,12 +50,12 @@ export default function AssignmentDetailPage() {
   const [reportingPeriod, setReportingPeriod] = useState<number | null>(null);
   const inFlightRef = useRef(false);
 
-  const REPORTING_PERIOD_STORAGE_KEY = "studentvue-last-reporting-period";
+  const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
 
   const fetchGradebook = useCallback(async () => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
-    const creds = localStorage.getItem("studentvue-creds");
+    const creds = localStorage.getItem("Student.creds");
     if (!creds) {
       router.push("/");
       return;

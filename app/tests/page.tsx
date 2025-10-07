@@ -51,7 +51,7 @@ export default function TestsPage() {
       try {
         setLoading(true);
         setError(null);
-        const credsRaw = localStorage.getItem("studentvue-creds");
+        const credsRaw = localStorage.getItem("Student.creds");
         if (!credsRaw) {
           window.location.href = "/";
           return;

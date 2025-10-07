@@ -64,7 +64,7 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const KEY = "studentvue-quick-stats";
+    const KEY = "Student.quickStats";
     const read = () => {
       try {
         const raw = localStorage.getItem(KEY);
@@ -84,10 +84,10 @@ export function AppSidebar() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      setStudentPhoto(localStorage.getItem("studentPhoto") || "");
-      setPermId(localStorage.getItem("studentPermId") || "");
-      setSchool(localStorage.getItem("studentSchool") || "");
-      const existingName = localStorage.getItem("studentName") || "";
+      setStudentPhoto(localStorage.getItem("Student.studentPhoto") || "");
+      setPermId(localStorage.getItem("Student.studentPermId") || "");
+      setSchool(localStorage.getItem("Student.studentSchool") || "");
+      const existingName = localStorage.getItem("Student.studentName") || "";
       if (existingName) setStudentName(existingName);
     } catch {}
   }, []);
@@ -95,7 +95,7 @@ export function AppSidebar() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     if (studentName) return;
-    const credsRaw = localStorage.getItem("studentvue-creds");
+    const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) return;
     let aborted = false;
     (async () => {
@@ -115,7 +115,7 @@ export function AppSidebar() {
           if (data && typeof data.name === "string" && data.name.trim()) {
             const nm = data.name.trim();
             setStudentName(nm);
-            localStorage.setItem("studentName", nm);
+            localStorage.setItem("Student.studentName", nm);
           }
         }
       } catch {}

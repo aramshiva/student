@@ -123,7 +123,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           label: "Logout",
           action: () => {
             try {
-              localStorage.removeItem("studentvue-creds");
+              localStorage.removeItem("Student.creds");
             } catch {}
             router.push("/");
           },
