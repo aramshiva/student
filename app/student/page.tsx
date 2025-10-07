@@ -367,9 +367,7 @@ export default function StudentDashboard() {
                     </span>
                   </div>
                   <p
-                    className={`text-sm mt-1 ${
-                      !m.read ? "font-medium" : ""
-                    }`}
+                    className={`text-sm mt-1 ${!m.read ? "font-medium" : ""}`}
                     title={m.subject}
                   >
                     {m.subject}

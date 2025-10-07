@@ -428,7 +428,9 @@ function AssignmentsTableBase({
         id: "percentage",
         header: "Percentage",
         sortingFn: (a, b) => {
-          const pctFrom = (row: import("@tanstack/react-table").Row<Assignment>) => {
+          const pctFrom = (
+            row: import("@tanstack/react-table").Row<Assignment>,
+          ) => {
             const ra = row.original;
             const rubric = isRubric(ra);
             const usePoints =
