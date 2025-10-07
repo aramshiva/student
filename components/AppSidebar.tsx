@@ -142,7 +142,7 @@ export function AppSidebar() {
           </Link>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="overflow-hidden">
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -174,7 +174,7 @@ export function AppSidebar() {
             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
               <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
               <SidebarGroupContent>
-                <div className="grid grid-cols-1 gap-2 text-xs px-1">
+                <div className="grid grid-cols-1 gap-2 text-xs pl-1">
                   <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
                     <div className="flex items-baseline justify-between">
                       <p className="font-medium tracking-tight">GPA</p>
