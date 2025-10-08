@@ -57,12 +57,23 @@ const NameEditor: React.FC<{
   setDraftNames: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   onEditName?: (id: string, name: string) => void;
   originalMeasure: string;
-}> = ({ initial, assignmentId, draftNamesRef, setDraftNames, onEditName, originalMeasure }) => {
+}> = ({
+  initial,
+  assignmentId,
+  draftNamesRef,
+  setDraftNames,
+  onEditName,
+  originalMeasure,
+}) => {
   const [localName, setLocalName] = React.useState(initial);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   React.useEffect(() => {
     const committed = draftNamesRef.current[assignmentId];
-    if (committed != null && committed !== localName && document.activeElement !== inputRef.current) {
+    if (
+      committed != null &&
+      committed !== localName &&
+      document.activeElement !== inputRef.current
+    ) {
       setLocalName(committed);
     }
   }, [assignmentId, draftNamesRef, localName]);
@@ -73,7 +84,14 @@ const NameEditor: React.FC<{
       setDraftNames((prev) => ({ ...prev, [assignmentId]: latest }));
       onEditName?.(assignmentId, latest);
     }
-  }, [assignmentId, localName, onEditName, originalMeasure, setDraftNames, draftNamesRef]);
+  }, [
+    assignmentId,
+    localName,
+    onEditName,
+    originalMeasure,
+    setDraftNames,
+    draftNamesRef,
+  ]);
   return (
     <Input
       ref={inputRef}
@@ -82,8 +100,16 @@ const NameEditor: React.FC<{
       onChange={(e) => setLocalName(e.target.value)}
       onBlur={commit}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') { e.preventDefault(); commit(); (e.target as HTMLInputElement).blur(); }
-        else if (e.key === 'Escape') { const committed = draftNamesRef.current[assignmentId] ?? originalMeasure; setLocalName(committed); (e.target as HTMLInputElement).blur(); }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          commit();
+          (e.target as HTMLInputElement).blur();
+        } else if (e.key === "Escape") {
+          const committed =
+            draftNamesRef.current[assignmentId] ?? originalMeasure;
+          setLocalName(committed);
+          (e.target as HTMLInputElement).blur();
+        }
       }}
       placeholder="Assignment name"
     />
