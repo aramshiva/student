@@ -23,7 +23,13 @@ bun i
 bun dev
 ```
 
-### Running a production enviorment/building.
+Optionally Student uses security partner [Arcjet](https://arcjet.com/) to provide protection against bots. To enable this, put your arcjet key in env:
+
+```
+ARCJET_KEY=ajkey_
+```
+
+### Running a production environment/building.
 
 To build the app, simply run:
 
