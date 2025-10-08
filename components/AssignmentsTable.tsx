@@ -50,6 +50,46 @@ import {
 } from "./ui/select";
 import Link from "next/link";
 
+const NameEditor: React.FC<{
+  initial: string;
+  assignmentId: string;
+  draftNamesRef: React.MutableRefObject<Record<string, string>>;
+  setDraftNames: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  onEditName?: (id: string, name: string) => void;
+  originalMeasure: string;
+}> = ({ initial, assignmentId, draftNamesRef, setDraftNames, onEditName, originalMeasure }) => {
+  const [localName, setLocalName] = React.useState(initial);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  React.useEffect(() => {
+    const committed = draftNamesRef.current[assignmentId];
+    if (committed != null && committed !== localName && document.activeElement !== inputRef.current) {
+      setLocalName(committed);
+    }
+  }, [assignmentId, draftNamesRef, localName]);
+  const commit = React.useCallback(() => {
+    const latest = inputRef.current?.value ?? localName;
+    const committed = draftNamesRef.current[assignmentId] ?? originalMeasure;
+    if (latest !== committed) {
+      setDraftNames((prev) => ({ ...prev, [assignmentId]: latest }));
+      onEditName?.(assignmentId, latest);
+    }
+  }, [assignmentId, localName, onEditName, originalMeasure, setDraftNames, draftNamesRef]);
+  return (
+    <Input
+      ref={inputRef}
+      type="text"
+      defaultValue={localName}
+      onChange={(e) => setLocalName(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') { e.preventDefault(); commit(); (e.target as HTMLInputElement).blur(); }
+        else if (e.key === 'Escape') { const committed = draftNamesRef.current[assignmentId] ?? originalMeasure; setLocalName(committed); (e.target as HTMLInputElement).blur(); }
+      }}
+      placeholder="Assignment name"
+    />
+  );
+};
+
 interface AssignmentsTableProps {
   assignments: Assignment[];
   getTypeColor: (type: string) => string;
@@ -221,7 +261,8 @@ function AssignmentsTableBase({
         cell: ({ row }) => {
           const a = row.original;
           const originalMeasure = decodeEntities(a._Measure);
-          const renamed = draftNames[a._GradebookID] ?? originalMeasure;
+          const globalDraft = draftNames[a._GradebookID];
+          const renamed = globalDraft ?? originalMeasure;
           const desc = a._MeasureDescription
             ? decodeEntities(a._MeasureDescription)
             : "";
@@ -232,18 +273,13 @@ function AssignmentsTableBase({
           return (
             <div className="max-w-[16rem] md:max-w-[21rem] xl:max-w-[26rem] space-y-1 pl-5">
               {hypotheticalMode ? (
-                <Input
-                  type="text"
-                  value={renamed}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setDraftNames((prev) => ({
-                      ...prev,
-                      [a._GradebookID]: value,
-                    }));
-                    onEditName?.(a._GradebookID, value);
-                  }}
-                  placeholder="Assignment name"
+                <NameEditor
+                  initial={renamed}
+                  assignmentId={a._GradebookID}
+                  draftNamesRef={draftNamesRef}
+                  setDraftNames={setDraftNames}
+                  onEditName={onEditName}
+                  originalMeasure={originalMeasure}
                 />
               ) : (
                 <div className="font-medium text-black dark:text-white break-words whitespace-pre-line leading-snug">
