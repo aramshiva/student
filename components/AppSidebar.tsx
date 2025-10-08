@@ -1,13 +1,8 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  BookUser,
-  Calendar,
-  CalendarClock,
-  File,
   Mail,
   Settings as SettingsIcon,
   ChevronUp,
@@ -15,6 +10,10 @@ import {
   MessageCircle,
   Smartphone,
   BookCheck,
+  FileText,
+  Table2,
+  CalendarDays,
+  BookOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -37,13 +36,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const primaryNav = [
   { name: "Home", href: "/student", icon: Home },
-  { name: "Gradebook", href: "/gradebook", icon: BookUser },
-  { name: "Schedule", href: "/schedule", icon: Calendar },
-  { name: "Attendance", href: "/attendance", icon: CalendarClock },
-  { name: "Documents", href: "/documents", icon: File },
+  { name: "Gradebook", href: "/gradebook", icon: BookOpen },
+  { name: "Schedule", href: "/schedule", icon: CalendarDays },
+  { name: "Attendance", href: "/attendance", icon: Table2 },
+  { name: "Documents", href: "/documents", icon: FileText },
   { name: "Mail", href: "/mail", icon: Mail },
   { name: "Test History", href: "/tests", icon: BookCheck },
 ];
@@ -64,7 +64,7 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const KEY = "studentvue-quick-stats";
+    const KEY = "Student.quickStats";
     const read = () => {
       try {
         const raw = localStorage.getItem(KEY);
@@ -84,10 +84,10 @@ export function AppSidebar() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      setStudentPhoto(localStorage.getItem("studentPhoto") || "");
-      setPermId(localStorage.getItem("studentPermId") || "");
-      setSchool(localStorage.getItem("studentSchool") || "");
-      const existingName = localStorage.getItem("studentName") || "";
+      setStudentPhoto(localStorage.getItem("Student.studentPhoto") || "");
+      setPermId(localStorage.getItem("Student.studentPermId") || "");
+      setSchool(localStorage.getItem("Student.studentSchool") || "");
+      const existingName = localStorage.getItem("Student.studentName") || "";
       if (existingName) setStudentName(existingName);
     } catch {}
   }, []);
@@ -95,7 +95,7 @@ export function AppSidebar() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     if (studentName) return;
-    const credsRaw = localStorage.getItem("studentvue-creds");
+    const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) return;
     let aborted = false;
     (async () => {
@@ -103,23 +103,22 @@ export function AppSidebar() {
         const creds = JSON.parse(credsRaw);
         const res = await fetch("/api/synergy/name", {
           method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: creds.username || creds.user || creds.userId,
-              password: creds.password || creds.pass,
-              district_url: creds.district_url || creds.district || creds.host,
-            }),
-          });
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: creds.username || creds.user || creds.userId,
+            password: creds.password || creds.pass,
+            district_url: creds.district_url || creds.district || creds.host,
+          }),
+        });
         if (!aborted && res.ok) {
           const data = await res.json();
           if (data && typeof data.name === "string" && data.name.trim()) {
             const nm = data.name.trim();
             setStudentName(nm);
-            localStorage.setItem("studentName", nm);
+            localStorage.setItem("Student.studentName", nm);
           }
         }
-      } catch {
-      }
+      } catch {}
     })();
     return () => {
       aborted = true;
@@ -143,7 +142,7 @@ export function AppSidebar() {
           </Link>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="overflow-hidden">
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -175,7 +174,7 @@ export function AppSidebar() {
             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
               <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
               <SidebarGroupContent>
-                <div className="grid grid-cols-1 gap-2 text-xs px-1">
+                <div className="grid grid-cols-1 gap-2 text-xs pl-1">
                   <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
                     <div className="flex items-baseline justify-between">
                       <p className="font-medium tracking-tight">GPA</p>
@@ -210,13 +209,15 @@ export function AppSidebar() {
             <DropdownMenuTrigger asChild>
               <button className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md mt-1 flex items-center gap-2 p-2 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1">
                 {studentPhoto ? (
-                  <Image
-                    src={`data:image/png;base64,${studentPhoto}`}
-                    alt="Student Photo"
-                    width={36}
-                    height={36}
-                    className="rounded-full object-cover aspect-square group-data-[collapsible=icon]:size-8"
-                  />
+                  <Avatar>
+                    <AvatarImage
+                      className="rounded-full object-cover aspect-square group-data-[collapsible=icon]:size-8"
+                      src={`data:image/png;base64,${studentPhoto}`}
+                    />
+                    <AvatarFallback>
+                      {(studentName || permId || school || "U").slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
                 ) : (
                   <div className="size-9 shrink-0 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-medium uppercase group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:text-sm">
                     {(studentName || permId || school || "U").slice(0, 2)}

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileQuestionMark } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,6 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import Link from "next/link";
 
 interface StudentDocument {
   comment: string;
@@ -51,7 +59,7 @@ export default function DocumentsPage() {
   };
 
   useEffect(() => {
-    const credsRaw = localStorage.getItem("studentvue-creds");
+    const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) {
       window.location.href = "/";
       return;
@@ -95,7 +103,7 @@ export default function DocumentsPage() {
   }, []);
 
   const fetchDocumentBase64 = async (guid: string) => {
-    const credsRaw = localStorage.getItem("studentvue-creds");
+    const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) return null;
     const creds = JSON.parse(credsRaw);
     const res = await fetch("/api/synergy/document", {
@@ -147,7 +155,7 @@ export default function DocumentsPage() {
   const openDocument = async (guid: string) => {
     setDownloading(guid);
     try {
-      const credsRaw = localStorage.getItem("studentvue-creds");
+      const credsRaw = localStorage.getItem("Student.creds");
       if (!credsRaw) return;
       const creds = JSON.parse(credsRaw);
       const res = await fetch("/api/synergy/document", {
@@ -256,7 +264,19 @@ export default function DocumentsPage() {
     <div className="p-8 space-y-6">
       <h1 className="text-xl font-semibold">Documents</h1>
       {!docs.length ? (
-        <div>No documents.</div>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <FileQuestionMark />
+            </EmptyMedia>
+          </EmptyHeader>
+          <EmptyTitle>No documents found</EmptyTitle>
+          <EmptyDescription>
+            No test documents found! If you believe this is an error, please
+            contact your district or open a{" "}
+            <Link href="/feedback">feedback issue</Link>
+          </EmptyDescription>
+        </Empty>
       ) : (
         <Card className="p-4">
           <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -353,9 +373,11 @@ export default function DocumentsPage() {
           </Table>
         </Card>
       )}
-      <p className="text-xs text-gray-500">
-        Showing {docs.length} document(s).
-      </p>
+      {docs.length > 0 && (
+        <p className="text-xs text-gray-500">
+          Showing {docs.length} document(s).
+        </p>
+      )}
     </div>
   );
 }

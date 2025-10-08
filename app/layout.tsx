@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,11 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="apple-mobile-web-app-title" content="Student" />
+        <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="48d436fd-4cbf-421e-bdf3-0d4354af34a0"
+        ></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -36,6 +42,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ClientLayout>{children}</ClientLayout>
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

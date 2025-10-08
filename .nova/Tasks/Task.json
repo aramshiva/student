@@ -1,0 +1,16 @@
+{
+  "actions": {
+    "build": {
+      "enabled": true,
+      "script": "bun run build"
+    },
+    "clean": {
+      "enabled": true,
+      "script": "#!\/bin\/sh\nbunx prettier --write ."
+    },
+    "run": {
+      "enabled": true,
+      "script": "bun dev"
+    }
+  }
+}

@@ -53,7 +53,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
   >([]);
   const [districtSearchLoading, setDistrictSearchLoading] = useState(false);
   const [districtSearchError, setDistrictSearchError] = useState<string | null>(
-    null
+    null,
   );
   const [showCustomUrl, setShowCustomUrl] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -84,7 +84,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
       setDistricts(data.districts || []);
     } catch (e) {
       setDistrictSearchError(
-        (e as Error).message || "District lookup failed. Try again."
+        (e as Error).message || "District lookup failed. Try again.",
       );
     } finally {
       setDistrictSearchLoading(false);

@@ -34,9 +34,10 @@ export default function Home() {
           ) {
             serverMessage = maybeJson.error;
           }
-        } catch {
-        }
-        throw new Error(serverMessage || `HTTP error! status: ${response.status}`);
+        } catch {}
+        throw new Error(
+          serverMessage || `HTTP error! status: ${response.status}`,
+        );
       }
       const raw = await response.json();
       const gradebookRoot = raw?.Gradebook ?? raw;
@@ -45,7 +46,7 @@ export default function Home() {
       if (errorMessage) {
         throw new Error(String(errorMessage));
       }
-      localStorage.setItem("studentvue-creds", JSON.stringify(credentials));
+      localStorage.setItem("Student.creds", JSON.stringify(credentials));
       // saves creds in LOCAL STORAGE (not cloud)
       // redirects to student page
       window.location.href = "/student";

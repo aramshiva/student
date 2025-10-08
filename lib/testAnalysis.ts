@@ -1,3 +1,13 @@
+// how this code works:
+// 1. we send a SOAP request to the StudentInfo method with creds,
+// this gives us StudentInfo BUT more importantly a session cookie.
+// 2. we extract the ASP.NET_SessionId from the Set-Cookie header
+// 3. we send a second request to the /api/GB/ClientSideData/Transfer?action=pxp.test.analysis-get endpoint
+//    with a JSON body requesting the test analysis data
+// 4. this provides us a response with all tests the user has taken
+// and scores
+// 5. we return this data to the caller
+
 export interface TestAnalysisTest {
   GU?: string;
   Name?: string;
@@ -28,18 +38,21 @@ export async function getTestAnalysis(params: {
   try {
     const soapBody = `<?xml version="1.0" encoding="utf-8"?>\n<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n                 xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n                 xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">\n  <soap12:Body>\n    <ProcessWebServiceRequest xmlns="http://edupoint.com/webservices/">\n      <userID>${userId}</userID>\n      <password>${password}</password>\n      <skipLoginLog>true</skipLoginLog>\n      <parent>false</parent>\n      <webServiceHandleName>PXPWebServices</webServiceHandleName>\n      <methodName>StudentInfo</methodName>\n      <paramStr>&lt;Params/&gt;</paramStr>\n    </ProcessWebServiceRequest>\n  </soap12:Body>\n</soap12:Envelope>`;
 
-    const soapRes = await fetch(`${districtBase}/Service/PXPCommunication.asmx`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/soap+xml; charset=utf-8",
-        Accept: "*/*",
-        "User-Agent": "SynergyClient/NameFetch",
+    const soapRes = await fetch(
+      `${districtBase}/Service/PXPCommunication.asmx`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/soap+xml; charset=utf-8",
+          Accept: "*/*",
+          "User-Agent": "SynergyClient/NameFetch",
+        },
+        body: soapBody,
+        signal: controller.signal,
       },
-      body: soapBody,
-      signal: controller.signal,
-    });
+    );
 
-  if (!soapRes.ok) throw new Error(`StudentInfo HTTP ${soapRes.status}`);
+    if (!soapRes.ok) throw new Error(`StudentInfo HTTP ${soapRes.status}`);
 
     const setCookie = soapRes.headers.get("set-cookie") || "";
     let sessionId: string | null = null;

@@ -29,7 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface GradeChartProps {
   assignments: Assignment[];
   onStickyChange?: (val: boolean) => void;
-  forceStickyInHeader?: boolean; 
+  forceStickyInHeader?: boolean;
   sticky?: boolean;
   minimal?: boolean;
 }
@@ -74,9 +74,11 @@ export function GradeChart({
       upTo.forEach((a) => {
         let pts: number | null = null;
         let ptsPossible: number | null = null;
-        if (typeof a._Points === 'string' && a._Points.includes('/')) {
-          const cleaned = a._Points.replace(/of/i, '/');
-          const m = cleaned.match(/([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/);
+        if (typeof a._Points === "string" && a._Points.includes("/")) {
+          const cleaned = a._Points.replace(/of/i, "/");
+          const m = cleaned.match(
+            /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/,
+          );
           if (m) {
             pts = parseFloat(m[1]);
             ptsPossible = parseFloat(m[2]);
@@ -99,7 +101,8 @@ export function GradeChart({
           }
         }
         if (
-          pts !== null && ptsPossible !== null &&
+          pts !== null &&
+          ptsPossible !== null &&
           Number.isFinite(pts) &&
           Number.isFinite(ptsPossible) &&
           (ptsPossible as number) > 0

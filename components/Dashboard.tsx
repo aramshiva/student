@@ -1,7 +1,11 @@
 "use client";
 
 import { Course, Mark } from "@/types/gradebook";
-import { loadCustomGPAScale, numericToLetterGrade } from "@/utils/gradebook";
+import {
+  loadCustomGPAScale,
+  numericToLetterGrade,
+  loadCalculateGradesEnabled,
+} from "@/utils/gradebook";
 import {
   Select,
   SelectTrigger,
@@ -52,26 +56,49 @@ export default function Dashboard({
 }: DashboardProps) {
   const gbRoot = gradebookData.data.Gradebook ?? gradebookData.data;
   const courses: Course[] = gbRoot?.Courses?.Course || [];
+  const calcGrades = loadCalculateGradesEnabled();
 
-  const validCourses = courses.filter((course: Course) => {
+  function recomputeCoursePercent(course: Course): number | null {
     const currentMark = getCurrentMark(course.Marks.Mark);
-    const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
-    return rawScore > 0;
-  });
+    if (!currentMark) return null;
+    const assignments = currentMark.Assignments?.Assignment || [];
+    let earned = 0;
+    let possible = 0;
+    for (const a of assignments) {
+      const s = a._Score ? parseFloat(a._Score) : NaN;
+      const m = a._ScoreMaxValue
+        ? parseFloat(a._ScoreMaxValue)
+        : a._PointPossible
+          ? parseFloat(a._PointPossible)
+          : NaN;
+      if (Number.isFinite(s) && Number.isFinite(m) && m > 0) {
+        earned += s;
+        possible += m;
+      }
+    }
+    if (possible <= 0) return null;
+    return (earned / possible) * 100;
+  }
 
   const gpaScale = loadCustomGPAScale();
-  const totalPoints = validCourses.reduce((sum: number, course: Course) => {
+  const computationBasis = courses.map((course) => {
     const currentMark = getCurrentMark(course.Marks.Mark);
-    const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
-    const letter = numericToLetterGrade(rawScore);
-    const pts = gpaScale[letter] ?? 0;
-    return sum + pts;
-  }, 0);
-
-  const gpa =
-    validCourses.length > 0
-      ? (totalPoints / validCourses.length).toFixed(2)
-      : "0.00";
+    const portalRaw = Number(currentMark?._CalculatedScoreRaw) || 0;
+    const localPct = recomputeCoursePercent(course);
+    const effectivePct = calcGrades && localPct != null ? localPct : portalRaw;
+    const letter = numericToLetterGrade(Math.round(effectivePct));
+    return { course, effectivePct, letter };
+  });
+  const validCourses = computationBasis.filter(
+    (c) => Number.isFinite(c.effectivePct) && (c.effectivePct as number) > 0,
+  );
+  const totalPoints = validCourses.reduce(
+    (acc, c) => acc + (gpaScale[c.letter] ?? 0),
+    0,
+  );
+  const gpa = validCourses.length
+    ? (totalPoints / validCourses.length).toFixed(2)
+    : "0.00";
 
   return (
     <>
@@ -120,43 +147,52 @@ export default function Dashboard({
 
         <div>
           <div className="bg-white dark:bg-neutral-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900">
-            {courses.map((course: Course, index: number) => {
-              const currentMark = getCurrentMark(course.Marks.Mark);
-              const rawScore = Number(currentMark?._CalculatedScoreRaw) || 0;
-              const calculatedScore =
-                currentMark?._CalculatedScoreString || "N/A";
-
-              return (
-                <div
-                  key={course._CourseID}
-                  className={`p-4 cursor-pointer transition-colors ${
-                    index !== courses.length - 1
-                      ? "border-b border-gray-200 dark:border-zinc-900"
-                      : ""
-                  }`}
-                  onClick={() => onCourseSelect(course)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-row space-x-5">
-                      <span className="font-semibold text-black dark:text-white text-lg">
-                        {course._Period}: {course._Title}
-                      </span>
-                      <span className="text-gray-500 text-sm mt-1">
-                        {course._Staff} • Room {course._Room}
-                      </span>
+            {computationBasis.map(
+              ({ course, effectivePct, letter }, index: number) => {
+                const currentMark = getCurrentMark(course.Marks.Mark);
+                const portalRaw = Number(currentMark?._CalculatedScoreRaw) || 0;
+                const displayScore =
+                  calcGrades && Number.isFinite(effectivePct)
+                    ? letter
+                    : currentMark?._CalculatedScoreString || "N/A";
+                return (
+                  <div
+                    key={course._CourseID}
+                    className={`p-4 cursor-pointer transition-colors ${
+                      index !== computationBasis.length - 1
+                        ? "border-b border-gray-200 dark:border-zinc-900"
+                        : ""
+                    }`}
+                    onClick={() => onCourseSelect(course)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-row space-x-5">
+                        <span className="font-semibold text-black dark:text-white text-lg">
+                          {course._Period}: {course._Title}
+                        </span>
+                        <span className="text-gray-500 text-sm mt-1">
+                          {course._Staff} • Room {course._Room}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ml-4 pt-2">
+                      <div className="text-3xl font-bold text-left">
+                        {displayScore}
+                      </div>
+                      <div className="text-sm text-gray-500 text-left">
+                        {calcGrades
+                          ? Number.isFinite(effectivePct)
+                            ? `${(effectivePct as number).toFixed(1)}%`
+                            : "No grade"
+                          : portalRaw > 0
+                            ? `${portalRaw.toFixed(1)}%`
+                            : "No grade"}
+                      </div>
                     </div>
                   </div>
-                  <div className="ml-4 pt-2">
-                    <div className="text-3xl font-bold text-left">
-                      {calculatedScore || "N/A"}
-                    </div>
-                    <div className="text-sm text-gray-500 text-left">
-                      {rawScore > 0 ? `${rawScore.toFixed(1)}%` : "No grade"}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              },
+            )}
           </div>
         </div>
       </div>

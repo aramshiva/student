@@ -9,9 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card
-} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 interface APIAbsencePeriod {
   _Number: string;
@@ -116,7 +114,7 @@ export default function AttendancePage() {
   };
 
   useEffect(() => {
-    const creds = localStorage.getItem("studentvue-creds");
+    const creds = localStorage.getItem("Student.creds");
     if (!creds) {
       window.location.href = "/";
       return;

@@ -46,8 +46,49 @@ const builder = new XMLBuilder({
 const escapeXmlText = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-const sanitizeDomain = (raw: string) =>
-  raw.replace(/^https?:\/\//i, "").replace(/\/+$/g, "");
+const sanitizeDomain = (raw: string): string => {
+  // sanitize and validate a synergy host string
+  // this is due to CWE-1333, CWE-400 and CWE-730.
+  let s = (raw || "").trim();
+
+  const lower = s.toLowerCase();
+  if (lower.startsWith("http://")) s = s.slice(7);
+  else if (lower.startsWith("https://")) s = s.slice(8);
+
+  const atIdx = s.indexOf("@");
+  if (atIdx !== -1) {
+    s = s.slice(atIdx + 1);
+  }
+
+  for (const cut of ["/", "?", "#"]) {
+    const idx = s.indexOf(cut);
+    if (idx !== -1) {
+      s = s.slice(0, idx);
+      break;
+    }
+  }
+
+  while (s.endsWith("/")) s = s.slice(0, -1);
+  // no need for trailing slashes ^
+
+  while (s.endsWith(".")) s = s.slice(0, -1);
+  // also no need for trailing dots
+
+  s = s.toLowerCase();
+
+  if (!s) throw new Error("Host is empty");
+  if (s.length > 253) throw new Error("Host too long");
+
+  const labels = s.split(".");
+  for (const label of labels) {
+    if (label.length > 63) throw new Error("dns label too long");
+    if (label.startsWith("-") || label.endsWith("-")) {
+      throw new Error("dns label invalid");
+    }
+  }
+
+  return s;
+};
 
 interface MinimalFetchInit {
   method?: string;
@@ -60,6 +101,14 @@ async function fetchWithTimeout(
   init: MinimalFetchInit = {},
   ms = 15000,
 ) {
+  // validate url to prevent req forgery
+  const url = typeof input === "string" ? input : input.url;
+  const parsedUrl = new URL(url);
+
+  if (parsedUrl.protocol !== "https:") {
+    // only allow https!
+    throw new Error("Only HTTPS URLs are allowed");
+  }
   const c = new AbortController();
   const id = setTimeout(() => c.abort(), ms);
   try {
@@ -92,26 +141,41 @@ export class SynergyClient {
     const paramStr = `&lt;Parms&gt;&lt;Key&gt;5E4B7859-B805-474B-A833-FDB15D205D40&lt;/Key&gt;&lt;MatchToDistrictZipCode&gt;${zipStr}&lt;/MatchToDistrictZipCode&gt;&lt;/Parms&gt;`;
     const soapBody = `<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <ProcessWebServiceRequest xmlns=\"http://edupoint.com/webservices/\">\n      <userID>EdupointDistrictInfo</userID>\n      <password>Edup01nt</password>\n      <skipLoginLog>1</skipLoginLog>\n      <parent>0</parent>\n      <webServiceHandleName>HDInfoServices</webServiceHandleName>\n      <methodName>GetMatchingDistrictList</methodName>\n      <paramStr>${paramStr}</paramStr>\n    </ProcessWebServiceRequest>\n  </soap:Body>\n</soap:Envelope>`;
 
-    const res = await fetch("https://support.edupoint.com/Service/HDInfoCommunication.asmx", {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        SOAPAction: "http://edupoint.com/webservices/ProcessWebServiceRequest",
+    const res = await fetch(
+      "https://support.edupoint.com/Service/HDInfoCommunication.asmx",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/xml; charset=utf-8",
+          SOAPAction:
+            "http://edupoint.com/webservices/ProcessWebServiceRequest",
+        },
+        body: soapBody,
       },
-      body: soapBody,
-    });
+    );
     const text = await res.text();
     if (!res.ok) {
       throw new Error(`District lookup failed HTTP ${res.status}`);
     }
-    const outerParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "_" });
+    const outerParser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: "_",
+    });
     let outer: unknown;
     try {
       outer = outerParser.parse(text);
     } catch {
       throw new Error("Failed to parse district SOAP response");
     }
-    const resultStr = (outer as any)?.["soap:Envelope"]?.["soap:Body"]?.ProcessWebServiceRequestResponse?.ProcessWebServiceRequestResult as unknown; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const resultStr = (
+      (
+        (
+          (outer as Record<string, unknown>)?.["soap:Envelope"] as
+            | Record<string, unknown>
+            | undefined
+        )?.["soap:Body"] as Record<string, unknown> | undefined
+      )?.ProcessWebServiceRequestResponse as Record<string, unknown> | undefined
+    )?.ProcessWebServiceRequestResult as unknown;
     if (!resultStr || typeof resultStr !== "string") {
       return [];
     }
@@ -125,8 +189,20 @@ export class SynergyClient {
     } catch {
       return [];
     }
-    const districtContainer = (inner as any)?.DistrictLists?.DistrictList || (inner as any)?.DistrictLists?.DistrictInfos; // eslint-disable-line @typescript-eslint/no-explicit-any
-    const rawNodes: unknown = districtContainer?.DistrictInfo;
+    const districtContainer =
+      (
+        (inner as Record<string, unknown>)?.DistrictLists as
+          | Record<string, unknown>
+          | undefined
+      )?.DistrictList ||
+      (
+        (inner as Record<string, unknown>)?.DistrictLists as
+          | Record<string, unknown>
+          | undefined
+      )?.DistrictInfos;
+    const rawNodes: unknown = (
+      districtContainer as Record<string, unknown> | undefined
+    )?.DistrictInfo;
     const districtNodes: unknown[] = Array.isArray(rawNodes)
       ? rawNodes
       : rawNodes
@@ -186,9 +262,9 @@ export class SynergyClient {
     const raw = await res.text().catch(() => "");
     if (!res.ok)
       throw new Error(
-        process.env.NODE_ENV === 'development' 
+        process.env.NODE_ENV === "development"
           ? `HTTP ${res.status} from Synergy: ${raw.slice(0, 400)}`
-          : `HTTP ${res.status} from Synergy`
+          : `HTTP ${res.status} from Synergy`,
       );
 
     const outer = parser.parse(raw);
