@@ -201,14 +201,6 @@ export default function GradebookPage() {
   }, [fetchGradebook]);
 
   if (isLoading) {
-    if (!theme) {
-      return (
-        <div className="p-20">
-          <p>Loading...</p>
-        </div>
-      );
-    }
-
     return (
       <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6">
