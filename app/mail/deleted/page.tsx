@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowLeft, RotateCcw } from "lucide-react";
 
 interface MailRecipient {
   _RecipientType?: string;
@@ -107,28 +107,6 @@ export default function DeletedMailPage() {
     } catch (error) {
       console.error("Failed to restore message:", error);
       alert("Failed to restore message");
-    } finally {
-      setIsRestoring(false);
-    }
-  };
-
-  const handlePermanentDelete = async (messageId: string) => {
-    if (!confirm("Are you sure you want to permanently delete this message? This cannot be undone.")) return;
-    
-    setIsRestoring(true);
-    try {
-      const newDeletedMessages = new Set(deletedMessages);
-      newDeletedMessages.delete(messageId);
-      setDeletedMessages(newDeletedMessages);
-      
-      localStorage.setItem("Student.deletedMails", JSON.stringify([...newDeletedMessages]));
-      
-      if (selected?._SMMessageGU === messageId) {
-        setSelected(null);
-      }
-    } catch (error) {
-      console.error("Failed to permanently delete message:", error);
-      alert("Failed to permanently delete message");
     } finally {
       setIsRestoring(false);
     }
