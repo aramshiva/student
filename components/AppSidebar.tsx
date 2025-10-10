@@ -223,7 +223,7 @@ export function AppSidebar() {
                     {(studentName || permId || school || "U").slice(0, 2)}
                   </div>
                 )}
-                <div className="min-w-0 text-left hidden group-data-[collapsible=icon]:hidden md:block">
+                <div className="min-w-0 text-left group-data-[collapsible=icon]:hidden md:block">
                   {(studentName || permId) && (
                     <p className="truncate text-xs font-medium leading-tight">
                       {studentName || permId}
