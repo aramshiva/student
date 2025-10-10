@@ -201,43 +201,52 @@ export default function GradebookPage() {
   }, [fetchGradebook]);
 
   if (isLoading) {
+    if (!theme) {
+      return <div className="p-20"><p>Loading...</p></div>;
+    }
+    
     return (
       <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6">
-          <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-3">
             <Skeleton
-              baseColor="#202020"
-              highlightColor="#444"
+              {...(theme === "dark"
+              ? { baseColor: "#202020", highlightColor: "#444" }
+              : {})}
               height={24}
               width={160}
             />
             <div className="flex items-center gap-3">
               <Skeleton
-                baseColor="#202020"
-                highlightColor="#444"
-                height={20}
-                width={110}
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
+              height={20}
+              width={110}
               />
               <Skeleton
-                baseColor="#202020"
-                highlightColor="#444"
-                height={36}
-                width={260}
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
+              height={36}
+              width={260}
               />
             </div>
-          </div>
+            </div>
           <div className="flex items-center space-x-10 md:self-start">
             <div className="text-right space-y-2">
               <Skeleton
-                baseColor="#202020"
-                highlightColor="#444"
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
                 height={16}
                 width={34}
-                style={{ marginLeft: "auto" }}
+                className="ml-auto"
               />
               <Skeleton
-                baseColor="#202020"
-                highlightColor="#444"
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
                 height={28}
                 width={70}
               />
@@ -250,35 +259,40 @@ export default function GradebookPage() {
               <div className="flex items-center justify-between">
                 <div className="flex flex-row space-x-6 items-center">
                   <Skeleton
-                    baseColor="#202020"
-                    highlightColor="#444"
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
                     height={20}
                     width={180}
                   />
                   <Skeleton
-                    baseColor="#202020"
-                    highlightColor="#444"
+                    {...(theme === "dark"
+                      ? { baseColor: "#202020", highlightColor: "#444" }
+                      : {})}
                     height={16}
                     width={220}
                   />
                 </div>
                 <Skeleton
-                  baseColor="#202020"
-                  highlightColor="#444"
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
                   height={20}
                   width={56}
                 />
               </div>
               <div className="ml-4 pt-1 space-y-2">
                 <Skeleton
-                  baseColor="#202020"
-                  highlightColor="#444"
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
                   height={32}
                   width={90}
                 />
                 <Skeleton
-                  baseColor="#202020"
-                  highlightColor="#444"
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
                   height={16}
                   width={80}
                 />
