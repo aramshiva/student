@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/empty";
 import { BadgeQuestionMark } from "lucide-react";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 
 interface AnalysisTest {
   GU?: string;
@@ -45,6 +46,7 @@ export default function TestsPage() {
   const [data, setData] = useState<AnalysisTest[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
 
   useEffect(() => {
     (async () => {
@@ -118,8 +120,9 @@ export default function TestsPage() {
               <CardHeader className="py-2 px-0">
                 <CardTitle className="text-sm font-medium">
                   <Skeleton
-                    baseColor="#202020"
-                    highlightColor="#444"
+                {...(theme === "dark"
+                  ? { baseColor: "#202020", highlightColor: "#444" }
+                  : {})}
                     className="h-4 w-48"
                   />
                 </CardTitle>
@@ -128,8 +131,9 @@ export default function TestsPage() {
                 {Array.from({ length: 4 }).map((__, r) => (
                   <Skeleton
                     key={r}
-                    baseColor="#202020"
-                    highlightColor="#444"
+                {...(theme === "dark"
+                  ? { baseColor: "#202020", highlightColor: "#444" }
+                  : {})}
                     className="h-3 w-full"
                   />
                 ))}
