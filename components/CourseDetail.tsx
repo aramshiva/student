@@ -44,6 +44,10 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   >(() => [...originalAssignments]);
   const [hypotheticalMode, setHypotheticalMode] = React.useState(false);
 
+  const dontShowGradeCalcWarning = localStorage.getItem(
+    "Student.dontShowGradeCalcWarning",
+  );
+
   React.useEffect(() => {
     setEditableAssignments([...originalAssignments]);
   }, [course, currentMark, originalAssignments]);
@@ -396,7 +400,8 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
                 </p>
               </div>
             </div>
-            {!hypotheticalMode &&
+            {!dontShowGradeCalcWarning &&
+              !hypotheticalMode &&
               !calcGrades &&
               !hasRubric &&
               Number.isFinite(recalcTotals.pct) &&

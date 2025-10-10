@@ -34,12 +34,14 @@ export default function SettingsPage() {
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [calcGrades, setCalcGrades] = useState(false);
+  const [hideGradeCalcWarning, setHideGradeCalcWarning] = useState(false);
 
   useEffect(() => {
     const scale = loadCustomGPAScale();
     setEntries(ORDER.map((letter) => ({ letter, value: scale[letter] })));
     setBounds(loadCustomGradeBounds());
     setCalcGrades(loadCalculateGradesEnabled());
+    setHideGradeCalcWarning(!!localStorage.getItem("Student.dontShowGradeCalcWarning"));
   }, []);
 
   const updateValue = (letter: string, val: string) => {
@@ -111,6 +113,11 @@ export default function SettingsPage() {
     saveCustomGradeBounds(sanitized);
     setBounds(sanitized);
     saveCalculateGradesEnabled(calcGrades);
+    if (hideGradeCalcWarning) {
+      localStorage.setItem("Student.dontShowGradeCalcWarning", "true");
+    } else {
+      localStorage.removeItem("Student.dontShowGradeCalcWarning");
+    }
     setDirty(false);
     setSavedMsg("Saved");
     setTimeout(() => setSavedMsg(null), 1500);
@@ -120,10 +127,12 @@ export default function SettingsPage() {
     resetCustomGPAScale();
     resetCustomGradeBounds();
     resetCalculateGradesEnabled();
+    localStorage.removeItem("Student.dontShowGradeCalcWarning");
     const scale = loadCustomGPAScale();
     setEntries(ORDER.map((letter) => ({ letter, value: scale[letter] })));
     setBounds(loadCustomGradeBounds());
     setCalcGrades(loadCalculateGradesEnabled());
+    setHideGradeCalcWarning(false);
     setDirty(false);
     setSavedMsg("Reset to default");
     setTimeout(() => setSavedMsg(null), 1500);
@@ -176,6 +185,30 @@ export default function SettingsPage() {
                 reported mark. This may be less accurate if your school uses
                 hidden or excluded assignments, complex weighting, or other
                 rules. GPA points are always calculated locally.
+              </span>
+            </label>
+          </div>
+          <div className="h-3" />
+          <div className="flex items-start rounded">
+            <Checkbox
+              id="hide-calc-warning"
+              checked={hideGradeCalcWarning}
+              onCheckedChange={(checked) => {
+                const isChecked = checked === true;
+                setHideGradeCalcWarning(isChecked);
+                setDirty(true);
+                setSavedMsg(null);
+              }}
+            />
+            <div className="w-5" />
+            <label
+              htmlFor="hide-calc-warning"
+              className="text-sm leading-tight cursor-pointer select-none"
+            >
+              <span className="font-medium">Hide Grade Calculation Warnings</span>
+              <br />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                When enabled, warnings about grade calculation accuracy will be hidden.
               </span>
             </label>
           </div>
