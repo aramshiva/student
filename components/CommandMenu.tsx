@@ -55,44 +55,44 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
       heading: "Navigation",
       entries: [
         {
-          label: "Dashboard",
+          label: "Home",
           action: () => navigate("/student"),
-          icon: <Home className="size-4" />,
+          icon: <Home className="text-sm" />,
         },
         {
           label: "Gradebook",
           action: () => navigate("/gradebook"),
-          icon: <BookOpen className="size-4" />,
-        },
-        {
-          label: "Attendance",
-          action: () => navigate("/attendance"),
-          icon: <CalendarDays className="size-4" />,
+          icon: <BookOpen className="text-sm" />,
         },
         {
           label: "Schedule",
           action: () => navigate("/schedule"),
-          icon: <Table2 className="size-4" />,
+          icon: <CalendarDays className="text-sm" />,
+        },
+        {
+          label: "Attendance",
+          action: () => navigate("/attendance"),
+          icon: <Table2 className="text-sm" />,
         },
         {
           label: "Documents",
           action: () => navigate("/documents"),
-          icon: <FileText className="size-4" />,
+          icon: <FileText className="text-sm" />,
         },
         {
           label: "Mail",
           action: () => navigate("/mail"),
-          icon: <Mail className="size-4" />,
+          icon: <Mail className="text-sm" />,
         },
         {
           label: "Test History",
           action: () => navigate("/tests"),
-          icon: <BookCheck className="size-4" />,
+          icon: <BookCheck className="text-sm" />,
         },
         {
           label: "Settings",
           action: () => navigate("/settings"),
-          icon: <Settings className="size-4" />,
+          icon: <Settings className="text-sm" />,
         },
       ],
     },
@@ -102,17 +102,17 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
         {
           label: "Light Mode",
           action: () => setTheme("light"),
-          icon: <Sun className="size-4" />,
+          icon: <Sun className="text-sm" />,
         },
         {
           label: "Dark Mode",
           action: () => setTheme("dark"),
-          icon: <Moon className="size-4" />,
+          icon: <Moon className="text-sm" />,
         },
         {
           label: "System Theme",
           action: () => setTheme("system"),
-          icon: <SunMoon className="size-4" />,
+          icon: <SunMoon className="text-sm" />,
         },
       ],
     },
@@ -127,7 +127,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
             } catch {}
             router.push("/");
           },
-          icon: <LogOut className="size-4" />,
+          icon: <LogOut className="text-sm" />,
         },
       ],
     },
