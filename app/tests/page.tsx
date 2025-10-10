@@ -117,12 +117,21 @@ export default function TestsPage() {
             <Card key={i} className="p-4">
               <CardHeader className="py-2 px-0">
                 <CardTitle className="text-sm font-medium">
-                  <Skeleton baseColor="#202020"  highlightColor="#444" className="h-4 w-48" />
+                  <Skeleton
+                    baseColor="#202020"
+                    highlightColor="#444"
+                    className="h-4 w-48"
+                  />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 px-0">
                 {Array.from({ length: 4 }).map((__, r) => (
-                  <Skeleton key={r} baseColor="#202020"  highlightColor="#444" className="h-3 w-full" />
+                  <Skeleton
+                    key={r}
+                    baseColor="#202020"
+                    highlightColor="#444"
+                    className="h-3 w-full"
+                  />
                 ))}
               </CardContent>
             </Card>

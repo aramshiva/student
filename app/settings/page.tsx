@@ -41,7 +41,9 @@ export default function SettingsPage() {
     setEntries(ORDER.map((letter) => ({ letter, value: scale[letter] })));
     setBounds(loadCustomGradeBounds());
     setCalcGrades(loadCalculateGradesEnabled());
-    setHideGradeCalcWarning(!!localStorage.getItem("Student.dontShowGradeCalcWarning"));
+    setHideGradeCalcWarning(
+      !!localStorage.getItem("Student.dontShowGradeCalcWarning"),
+    );
   }, []);
 
   const updateValue = (letter: string, val: string) => {
@@ -205,10 +207,13 @@ export default function SettingsPage() {
               htmlFor="hide-calc-warning"
               className="text-sm leading-tight cursor-pointer select-none"
             >
-              <span className="font-medium">Hide Grade Calculation Warnings</span>
+              <span className="font-medium">
+                Hide Grade Calculation Warnings
+              </span>
               <br />
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                When enabled, warnings about grade calculation accuracy will be hidden.
+                When enabled, warnings about grade calculation accuracy will be
+                hidden.
               </span>
             </label>
           </div>

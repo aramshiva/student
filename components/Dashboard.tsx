@@ -191,14 +191,20 @@ export default function Dashboard({
                         </div>
                       </div>
                       {(() => {
-                        const assignments = currentMark?.Assignments?.Assignment || [];
-                        const missingCount = assignments.filter(a => 
-                          a._Notes && a._Notes.toLowerCase().trim() === 'missing'
+                        const assignments =
+                          currentMark?.Assignments?.Assignment || [];
+                        const missingCount = assignments.filter(
+                          (a) =>
+                            a._Notes &&
+                            a._Notes.toLowerCase().trim() === "missing",
                         ).length;
-                        
+
                         return (
-                          <div className={`text-xs ${missingCount > 0 ? 'text-red-500' : 'text-gray-500'} text-right`}>
-                            {missingCount} missing assignment{missingCount === 1 ? '' : 's'}
+                          <div
+                            className={`text-xs ${missingCount > 0 ? "text-red-500" : "text-gray-500"} text-right`}
+                          >
+                            {missingCount} missing assignment
+                            {missingCount === 1 ? "" : "s"}
                           </div>
                         );
                       })()}
