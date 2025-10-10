@@ -120,7 +120,7 @@ export default function TestsPage() {
               <CardHeader className="py-2 px-0">
                 <CardTitle className="text-sm font-medium">
                   <Skeleton
-                {...(theme === "dark"
+                {...(theme.theme === "dark"
                   ? { baseColor: "#202020", highlightColor: "#444" }
                   : {})}
                     className="h-4 w-48"
@@ -131,7 +131,7 @@ export default function TestsPage() {
                 {Array.from({ length: 4 }).map((__, r) => (
                   <Skeleton
                     key={r}
-                {...(theme === "dark"
+                {...(theme.theme === "dark"
                   ? { baseColor: "#202020", highlightColor: "#444" }
                   : {})}
                     className="h-3 w-full"
@@ -218,7 +218,7 @@ export default function TestsPage() {
         })}
       </div>
     );
-  }, [data, error, loading]);
+  }, [data, error, loading, theme.theme]);
 
   return (
     <div className="p-6 space-y-6">
