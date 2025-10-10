@@ -57,7 +57,7 @@ export default function AssignmentDetailPage() {
     inFlightRef.current = true;
     const creds = localStorage.getItem("Student.creds");
     if (!creds) {
-      router.push("/");
+      router.push("/login");
       return;
     }
     const credentials = JSON.parse(creds);

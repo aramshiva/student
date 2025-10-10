@@ -93,7 +93,7 @@ export default function SchedulePage() {
   useEffect(() => {
     const creds = localStorage.getItem("Student.creds");
     if (!creds) {
-      window.location.href = "/";
+      window.location.href = "/login";
       return;
     }
     (async () => {

@@ -123,7 +123,7 @@ export default function StudentDashboard() {
     (async () => {
       const credsRaw = localStorage.getItem("Student.creds");
       if (!credsRaw) {
-        window.location.href = "/";
+        window.location.href = "/login";
         return;
       }
       setLoading(true);

@@ -55,7 +55,7 @@ export default function TestsPage() {
         setError(null);
         const credsRaw = localStorage.getItem("Student.creds");
         if (!credsRaw) {
-          window.location.href = "/";
+          window.location.href = "/login";
           return;
         }
         const res = await fetch("/api/synergy/tests", {

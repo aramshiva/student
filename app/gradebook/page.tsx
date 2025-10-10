@@ -122,7 +122,7 @@ export default function GradebookPage() {
       inFlightRef.current = true;
       const creds = localStorage.getItem("Student.creds");
       if (!creds) {
-        window.location.href = "/";
+        window.location.href = "/login";
         return;
       }
       const credentials = JSON.parse(creds);
@@ -316,7 +316,7 @@ export default function GradebookPage() {
       onCourseSelect={setSelectedCourse}
       onLogout={() => {
         localStorage.removeItem("Student.creds");
-        window.location.href = "/";
+        window.location.href = "/login";
       }}
       reportingPeriods={reportingPeriods}
       selectedReportingPeriod={selectedReportingPeriod}
