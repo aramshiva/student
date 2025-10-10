@@ -16,7 +16,7 @@ import { useTheme } from "next-themes";
 export default function GradebookPage() {
   const { theme } = useTheme();
   const [gradebookData, setGradebookData] = useState<GradebookData | null>(
-    null,
+    null
   );
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,8 +77,8 @@ export default function GradebookPage() {
             const m = a._ScoreMaxValue
               ? parseFloat(a._ScoreMaxValue)
               : a._PointPossible
-                ? parseFloat(a._PointPossible)
-                : NaN;
+              ? parseFloat(a._PointPossible)
+              : NaN;
             if (Number.isFinite(s) && Number.isFinite(m) && m > 0) {
               earned += s;
               possible += m;
@@ -166,13 +166,13 @@ export default function GradebookPage() {
           reportPeriodIndex != null
             ? reportPeriodIndex
             : data?.ReportingPeriod?._Index != null
-              ? Number(data.ReportingPeriod._Index)
-              : (mapped[0]?.index ?? 0);
+            ? Number(data.ReportingPeriod._Index)
+            : mapped[0]?.index ?? 0;
         setSelectedReportingPeriod(currentIndex);
         try {
           localStorage.setItem(
             REPORTING_PERIOD_STORAGE_KEY,
-            String(currentIndex),
+            String(currentIndex)
           );
         } catch {}
         setGradebookData({ data });
@@ -185,7 +185,7 @@ export default function GradebookPage() {
         inFlightRef.current = false;
       }
     },
-    [computeAndStoreQuickStats],
+    [computeAndStoreQuickStats]
   );
 
   useEffect(() => {
@@ -201,52 +201,91 @@ export default function GradebookPage() {
   }, [fetchGradebook]);
 
   if (isLoading) {
-    const isLightMode = theme === "light";
     return (
-      <div className="min-h-screen p-9 bg-white dark:bg-neutral-950">
-        {!isLightMode && (
-          <div className="text-white dark:text-black p-4">Loading...</div>
-        )}
-        {isLightMode && (
-          <>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6">
-              <div className="flex-1 space-y-3">
-                <Skeleton height={24} width={160} />
-                <div className="flex items-center gap-3">
-                  <Skeleton height={20} width={110} />
-                  <Skeleton height={36} width={260} />
-                </div>
-              </div>
-              <div className="flex items-center space-x-10 md:self-start">
-                <div className="text-right space-y-2">
+      <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6">
+          <div className="flex-1 space-y-3">
+            <Skeleton
+              baseColor="#202020"
+              highlightColor="#444"
+              height={24}
+              width={160}
+            />
+            <div className="flex items-center gap-3">
+              <Skeleton
+                baseColor="#202020"
+                highlightColor="#444"
+                height={20}
+                width={110}
+              />
+              <Skeleton
+                baseColor="#202020"
+                highlightColor="#444"
+                height={36}
+                width={260}
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-10 md:self-start">
+            <div className="text-right space-y-2">
+              <Skeleton
+                baseColor="#202020"
+                highlightColor="#444"
+                height={16}
+                width={34}
+                style={{ marginLeft: "auto" }}
+              />
+              <Skeleton
+                baseColor="#202020"
+                highlightColor="#444"
+                height={28}
+                width={70}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-neutral-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900 divide-y divide-gray-200 dark:divide-gray-900">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-row space-x-6 items-center">
                   <Skeleton
-                    height={16}
-                    width={34}
-                    style={{ marginLeft: "auto" }}
+                    baseColor="#202020"
+                    highlightColor="#444"
+                    height={20}
+                    width={180}
                   />
-                  <Skeleton height={28} width={70} />
+                  <Skeleton
+                    baseColor="#202020"
+                    highlightColor="#444"
+                    height={16}
+                    width={220}
+                  />
                 </div>
+                <Skeleton
+                  baseColor="#202020"
+                  highlightColor="#444"
+                  height={20}
+                  width={56}
+                />
+              </div>
+              <div className="ml-4 pt-1 space-y-2">
+                <Skeleton
+                  baseColor="#202020"
+                  highlightColor="#444"
+                  height={32}
+                  width={90}
+                />
+                <Skeleton
+                  baseColor="#202020"
+                  highlightColor="#444"
+                  height={16}
+                  width={80}
+                />
               </div>
             </div>
-            <div className="bg-white dark:bg-neutral-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900 divide-y divide-gray-200 dark:divide-gray-900">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-row space-x-6 items-center">
-                      <Skeleton height={20} width={180} />
-                      <Skeleton height={16} width={220} />
-                    </div>
-                    <Skeleton height={20} width={56} />
-                  </div>
-                  <div className="ml-4 pt-1 space-y-2">
-                    <Skeleton height={32} width={90} />
-                    <Skeleton height={16} width={80} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+          ))}
+        </div>
       </div>
     );
   }
