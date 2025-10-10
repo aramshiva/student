@@ -61,6 +61,14 @@ export function AppSidebar() {
     totalCourses: number;
     ts: number;
   } | null>(null);
+  const [nextPeriod, setNextPeriod] = React.useState<{
+    period: number;
+    courseTitle: string;
+    room?: string;
+    teacher?: string;
+    timeUntil?: string;
+    isNext: boolean;
+  } | null>(null);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -125,6 +133,125 @@ export function AppSidebar() {
     };
   }, [studentName]);
 
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const calculateNextPeriod = async () => {
+      try {
+        const credsRaw = localStorage.getItem("Student.creds");
+        if (!credsRaw) return;
+        
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+        const dayOfWeek = now.getDay(); 
+        
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+          setNextPeriod(null);
+          return;
+        }
+        
+        const creds = JSON.parse(credsRaw);
+        const res = await fetch("/api/synergy/schedule", {
+          method: "POST", 
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...creds,
+          }),
+        });
+        
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        const todayClasses = data?.StudentClassSchedule?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes?.ClassInfo;
+        
+        if (!todayClasses) return;
+        
+        const parseTime = (timeStr?: string) => {
+          if (!timeStr) return null;
+          const match = timeStr.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+          if (!match) return null;
+          
+          const [, hours, minutes, period] = match;
+          let h = parseInt(hours);
+          const m = parseInt(minutes);
+          
+          if (period) {
+            if (period.toUpperCase() === 'PM' && h !== 12) h += 12;
+            if (period.toUpperCase() === 'AM' && h === 12) h = 0;
+          }
+          
+          return h * 60 + m;
+        };
+
+        const classes = (Array.isArray(todayClasses) ? todayClasses : [todayClasses])
+          .map((c: { 
+            _Period?: string; 
+            _ClassName?: string; 
+            _RoomName?: string; 
+            _TeacherName?: string;
+            _StartTime?: string;
+            _EndTime?: string;
+          }) => ({
+            period: Number(c._Period || 0),
+            courseTitle: c._ClassName || "",
+            room: c._RoomName || "",
+            teacher: c._TeacherName || "",
+            startTime: parseTime(c._StartTime),
+            endTime: parseTime(c._EndTime),
+          }))
+          .filter((c) => c.courseTitle && c.startTime !== null && c.endTime !== null)
+          .sort((a, b) => (a.startTime! - b.startTime!) || (a.period - b.period));
+        
+        if (classes.length === 0) return;
+        
+        const firstClass = classes[0];
+        const lastClass = classes[classes.length - 1];
+        const schoolStartTime = firstClass.startTime!;
+        const schoolEndTime = lastClass.endTime!;
+        
+        if (currentTime < schoolStartTime || currentTime > schoolEndTime) {
+          setNextPeriod(null);
+          return;
+        }
+        
+        for (let i = 0; i < classes.length; i++) {
+          const classInfo = classes[i];
+          const startTime = classInfo.startTime!;
+          const endTime = classInfo.endTime!;
+          
+          if (currentTime < endTime) {
+            const minutesUntil = Math.max(0, startTime - currentTime);
+            const timeUntilText = minutesUntil === 0 
+              ? "Now" 
+              : minutesUntil < 60 
+                ? `${minutesUntil}m` 
+                : `${Math.floor(minutesUntil / 60)}h ${minutesUntil % 60}m`;
+                
+            setNextPeriod({
+              period: classInfo.period,
+              courseTitle: classInfo.courseTitle,
+              room: classInfo.room,
+              teacher: classInfo.teacher,
+              timeUntil: timeUntilText,
+              isNext: minutesUntil > 0,
+            });
+            return;
+          }
+        }
+        
+        setNextPeriod(null);
+        
+      } catch {
+        setNextPeriod(null);
+      }
+    };
+    
+    calculateNextPeriod();
+    const interval = setInterval(calculateNextPeriod, 60000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
       <SidebarHeader className="gap-1">
@@ -168,6 +295,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <div>
         {quickStats && quickStats.gradedCourses > 0 && (
           <>
             <SidebarSeparator />
@@ -202,6 +330,45 @@ export function AppSidebar() {
             </SidebarGroup>
           </>
         )}
+        {nextPeriod && (
+          <>
+            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+              <SidebarGroupLabel>Next Period</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="grid grid-cols-1 gap-2 text-xs pl-1">
+                  <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium tracking-tight truncate">
+                          Period {nextPeriod.period}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {nextPeriod.courseTitle}
+                        </p>
+                        {nextPeriod.room && (
+                          <p className="text-[10px] text-muted-foreground/80 truncate">
+                            Room {nextPeriod.room}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className={`text-sm font-semibold ${
+                          nextPeriod.isNext ? "text-blue-600" : "text-green-600"
+                        }`}>
+                          {nextPeriod.timeUntil}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {nextPeriod.isNext ? "starts" : "current"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        )}
+        </div>
       </SidebarContent>
       <SidebarFooter>
         {(studentPhoto || permId || school) && (
