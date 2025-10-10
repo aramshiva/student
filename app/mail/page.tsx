@@ -1,6 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface MailRecipient {
   _RecipientType?: string;
@@ -31,8 +33,20 @@ export default function MailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<MailMessage | null>(null);
+  const [deletedMessages, setDeletedMessages] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    const deletedRaw = localStorage.getItem("Student.deletedMails");
+    if (deletedRaw) {
+      try {
+        const deletedArray = JSON.parse(deletedRaw);
+        setDeletedMessages(new Set(deletedArray));
+      } catch (e) {
+        console.error("Failed to parse deleted messages:", e);
+      }
+    }
+
     const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) {
       window.location.href = "/";
@@ -80,45 +94,130 @@ export default function MailPage() {
     });
   };
 
+  const handleDeleteSingle = async (messageId: string) => {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+    
+    setIsDeleting(true);
+    try {
+      const newDeletedMessages = new Set(deletedMessages);
+      newDeletedMessages.add(messageId);
+      setDeletedMessages(newDeletedMessages);
+      
+      localStorage.setItem("Student.deletedMails", JSON.stringify([...newDeletedMessages]));
+      
+      if (selected?._SMMessageGU === messageId) {
+        setSelected(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+      alert("Failed to delete message");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    const visibleMessages = messages.filter(m => !deletedMessages.has(m._SMMessageGU || ""));
+    if (visibleMessages.length === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete all ${visibleMessages.length} visible message(s)?`)) return;
+    
+    setIsDeleting(true);
+    try {
+      const newDeletedMessages = new Set(deletedMessages);
+      visibleMessages.forEach(m => {
+        if (m._SMMessageGU) {
+          newDeletedMessages.add(m._SMMessageGU);
+        }
+      });
+      setDeletedMessages(newDeletedMessages);
+      
+      localStorage.setItem("Student.deletedMails", JSON.stringify([...newDeletedMessages]));
+      
+      if (selected && newDeletedMessages.has(selected._SMMessageGU || "")) {
+        setSelected(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete messages:", error);
+      alert("Failed to delete messages");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) return <div className="p-8">Loading mail...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
     <div className="p-8 space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Mail</h1>
+        <div className="flex items-center gap-2">
+          {messages.filter(m => !deletedMessages.has(m._SMMessageGU || "")).length > 0 && (
+            <Button 
+              onClick={handleDeleteAll}
+              disabled={isDeleting}
+              variant="destructive"
+              size="sm"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete All Visible
+            </Button>
+          )}
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.href = "/mail/deleted"}
+          >
+            View Deleted ({deletedMessages.size})
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-4 md:col-span-1 max-h-[70vh] overflow-auto">
           <h2 className="font-medium mb-3 text-sm text-muted-foreground">
-            Inbox ({messages.length})
+            Inbox ({messages.filter(m => !deletedMessages.has(m._SMMessageGU || "")).length})
           </h2>
           {!messages.length && (
             <div className="text-xs text-muted-foreground">No messages.</div>
           )}
           <ul className="space-y-1">
-            {messages.map((m) => {
-              const sender = Array.isArray(m.From?.RecipientXML)
-                ? m.From?.RecipientXML[0]
-                : m.From?.RecipientXML;
-              return (
-                <li key={m._SMMessageGU}>
-                  <button
-                    onClick={() => setSelected(m)}
-                    className={`w-full text-left rounded px-2 py-2 border hover:bg-muted/40 transition text-sm ${selected?._SMMessageGU === m._SMMessageGU ? "bg-muted/60" : ""}`}
-                  >
-                    <div className="font-medium line-clamp-1">
-                      {m._Subject || "(No Subject)"}
+            {messages
+              .filter((m) => !deletedMessages.has(m._SMMessageGU || ""))
+              .map((m) => {
+                const sender = Array.isArray(m.From?.RecipientXML)
+                  ? m.From?.RecipientXML[0]
+                  : m.From?.RecipientXML;
+                const messageId = m._SMMessageGU || "";
+                return (
+                  <li key={m._SMMessageGU} className="group">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSelected(m)}
+                        className={`flex-1 text-left rounded px-2 py-2 border hover:bg-muted/40 transition text-sm ${selected?._SMMessageGU === m._SMMessageGU ? "bg-muted/60" : ""}`}
+                      >
+                        <div className="font-medium line-clamp-1">
+                          {m._Subject || "(No Subject)"}
+                        </div>
+                        <div className="text-xs text-muted-foreground line-clamp-1">
+                          {sender?._Details1 || "Unknown"} •{" "}
+                          {formatDate(m._SendDateTime)}
+                        </div>
+                      </button>
+                      <Button
+                        onClick={() => handleDeleteSingle(messageId)}
+                        disabled={isDeleting}
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground line-clamp-1">
-                      {sender?._Details1 || "Unknown"} •{" "}
-                      {formatDate(m._SendDateTime)}
-                    </div>
-                  </button>
-                </li>
-              );
-            })}
+                  </li>
+                );
+              })}
           </ul>
         </Card>
 

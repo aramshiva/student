@@ -651,7 +651,6 @@ function AssignmentsTableBase({
               .replace(/\s{2,}/g, " ")
               .trim();
             if (rubric) {
-              // For rubric, just show the left side (score) without the denominator
               const m = normalized.match(/([0-9]+(?:\.[0-9]+)?)/);
               display = m ? m[1] : normalized;
             } else {
