@@ -175,19 +175,33 @@ export default function Dashboard({
                         </span>
                       </div>
                     </div>
-                    <div className="ml-4 pt-2">
-                      <div className="text-3xl font-bold text-left">
-                        {displayScore}
+                    <div className="flex items-end justify-between">
+                      <div className="ml-4 pt-2">
+                        <div className="text-3xl font-bold text-left">
+                          {displayScore}
+                        </div>
+                        <div className="text-sm text-gray-500 text-left">
+                          {calcGrades
+                            ? Number.isFinite(effectivePct)
+                              ? `${(effectivePct as number).toFixed(1)}%`
+                              : "No grade"
+                            : portalRaw > 0
+                              ? `${portalRaw.toFixed(1)}%`
+                              : "No grade"}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-500 text-left">
-                        {calcGrades
-                          ? Number.isFinite(effectivePct)
-                            ? `${(effectivePct as number).toFixed(1)}%`
-                            : "No grade"
-                          : portalRaw > 0
-                            ? `${portalRaw.toFixed(1)}%`
-                            : "No grade"}
-                      </div>
+                      {(() => {
+                        const assignments = currentMark?.Assignments?.Assignment || [];
+                        const missingCount = assignments.filter(a => 
+                          a._Notes && a._Notes.toLowerCase().trim() === 'missing'
+                        ).length;
+                        
+                        return (
+                          <div className={`text-xs ${missingCount > 0 ? 'text-red-500' : 'text-gray-500'} text-right`}>
+                            {missingCount} missing assignment{missingCount === 1 ? '' : 's'}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
