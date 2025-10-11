@@ -14,7 +14,9 @@ import {
   Table2,
   CalendarDays,
   BookOpen,
+  LogOut,
 } from "lucide-react";
+import { logout } from "@/lib/clientAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -103,20 +105,14 @@ export function AppSidebar() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     if (studentName) return;
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) return;
     let aborted = false;
     (async () => {
       try {
-        const creds = JSON.parse(credsRaw);
         const res = await fetch("/api/synergy/name", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: creds.username || creds.user || creds.userId,
-            password: creds.password || creds.pass,
-            district_url: creds.district_url || creds.district || creds.host,
-          }),
+          body: JSON.stringify({}),
+          credentials: 'include', // Use secure cookie authentication
         });
         if (!aborted && res.ok) {
           const data = await res.json();
@@ -125,6 +121,9 @@ export function AppSidebar() {
             setStudentName(nm);
             localStorage.setItem("Student.studentName", nm);
           }
+        } else if (res.status === 401) {
+          // Authentication failed - redirect to login
+          window.location.href = "/";
         }
       } catch {}
     })();
@@ -138,12 +137,6 @@ export function AppSidebar() {
     
     const calculateNextPeriod = async () => {
       try {
-        const credsRaw = localStorage.getItem("Student.creds");
-        if (!credsRaw) {
-          setNextPeriod(null);
-          return;
-        }
-        
         const now = new Date();
         const currentTime = now.getHours() * 60 + now.getMinutes();
         const dayOfWeek = now.getDay(); 
@@ -153,16 +146,18 @@ export function AppSidebar() {
           return;
         }
         
-        const creds = JSON.parse(credsRaw);
         const res = await fetch("/api/synergy/schedule", {
           method: "POST", 
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...creds,
-          }),
+          body: JSON.stringify({}),
+          credentials: 'include', // Use secure cookie authentication
         });
         
         if (!res.ok) {
+          if (res.status === 401) {
+            // Authentication failed - redirect to login
+            window.location.href = "/";
+          }
           return;
         }
         
@@ -454,6 +449,14 @@ export function AppSidebar() {
                   <SettingsIcon className="size-4" />
                   <span>Settings</span>
                 </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={logout}
+                className="cursor-pointer flex items-center gap-2 text-red-600 focus:text-red-600"
+              >
+                <LogOut className="size-4" />
+                <span>Sign Out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

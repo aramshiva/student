@@ -80,7 +80,7 @@ export default function TestsPage() {
   const content = useMemo(() => {
     const prettify = (label: string) => {
       if (!label) return label;
-      if (label.includes(" ")) return label; // already spaced
+      if (label.includes(" ")) return label;
       let spaced = label.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
       spaced = spaced.replace(/([A-Z])([A-Z][a-z])/g, "$1 $2");
       return spaced.trim();

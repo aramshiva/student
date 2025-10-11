@@ -48,7 +48,6 @@ const escapeXmlText = (s: string) =>
 
 const sanitizeDomain = (raw: string): string => {
   // sanitize and validate a synergy host string
-  // this is due to CWE-1333, CWE-400 and CWE-730.
   let s = (raw || "").trim();
 
   const lower = s.toLowerCase();
@@ -101,12 +100,10 @@ async function fetchWithTimeout(
   init: MinimalFetchInit = {},
   ms = 15000,
 ) {
-  // validate url to prevent req forgery
   const url = typeof input === "string" ? input : input.url;
   const parsedUrl = new URL(url);
 
   if (parsedUrl.protocol !== "https:") {
-    // only allow https!
     throw new Error("Only HTTPS URLs are allowed");
   }
   const c = new AbortController();

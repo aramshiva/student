@@ -1,48 +1,41 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getTestAnalysis } from "@/lib/testAnalysis";
+import { getCredentialsFromRequest } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const contentType = req.headers.get("content-type") || "";
-    if (!contentType.includes("application/json")) {
-      return new Response(
-        JSON.stringify({ error: "Expected application/json body" }),
-        { status: 415 },
-      );
-    }
-    const body = (await req.json().catch(() => null)) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (!body || typeof body !== "object") {
-      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-        status: 400,
-      });
-    }
-    const { username, password, district_url } = body;
-    if (!username || !password || !district_url) {
-      return new Response(
-        JSON.stringify({ error: "Missing username, password or district_url" }),
-        { status: 400 },
-      );
-    }
-
-    const trimmed = String(district_url).trim();
-    if (!/^https?:\/\//i.test(trimmed)) {
-      return new Response(
-        JSON.stringify({ error: "district_url must start with http(s)://" }),
-        { status: 400 },
+    const credentials = await getCredentialsFromRequest(req);
+    
+    if (!credentials) {
+      return NextResponse.json(
+        { error: "Authentication required. Please log in again." },
+        { status: 401 }
       );
     }
 
     const analysis = await getTestAnalysis({
-      districtBase: trimmed.replace(/\/$/, ""),
-      userId: String(username),
-      password: String(password),
+      districtBase: credentials.district_url.replace(/\/$/, ""),
+      userId: credentials.username,
+      password: credentials.password,
     });
 
-    return new Response(JSON.stringify({ analysis }), { status: 200 });
-  } catch {
-    return new Response(
-      JSON.stringify({ error: "Unable to fetch test analysis" }),
-      { status: 500 },
+    const response = NextResponse.json({ analysis }, { status: 200 });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
+  } catch (error) {
+    console.error('Test analysis error:', error instanceof Error ? error.message : 'Unknown error');
+    
+    const response = NextResponse.json(
+      { error: "Unable to fetch test analysis" },
+      { status: 500 }
     );
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   }
 }

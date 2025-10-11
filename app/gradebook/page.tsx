@@ -120,25 +120,25 @@ export default function GradebookPage() {
     async (reportPeriodIndex: number | null = null) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
-      const creds = localStorage.getItem("Student.creds");
-      if (!creds) {
-        window.location.href = "/";
-        return;
-      }
-      const credentials = JSON.parse(creds);
       setIsLoading(true);
       setError(null);
       try {
-        const body =
-          reportPeriodIndex != null
-            ? { ...credentials, reportPeriod: reportPeriodIndex }
-            : credentials;
+        // Use secure cookie authentication - no credentials in request body
+        const body = reportPeriodIndex != null ? { reportPeriod: reportPeriodIndex } : {};
         const res = await fetch("/api/synergy/gradebook", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
+          credentials: 'include', // Include secure cookie
         });
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        if (!res.ok) {
+          if (res.status === 401) {
+            // Authentication failed - redirect to login
+            window.location.href = "/";
+            return;
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
         if (data["@ErrorMessage"]) {
           throw new Error(data["@ErrorMessage"]);
