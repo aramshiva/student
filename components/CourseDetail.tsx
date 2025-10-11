@@ -252,6 +252,19 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
       return rows.filter((r) => r._Type.toUpperCase() !== "TOTAL");
     }, [workingAssignments, currentMark, hypotheticalMode, extractScoreMax]);
 
+  const availableTypes = React.useMemo(() => {
+    const gradeCalcs = hypotheticalMode && recalculatedBreakdown 
+      ? recalculatedBreakdown
+      : currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
+    
+    if (!gradeCalcs) return [];
+    
+    return gradeCalcs
+      .map(calc => calc._Type?.trim())
+      .filter((type): type is string => Boolean(type && type.length > 0))
+      .filter(type => type.toUpperCase() !== "TOTAL");
+  }, [hypotheticalMode, recalculatedBreakdown, currentMark]);
+
   const onUpdateAssignmentScore = React.useCallback(
     (id: string, score: string, max: string) => {
       setEditableAssignments((prev) =>
@@ -472,6 +485,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
               prev.filter((a) => a._GradebookID !== id),
             );
           }}
+          availableTypes={availableTypes}
         />
       </div>
     </div>

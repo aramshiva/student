@@ -126,6 +126,7 @@ interface AssignmentsTableProps {
   onEditName?: (id: string, name: string) => void;
   onCreateHypothetical?: () => void;
   onDeleteHypothetical?: (id: string) => void;
+  availableTypes?: string[];
 }
 
 function AssignmentsTableBase({
@@ -138,6 +139,7 @@ function AssignmentsTableBase({
   onEditName,
   onCreateHypothetical,
   onDeleteHypothetical,
+  availableTypes,
 }: AssignmentsTableProps) {
   const isRubric = React.useCallback(
     (a: Pick<Assignment, "_ScoreType"> | Assignment | undefined | null) =>
@@ -366,19 +368,24 @@ function AssignmentsTableBase({
         accessorFn: (row) => row._Type,
         header: "Type",
         cell: ({ row }) => {
-          const uniqueTypes = Array.from(
+          const assignmentTypes = Array.from(
             new Set(
               assignments
                 .map((a) => (a._Type || "").trim())
                 .filter((t) => t.length > 0),
             ),
           );
+          
+          const allTypes = availableTypes && availableTypes.length > 0 
+            ? availableTypes 
+            : assignmentTypes;
+            
           const curType =
             row.original._Type && row.original._Type.trim().length > 0
               ? row.original._Type
-              : uniqueTypes[0] || "";
+              : allTypes[0] || "";
 
-          if (!hypotheticalMode || uniqueTypes.length < 2) {
+          if (!hypotheticalMode || allTypes.length < 2) {
             return (
               <Badge className={`${getTypeColor(curType || "Uncategorized")}`}>
                 {curType || "Uncategorized"}
@@ -397,7 +404,7 @@ function AssignmentsTableBase({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {uniqueTypes.map((t) => (
+                {allTypes.map((t) => (
                   <SelectItem key={t} value={t}>
                     {t}
                   </SelectItem>
@@ -724,6 +731,7 @@ function AssignmentsTableBase({
       onEditName,
       onDeleteHypothetical,
       isRubric,
+      availableTypes,
     ],
   );
 
