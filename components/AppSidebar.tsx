@@ -139,7 +139,10 @@ export function AppSidebar() {
     const calculateNextPeriod = async () => {
       try {
         const credsRaw = localStorage.getItem("Student.creds");
-        if (!credsRaw) return;
+        if (!credsRaw) {
+          setNextPeriod(null);
+          return;
+        }
         
         const now = new Date();
         const currentTime = now.getHours() * 60 + now.getMinutes();
@@ -159,12 +162,16 @@ export function AppSidebar() {
           }),
         });
         
-        if (!res.ok) return;
+        if (!res.ok) {
+          return;
+        }
         
         const data = await res.json();
         const todayClasses = data?.StudentClassSchedule?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes?.ClassInfo;
         
-        if (!todayClasses) return;
+        if (!todayClasses) {
+          return;
+        }
         
         const parseTime = (timeStr?: string) => {
           if (!timeStr) return null;
@@ -202,7 +209,9 @@ export function AppSidebar() {
           .filter((c) => c.courseTitle && c.startTime !== null && c.endTime !== null)
           .sort((a, b) => (a.startTime! - b.startTime!) || (a.period - b.period));
         
-        if (classes.length === 0) return;
+        if (classes.length === 0) {
+          return;
+        }
         
         const firstClass = classes[0];
         const lastClass = classes[classes.length - 1];
@@ -241,13 +250,13 @@ export function AppSidebar() {
         
         setNextPeriod(null);
         
-      } catch {
+        } catch {
         setNextPeriod(null);
       }
     };
     
     calculateNextPeriod();
-    const interval = setInterval(calculateNextPeriod, 60000);
+    const interval = setInterval(calculateNextPeriod, 3000);
     
     return () => clearInterval(interval);
   }, []);
