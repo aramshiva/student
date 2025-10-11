@@ -22,6 +22,7 @@ function validateDistrictUrl(url: string): boolean {
     ) {
       return false;
     }
+    return true;
   } catch {
     return false;
   }
