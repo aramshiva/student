@@ -24,6 +24,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import Link from "next/link";
 
 const ORDER = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"];
 
@@ -35,6 +36,7 @@ export default function SettingsPage() {
   const [showErrors, setShowErrors] = useState(false);
   const [calcGrades, setCalcGrades] = useState(false);
   const [hideGradeCalcWarning, setHideGradeCalcWarning] = useState(false);
+  const [dontTrackMe, setDontTrackMe] = useState(false);
 
   useEffect(() => {
     const scale = loadCustomGPAScale();
@@ -44,6 +46,7 @@ export default function SettingsPage() {
     setHideGradeCalcWarning(
       !!localStorage.getItem("Student.dontShowGradeCalcWarning"),
     );
+    setDontTrackMe(localStorage.getItem("umami.disabled") === "1");
   }, []);
 
   const updateValue = (letter: string, val: string) => {
@@ -130,11 +133,13 @@ export default function SettingsPage() {
     resetCustomGradeBounds();
     resetCalculateGradesEnabled();
     localStorage.removeItem("Student.dontShowGradeCalcWarning");
+    localStorage.removeItem("umami.disabled");
     const scale = loadCustomGPAScale();
     setEntries(ORDER.map((letter) => ({ letter, value: scale[letter] })));
     setBounds(loadCustomGradeBounds());
     setCalcGrades(loadCalculateGradesEnabled());
     setHideGradeCalcWarning(false);
+    setDontTrackMe(false);
     setDirty(false);
     setSavedMsg("Reset to default");
     setTimeout(() => setSavedMsg(null), 1500);
@@ -247,7 +252,14 @@ export default function SettingsPage() {
                         max={5}
                         value={entry?.value ?? 0}
                         onChange={(ev) => updateValue(letter, ev.target.value)}
-                        className={`w-28 h-8 ${entry && (entry.value < 0 || entry.value > 5 || !Number.isFinite(entry.value)) ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                        className={`w-28 h-8 ${
+                          entry &&
+                          (entry.value < 0 ||
+                            entry.value > 5 ||
+                            !Number.isFinite(entry.value))
+                            ? "border-red-500 focus-visible:ring-red-500"
+                            : ""
+                        }`}
                       />
                     </TableCell>
                     <TableCell>
@@ -258,7 +270,13 @@ export default function SettingsPage() {
                         step="0.1"
                         value={bound.min}
                         onChange={(ev) => updateBound(letter, ev.target.value)}
-                        className={`w-28 h-8 ${bound.min < 0 || bound.min > 100 || !Number.isFinite(bound.min) ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                        className={`w-28 h-8 ${
+                          bound.min < 0 ||
+                          bound.min > 100 ||
+                          !Number.isFinite(bound.min)
+                            ? "border-red-500 focus-visible:ring-red-500"
+                            : ""
+                        }`}
                       />
                     </TableCell>
                   </TableRow>
@@ -288,6 +306,46 @@ export default function SettingsPage() {
           {savedMsg && (
             <span className="text-xs text-gray-500">{savedMsg}</span>
           )}
+        </div>
+      </section>
+      <section className="space-y-4">
+        <header>
+          <h2 className="text-lg font-medium">Privacy & data</h2>
+          <p className="text-xs text-gray-500">
+            Manage your privacy and data preferences
+          </p>
+        </header>
+        <div className="pl-5 pt-1">
+          <div className="flex items-start rounded">
+            <Checkbox
+              id="dont-track-me"
+              checked={dontTrackMe}
+              onCheckedChange={(checked) => {
+                const isChecked = checked === true;
+                setDontTrackMe(isChecked);
+                if (isChecked) {
+                  localStorage.setItem("umami.disabled", "1");
+                } else {
+                  localStorage.removeItem("umami.disabled");
+                }
+              }}
+            />
+            <div className="w-5" />
+            <label
+              htmlFor="dont-track-me"
+              className="text-sm leading-tight cursor-pointer select-none"
+            >
+              <span className="font-medium">Disable Umami Analytics</span>
+              <br />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                We use <Link href="https://umami.is">Umami</Link>, a privacy
+                focused analytics tool, to gather anonymous statistics. All data
+                is anonymous and there is no identifable information or
+                password/grades passed. Checking this signifies you want to
+                opt-out.
+              </span>
+            </label>
+          </div>
         </div>
       </section>
       {savedMsg && !dirty && (
