@@ -6,7 +6,6 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    // Get credentials from secure cookie
     const credentials = await getCredentialsFromRequest(req);
     
     if (!credentials) {
