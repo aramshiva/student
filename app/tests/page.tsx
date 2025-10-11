@@ -53,15 +53,11 @@ export default function TestsPage() {
       try {
         setLoading(true);
         setError(null);
-        const credsRaw = localStorage.getItem("Student.creds");
-        if (!credsRaw) {
-          window.location.href = "/";
-          return;
-        }
         const res = await fetch("/api/synergy/tests", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: credsRaw,
+          body: JSON.stringify({}),
+          credentials: "include",
         });
         if (!res.ok) {
           throw new Error(`Tests HTTP ${res.status}`);

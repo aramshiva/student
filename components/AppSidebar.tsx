@@ -14,9 +14,7 @@ import {
   Table2,
   CalendarDays,
   BookOpen,
-  LogOut,
 } from "lucide-react";
-import { logout } from "@/lib/clientAuth";
 import {
   Sidebar,
   SidebarContent,
@@ -112,7 +110,7 @@ export function AppSidebar() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({}),
-          credentials: 'include', // Use secure cookie authentication
+          credentials: "include",
         });
         if (!aborted && res.ok) {
           const data = await res.json();
@@ -121,9 +119,6 @@ export function AppSidebar() {
             setStudentName(nm);
             localStorage.setItem("Student.studentName", nm);
           }
-        } else if (res.status === 401) {
-          // Authentication failed - redirect to login
-          window.location.href = "/";
         }
       } catch {}
     })();
@@ -150,14 +145,10 @@ export function AppSidebar() {
           method: "POST", 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({}),
-          credentials: 'include', // Use secure cookie authentication
+          credentials: "include",
         });
         
         if (!res.ok) {
-          if (res.status === 401) {
-            // Authentication failed - redirect to login
-            window.location.href = "/";
-          }
           return;
         }
         
@@ -449,14 +440,6 @@ export function AppSidebar() {
                   <SettingsIcon className="size-4" />
                   <span>Settings</span>
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={logout}
-                className="cursor-pointer flex items-center gap-2 text-red-600 focus:text-red-600"
-              >
-                <LogOut className="size-4" />
-                <span>Sign Out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

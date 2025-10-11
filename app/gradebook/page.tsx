@@ -123,22 +123,17 @@ export default function GradebookPage() {
       setIsLoading(true);
       setError(null);
       try {
-        // Use secure cookie authentication - no credentials in request body
-        const body = reportPeriodIndex != null ? { reportPeriod: reportPeriodIndex } : {};
+        const body =
+          reportPeriodIndex != null
+            ? { reportPeriod: reportPeriodIndex }
+            : {};
         const res = await fetch("/api/synergy/gradebook", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
-          credentials: 'include', // Include secure cookie
+          credentials: "include",
         });
-        if (!res.ok) {
-          if (res.status === 401) {
-            // Authentication failed - redirect to login
-            window.location.href = "/";
-            return;
-          }
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         if (data["@ErrorMessage"]) {
           throw new Error(data["@ErrorMessage"]);
