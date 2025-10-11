@@ -18,10 +18,37 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     try {
+      const authRes = await fetch(`/api/auth`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password,
+          district_url: credentials.district_url,
+        }),
+        credentials: "include",
+      });
+      if (!authRes.ok) {
+        let serverMessage: string | null = null;
+        try {
+          const maybeJson = await authRes.json();
+          if (
+            maybeJson &&
+            typeof maybeJson === "object" &&
+            typeof maybeJson.error === "string"
+          ) {
+            serverMessage = maybeJson.error;
+          }
+        } catch {}
+        throw new Error(
+          serverMessage || `HTTP error! status: ${authRes.status}`,
+        );
+      }
       const response = await fetch(`/api/synergy/gradebook`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({}),
+        credentials: "include",
       });
       if (!response.ok) {
         let serverMessage: string | null = null;
@@ -46,9 +73,6 @@ export default function Home() {
       if (errorMessage) {
         throw new Error(String(errorMessage));
       }
-      localStorage.setItem("Student.creds", JSON.stringify(credentials));
-      // saves creds in LOCAL STORAGE (not cloud)
-      // redirects to student page
       window.location.href = "/student";
     } catch (err) {
       if (err instanceof Error) {

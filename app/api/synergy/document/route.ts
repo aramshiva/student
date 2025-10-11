@@ -1,38 +1,52 @@
 import { NextResponse } from "next/server";
 import { SynergyClient } from "@/lib/synergy";
+import { getCredentialsFromRequest } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const {
-      district_url,
-      username,
-      password,
-      document_guid: documentGuid,
-    } = await req.json();
-
-    if (!district_url || !username || !password || !documentGuid) {
+    const credentials = await getCredentialsFromRequest(req);
+    
+    if (!credentials) {
       return NextResponse.json(
-        {
-          error:
-            "district_url, username, password, and documentGuid are required",
-        },
-        { status: 400 },
+        { error: "Authentication required. Please log in again." },
+        { status: 401 }
       );
     }
 
-    const normalizedDomain = String(district_url)
+    const body = await req.json().catch(() => ({}));
+    const { document_guid: documentGuid } = body;
+
+    if (!documentGuid) {
+      return NextResponse.json(
+        { error: "document_guid is required" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedDomain = credentials.district_url
       .trim()
       .replace(/^https?:\/\//i, "")
       .replace(/\/$/, "");
 
-    const client = new SynergyClient(normalizedDomain, username, password);
+    const client = new SynergyClient(normalizedDomain, credentials.username, credentials.password);
     const data = await client.getDocument(documentGuid);
 
-    return NextResponse.json(data, { status: 200 });
+    const response = NextResponse.json(data, { status: 200 });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    
+    const response = NextResponse.json({ error: message }, { status: 500 });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   }
 }

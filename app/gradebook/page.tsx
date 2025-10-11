@@ -120,23 +120,18 @@ export default function GradebookPage() {
     async (reportPeriodIndex: number | null = null) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
-      const creds = localStorage.getItem("Student.creds");
-      if (!creds) {
-        window.location.href = "/";
-        return;
-      }
-      const credentials = JSON.parse(creds);
       setIsLoading(true);
       setError(null);
       try {
         const body =
           reportPeriodIndex != null
-            ? { ...credentials, reportPeriod: reportPeriodIndex }
-            : credentials;
+            ? { reportPeriod: reportPeriodIndex }
+            : {};
         const res = await fetch("/api/synergy/gradebook", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
+          credentials: "include",
         });
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();

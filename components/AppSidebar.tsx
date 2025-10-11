@@ -103,20 +103,14 @@ export function AppSidebar() {
   React.useEffect(() => {
     if (typeof window === "undefined") return;
     if (studentName) return;
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) return;
     let aborted = false;
     (async () => {
       try {
-        const creds = JSON.parse(credsRaw);
         const res = await fetch("/api/synergy/name", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: creds.username || creds.user || creds.userId,
-            password: creds.password || creds.pass,
-            district_url: creds.district_url || creds.district || creds.host,
-          }),
+          body: JSON.stringify({}),
+          credentials: "include",
         });
         if (!aborted && res.ok) {
           const data = await res.json();
@@ -138,12 +132,6 @@ export function AppSidebar() {
     
     const calculateNextPeriod = async () => {
       try {
-        const credsRaw = localStorage.getItem("Student.creds");
-        if (!credsRaw) {
-          setNextPeriod(null);
-          return;
-        }
-        
         const now = new Date();
         const currentTime = now.getHours() * 60 + now.getMinutes();
         const dayOfWeek = now.getDay(); 
@@ -153,13 +141,11 @@ export function AppSidebar() {
           return;
         }
         
-        const creds = JSON.parse(credsRaw);
         const res = await fetch("/api/synergy/schedule", {
           method: "POST", 
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...creds,
-          }),
+          body: JSON.stringify({}),
+          credentials: "include",
         });
         
         if (!res.ok) {
@@ -256,7 +242,7 @@ export function AppSidebar() {
     };
     
     calculateNextPeriod();
-    const interval = setInterval(calculateNextPeriod, 3000);
+    const interval = setInterval(calculateNextPeriod, 45000);
     
     return () => clearInterval(interval);
   }, []);
