@@ -242,7 +242,7 @@ export function AppSidebar() {
     };
     
     calculateNextPeriod();
-    const interval = setInterval(calculateNextPeriod, 45000);
+    const interval = setInterval(calculateNextPeriod, 30000);
     
     return () => clearInterval(interval);
   }, []);
