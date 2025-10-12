@@ -26,6 +26,7 @@ import {
   DrawerFooter,
   DrawerClose,
 } from "./ui/drawer";
+import Link from "next/link";
 
 interface LoginProps {
   onLogin: (credentials: LoginCredentials) => void;
@@ -189,9 +190,11 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
             <div className="flex items-center mt-2 pt-2">
               <EyeOff className="w-9 h-3 mr-1 text-gray-700" />
               <p className="text-xs text-gray-700">
-                Your device directly, and securely connects to
-                Synergy/StudentVUE. We can{"'"}t see your passwords or your
-                grades.
+                Your device securely connects to Synergy/StudentVUE. We can{"'"}
+                t see your passwords or your grades.{" "}
+                <Link href="/privacy" target="_blank" className="underline">
+                  Learn More
+                </Link>
               </p>
             </div>
           </div>
