@@ -180,33 +180,29 @@ export default function DeletedMailPage() {
                 : m.From?.RecipientXML;
               const messageId = m._SMMessageGU || "";
               return (
-                <li key={m._SMMessageGU} className="group">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setSelected(m)}
-                      className={`flex-1 text-left rounded px-2 py-2 border hover:bg-muted/40 transition text-sm ${selected?._SMMessageGU === m._SMMessageGU ? "bg-muted/60" : ""}`}
-                    >
-                      <div className="font-medium line-clamp-1">
-                        {m._Subject || "(No Subject)"}
-                      </div>
-                      <div className="text-xs text-muted-foreground line-clamp-1">
-                        {sender?._Details1 || "Unknown"} •{" "}
-                        {formatDate(m._SendDateTime)}
-                      </div>
-                    </button>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        onClick={() => handleRestore(messageId)}
-                        disabled={isRestoring}
-                        variant="ghost"
-                        size="sm"
-                        className="p-1 h-8 w-8 text-green-600 hover:text-green-800 hover:bg-green-50"
-                        title="Restore"
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                      </Button>
+                <li key={m._SMMessageGU} className="group relative">
+                  <button
+                    onClick={() => setSelected(m)}
+                    className={`w-full text-left rounded px-2 py-2 border hover:bg-muted/40 transition text-sm ${selected?._SMMessageGU === m._SMMessageGU ? "bg-muted/60" : ""}`}
+                  >
+                    <div className="font-medium line-clamp-1">
+                      {m._Subject || "(No Subject)"}
                     </div>
-                  </div>
+                    <div className="text-xs text-muted-foreground line-clamp-1">
+                      {sender?._Details1 || "Unknown"} •{" "}
+                      {formatDate(m._SendDateTime)}
+                    </div>
+                  </button>
+                  <Button
+                    onClick={() => handleRestore(messageId)}
+                    disabled={isRestoring}
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-green-600 hover:text-green-800 hover:bg-green-50"
+                    title="Restore"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                  </Button>
                 </li>
               );
             })}
