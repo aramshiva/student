@@ -114,11 +114,6 @@ export default function AttendancePage() {
   };
 
   useEffect(() => {
-    const creds = localStorage.getItem("Student.creds");
-    if (!creds) {
-      window.location.href = "/";
-      return;
-    }
     const run = async () => {
       try {
         setIsLoading(true);
@@ -126,7 +121,8 @@ export default function AttendancePage() {
         const res = await fetch(`/api/synergy/attendance`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(JSON.parse(creds)),
+          body: JSON.stringify({}),
+          credentials: "include",
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const root: AttendanceAPIResponseRoot = await res.json();
@@ -196,7 +192,8 @@ export default function AttendancePage() {
           const schedRes = await fetch(`/api/synergy/schedule`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...JSON.parse(creds), term_index: 0 }),
+            body: JSON.stringify({ term_index: 0 }),
+            credentials: "include",
           });
           if (schedRes.ok) {
             const schedJson = await schedRes.json();

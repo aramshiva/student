@@ -121,29 +121,26 @@ export default function StudentDashboard() {
   );
   useEffect(() => {
     (async () => {
-      const credsRaw = localStorage.getItem("Student.creds");
-      if (!credsRaw) {
-        window.location.href = "/";
-        return;
-      }
       setLoading(true);
       setError(null);
       try {
-        const creds = JSON.parse(credsRaw);
         const studentInfoReq = fetch("/api/synergy/student", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(creds),
+          body: JSON.stringify({}),
+          credentials: "include",
         });
         const messagesReq = fetch("/api/synergy/messages", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: credsRaw,
+          body: JSON.stringify({}),
+          credentials: "include",
         });
         const scheduleReq = fetch("/api/synergy/schedule", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: credsRaw,
+          body: JSON.stringify({}),
+          credentials: "include",
         });
         const [infoRes, messagesRes, scheduleRes] = await Promise.all([
           studentInfoReq,
@@ -197,11 +194,8 @@ export default function StudentDashboard() {
           const nameRes = await fetch("/api/synergy/name", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: creds.username || creds.user || creds.userId,
-              password: creds.password || creds.pass,
-              district_url: creds.district_url || creds.district || creds.host,
-            }),
+            body: JSON.stringify({}),
+            credentials: "include",
           });
           if (nameRes.ok) {
             const nameJson = await nameRes.json();

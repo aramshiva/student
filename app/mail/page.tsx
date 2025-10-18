@@ -47,21 +47,12 @@ export default function MailPage() {
       }
     }
 
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) {
-      window.location.href = "/";
-      return;
-    }
-    const creds = JSON.parse(credsRaw);
     setLoading(true);
     fetch("/api/synergy/mail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        district_url: creds.district_url,
-        username: creds.username,
-        password: creds.password,
-      }),
+      body: JSON.stringify({}),
+      credentials: "include",
     })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
