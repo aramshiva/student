@@ -30,9 +30,18 @@ function getCurrentMark(marks: Mark | Mark[]): Mark | null {
 interface CourseDetailProps {
   course: Course;
   onBack: () => void;
+  initialSticky?: boolean;
+  initialHypothetical?: boolean;
+  onStateChange?: (sticky: boolean, hypothetical: boolean) => void;
 }
 
-export default function CourseDetail({ course, onBack }: CourseDetailProps) {
+export default function CourseDetail({ 
+  course, 
+  onBack,
+  initialSticky = false,
+  initialHypothetical = false,
+  onStateChange
+}: CourseDetailProps) {
   const marks = course.Marks.Mark;
   const currentMark = getCurrentMark(marks);
   const originalAssignments = React.useMemo(
@@ -42,7 +51,7 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
   const [editableAssignments, setEditableAssignments] = React.useState<
     Assignment[]
   >(() => [...originalAssignments]);
-  const [hypotheticalMode, setHypotheticalMode] = React.useState(false);
+  const [hypotheticalMode, setHypotheticalMode] = React.useState(initialHypothetical);
 
   const dontShowGradeCalcWarning = localStorage.getItem(
     "Student.dontShowGradeCalcWarning",
@@ -408,7 +417,19 @@ export default function CourseDetail({ course, onBack }: CourseDetailProps) {
     return "bg-gray-100 text-gray-800";
   };
 
-  const [chartSticky, setChartSticky] = React.useState(false);
+  const [chartSticky, setChartSticky] = React.useState(initialSticky);
+
+  const isInitialMount = React.useRef(true);
+
+  React.useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (onStateChange) {
+      onStateChange(chartSticky, hypotheticalMode);
+    }
+  }, [chartSticky, hypotheticalMode, onStateChange]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">

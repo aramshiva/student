@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Dashboard from "@/components/Dashboard";
 import CourseDetail from "@/components/CourseDetail";
 import { GradebookData, Course, Mark, Assignment } from "@/types/gradebook";
@@ -15,6 +16,8 @@ import { useTheme } from "next-themes";
 
 export default function GradebookPage() {
   const { theme } = useTheme();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [gradebookData, setGradebookData] = useState<GradebookData | null>(
     null,
   );
@@ -34,6 +37,44 @@ export default function GradebookPage() {
   >(null);
   const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
   const QUICK_STATS_STORAGE_KEY = "Student.quickStats";
+
+  const initialCourseId = searchParams.get('course');
+  const initialSticky = searchParams.get('sticky') === '1';
+  const initialHypothetical = searchParams.get('hypothetical') === '1';
+
+  const updateURL = useCallback((params: {
+    courseId?: string | null;
+    sticky?: boolean;
+    hypothetical?: boolean;
+  }) => {
+    const current = new URLSearchParams(searchParams.toString());
+    
+    if (params.courseId) {
+      current.set('course', params.courseId);
+    } else if (params.courseId === null) {
+      current.delete('course');
+    }
+    
+    if (params.sticky !== undefined) {
+      if (params.sticky) {
+        current.set('sticky', '1');
+      } else {
+        current.delete('sticky');
+      }
+    }
+    
+    if (params.hypothetical !== undefined) {
+      if (params.hypothetical) {
+        current.set('hypothetical', '1');
+      } else {
+        current.delete('hypothetical');
+      }
+    }
+    
+    const queryString = current.toString();
+    const newURL = queryString ? `/gradebook?${queryString}` : '/gradebook';
+    router.push(newURL, { scroll: false });
+  }, [searchParams, router]);
 
   function getCurrentMark(m: Mark | Mark[] | undefined): Mark | null {
     if (!m) return null;
@@ -200,6 +241,38 @@ export default function GradebookPage() {
     fetchGradebook(stored);
   }, [fetchGradebook]);
 
+  useEffect(() => {
+    if (!gradebookData || !initialCourseId) return;
+    
+    const gbRoot = gradebookData.data?.Gradebook || gradebookData.data || {};
+    const courses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
+    const course = courses.find(c => c?._CourseID === initialCourseId);
+    
+    if (course && !selectedCourse) {
+      setSelectedCourse(course);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gradebookData, initialCourseId]);
+
+  const handleCourseSelect = useCallback((course: Course) => {
+    setSelectedCourse(course);
+    updateURL({ courseId: course._CourseID });
+  }, [updateURL]);
+
+  const handleBack = useCallback(() => {
+    setSelectedCourse(null);
+    updateURL({ courseId: null, sticky: false, hypothetical: false });
+  }, [updateURL]);
+
+  const handleStateChange = useCallback((sticky: boolean, hypothetical: boolean) => {
+    const currentSticky = searchParams.get('sticky') === '1';
+    const currentHypothetical = searchParams.get('hypothetical') === '1';
+    
+    if (sticky !== currentSticky || hypothetical !== currentHypothetical) {
+      updateURL({ sticky, hypothetical });
+    }
+  }, [searchParams, updateURL]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
@@ -306,14 +379,17 @@ export default function GradebookPage() {
     return (
       <CourseDetail
         course={selectedCourse}
-        onBack={() => setSelectedCourse(null)}
+        onBack={handleBack}
+        initialSticky={initialSticky}
+        initialHypothetical={initialHypothetical}
+        onStateChange={handleStateChange}
       />
     );
   }
   return (
     <Dashboard
       gradebookData={gradebookData}
-      onCourseSelect={setSelectedCourse}
+      onCourseSelect={handleCourseSelect}
       onLogout={() => {
         localStorage.removeItem("Student.creds");
         window.location.href = "/";
