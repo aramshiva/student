@@ -30,9 +30,10 @@ export default function ClientLayout({
       "/documents": "Documents",
       "/gradebook": "Gradebook",
       "/mail": "Mail",
-      "/schedule": "Schedule",
       "/settings": "Settings",
       "/student_info": "Student Info",
+      "/tests": "Test History",
+      "/schedule": "Class Schedule",
     };
     if (map[p]) return map[p];
     if (p.startsWith("/gradebook/")) return "Assignment";

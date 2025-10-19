@@ -262,7 +262,6 @@ export default function DocumentsPage() {
 
   return (
     <div className="p-8 space-y-6">
-      <h1 className="text-xl font-semibold">Documents</h1>
       {!docs.length ? (
         <Empty>
           <EmptyHeader>

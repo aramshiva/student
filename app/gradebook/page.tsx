@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Dashboard from "@/components/Dashboard";
 import CourseDetail from "@/components/CourseDetail";
@@ -14,7 +14,7 @@ import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { useTheme } from "next-themes";
 
-export default function GradebookPage() {
+function GradebookPageContent() {
   const { theme } = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -399,5 +399,13 @@ export default function GradebookPage() {
       onSelectReportingPeriod={(idx: number) => fetchGradebook(idx)}
       isLoading={isLoading}
     />
+  );
+}
+
+export default function GradebookPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading gradebook...</div>}>
+      <GradebookPageContent />
+    </Suspense>
   );
 }

@@ -24,6 +24,7 @@ const items = [
   { title: "Attendance", url: "/attendance", icon: CalendarClock },
   { title: "Documents", url: "/documents", icon: File },
   { title: "Mail", url: "/mail", icon: Mail },
+  { title: "Test History", url: "/tests", icon: File },
 ];
 
 export function AppSidebar() {

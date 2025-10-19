@@ -174,7 +174,6 @@ export default function SchedulePage() {
 
   return (
     <div className="p-8">
-      <p className="text-xl font-medium pb-3">Class Schedule</p>
       {terms.length > 0 && (
         <div className="mb-4">
           <label className="font-semibold mr-2">Term:</label>

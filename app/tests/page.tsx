@@ -222,7 +222,6 @@ export default function TestsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-xl font-semibold tracking-tight">Test History</h1>
       {content}
     </div>
   );

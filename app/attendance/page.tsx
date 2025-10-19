@@ -140,10 +140,18 @@ export default function AttendancePage() {
           w?: APIPeriodTotalsWrapper,
         ): PeriodTotal[] => {
           if (!w) return [];
-          return normalizeArray(w.PeriodTotal).map((pt) => ({
-            number: Number(pt._Number || 0),
-            total: Number(pt._Total || 0),
-          }));
+          const totals = normalizeArray(w.PeriodTotal);
+          const result: PeriodTotal[] = [];
+          
+          totals.forEach((pt, index) => {
+            const total = Number(pt._Total || 0);
+            
+            const actualPeriod = index;
+            
+            result.push({ number: actualPeriod, total });
+          });
+          
+          return result;
         };
 
         const absenceDays: AbsenceDay[] = normalizeArray(root.Absences?.Absence)
@@ -226,7 +234,7 @@ export default function AttendancePage() {
                 if (p.course && !map[p.number]) map[p.number] = p.course;
               }
             }
-            if (Object.keys(map).length) setPeriodNameMap(map);
+            setPeriodNameMap(map);
           }
         } catch {
           const map: Record<number, string> = {};
@@ -236,6 +244,68 @@ export default function AttendancePage() {
             }
           }
           if (Object.keys(map).length) setPeriodNameMap(map);
+        }
+
+        // so you may be like "aram, why are you manually calculating 7th period??"
+        // for some reason, the synergy api sometimes omits period 7 totals 
+        // it has 21 periods but not 7th.
+        const calculatePeriod7Totals = () => {
+          const period7Totals = {
+            excused: 0,
+            tardies: 0,
+            unexcused: 0,
+            activities: 0,
+            unexcusedTardies: 0,
+          };
+
+          dataShape.absenceDays.forEach((day) => {
+            const period7 = day.periods.find((p) => p.number === 7);
+            if (period7) {
+              const iconName = period7.iconName?.toLowerCase() || '';
+              const name = period7.name?.toLowerCase() || '';
+              
+              if (iconName.includes('tardy') || name.includes('tardy')) {
+                if (iconName.includes('unx') || iconName.includes('unexcused')) {
+                  period7Totals.unexcusedTardies++;
+                } else {
+                  period7Totals.tardies++;
+                }
+              } else if (iconName.includes('excused') || name.includes('illness')) {
+                period7Totals.excused++;
+              } else if (iconName.includes('unexcused')) {
+                period7Totals.unexcused++;
+              } else if (iconName.includes('activity')) {
+                period7Totals.activities++;
+              }
+            }
+          });
+
+          return period7Totals;
+        };
+
+        const period7Totals = calculatePeriod7Totals();
+        
+        // add period 7 to totals if it exists (why? bc studentvue api doesnt show any totals for 7th period???)
+        if (period7Totals.excused > 0 || period7Totals.tardies > 0 || 
+            period7Totals.unexcused > 0 || period7Totals.activities > 0 || 
+            period7Totals.unexcusedTardies > 0 ||
+            dataShape.absenceDays.some(day => day.periods.some(p => p.number === 7))) {
+          
+          if (!dataShape.totals.excused?.find(p => p.number === 7)) {
+            dataShape.totals.excused?.push({ number: 7, total: period7Totals.excused });
+          }
+          if (!dataShape.totals.tardies?.find(p => p.number === 7)) {
+            dataShape.totals.tardies?.push({ number: 7, total: period7Totals.tardies });
+          }
+          if (!dataShape.totals.unexcused?.find(p => p.number === 7)) {
+            dataShape.totals.unexcused?.push({ number: 7, total: period7Totals.unexcused });
+          }
+          if (!dataShape.totals.activities?.find(p => p.number === 7)) {
+            dataShape.totals.activities?.push({ number: 7, total: period7Totals.activities });
+          }
+          if (!dataShape.totals.unexcusedTardies?.find(p => p.number === 7)) {
+            dataShape.totals.unexcusedTardies?.push({ number: 7, total: period7Totals.unexcusedTardies });
+          }
         }
       } catch (e) {
         setError((e as Error).message);
@@ -251,15 +321,12 @@ export default function AttendancePage() {
 
   return (
     <div className="p-8">
-      <p className="text-xl font-medium pb-3">Attendance</p>
       {!dataShape?.absenceDays?.length ? (
-        <div>No absence records.</div>
+        <div>No attendance anomalies found.</div>
       ) : (
-        <div className="space-y-6">
-          <div className="text-sm text-gray-500 flex flex-wrap gap-4">
-            <span>{dataShape.absenceDays.length} days absent total.</span>
-          </div>
-
+        <>
+        <div className="space-y-5">
+          <>
           <Table className="px-8">
             <TableHeader>
               <TableRow>
@@ -285,13 +352,6 @@ export default function AttendancePage() {
                 dataShape?.absenceDays.forEach((day) =>
                   day.periods.forEach((p) => nums.add(p.number)),
                 );
-                const activePeriodNums = new Set<number>();
-                Object.keys(periodNameMap).forEach((k) =>
-                  activePeriodNums.add(Number(k)),
-                );
-                dataShape?.absenceDays.forEach((day) =>
-                  day.periods.forEach((p) => activePeriodNums.add(p.number)),
-                );
                 const sorted = Array.from(nums).sort((a, b) => a - b);
                 return sorted
                   .map((n) => {
@@ -302,10 +362,15 @@ export default function AttendancePage() {
                     const t = find(dataShape?.totals.tardies);
                     const u = find(dataShape?.totals.unexcused);
                     const ut = find(dataShape?.totals.unexcusedTardies);
+                    
+                    const hasAbsences = dataShape?.absenceDays.some((day) =>
+                      day.periods.some((p) => p.number === n)
+                    );
+                    
                     if (
                       !periodNameMap[n] &&
                       a + e + t + u + ut === 0 &&
-                      !activePeriodNums.has(n)
+                      !hasAbsences
                     )
                       return null;
                     const label = periodNameMap[n]
@@ -331,6 +396,7 @@ export default function AttendancePage() {
               })()}
             </TableBody>
           </Table>
+          </>
           {dataShape.absenceDays.map((a) => {
             const isOpen = expanded[a.date] ?? false;
             return (
@@ -386,10 +452,11 @@ export default function AttendancePage() {
               </Card>
             );
           })}
-        </div>
+          </div>
+        </>
       )}
       <p className="text-xs text-gray-500 mt-4">
-        Rendered {dataShape?.absenceDays.length || 0} absence day(s).
+        Rendered {dataShape?.absenceDays.length || 0} attendance anomalies.
       </p>
     </div>
   );
