@@ -16,6 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import { useTheme } from "next-themes";
 
 interface APIRawClassListing {
   _Period: string;
@@ -83,6 +86,7 @@ interface ClassListing {
 }
 
 export default function SchedulePage() {
+  const { theme } = useTheme();
   const [classes, setClasses] = useState<ClassListing[]>([]);
   const [terms, setTerms] = useState<Term[]>([]);
   const TODAY_SENTINEL = -1;
@@ -169,60 +173,131 @@ export default function SchedulePage() {
     })();
   }, [selectedTerm, TODAY_SENTINEL]);
 
-  if (isLoading) return <div className="p-8">Loading schedule...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
     <div className="p-8">
-      {terms.length > 0 && (
+      {(isLoading || terms.length > 0) && (
         <div className="mb-4">
-          <label className="font-semibold mr-2">Term:</label>
-          <Select
-            value={selectedTerm.toString()}
-            onValueChange={(val) => setSelectedTerm(Number(val))}
-          >
-            <SelectTrigger className="w-[260px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={TODAY_SENTINEL.toString()}>
-                Today ({new Date().toLocaleDateString()})
-              </SelectItem>
-              {terms.map((term) => (
-                <SelectItem
-                  key={term.termIndex}
-                  value={term.termIndex.toString()}
-                >
-                  {term.termName} ({term.beginDate} - {term.endDate})
+          {isLoading ? (
+            <Skeleton
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
+              width={50}
+              inline
+              style={{ marginRight: "8px" }}
+            />
+          ) : (
+            <label className="font-semibold mr-2">Term:</label>
+          )}
+          {isLoading ? (
+            <Skeleton
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
+              height={40}
+              width={260}
+              inline
+            />
+          ) : (
+            <Select
+              value={selectedTerm.toString()}
+              onValueChange={(val) => setSelectedTerm(Number(val))}
+            >
+              <SelectTrigger className="w-[260px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODAY_SENTINEL.toString()}>
+                  Today ({new Date().toLocaleDateString()})
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {terms.map((term) => (
+                  <SelectItem
+                    key={term.termIndex}
+                    value={term.termIndex.toString()}
+                  >
+                    {term.termName} ({term.beginDate} - {term.endDate})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       )}
-      {!classes.length ? (
+      {!isLoading && !classes.length ? (
         <div className="p-8">No schedule found.</div>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">Period</TableHead>
-              <TableHead>Course</TableHead>
-              <TableHead>Room</TableHead>
-              <TableHead>Teacher</TableHead>
-              <TableHead>Teacher Email</TableHead>
+              <TableHead className="w-[80px]">
+                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Period"}
+              </TableHead>
+              <TableHead>
+                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Course"}
+              </TableHead>
+              <TableHead>
+                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Room"}
+              </TableHead>
+              <TableHead>
+                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Teacher"}
+              </TableHead>
+              <TableHead>
+                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Teacher Email"}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {classes.map((c) => (
-              <TableRow key={c.period}>
-                <TableCell>{c.period}</TableCell>
-                <TableCell>{c.courseTitle}</TableCell>
-                <TableCell>{c.room}</TableCell>
-                <TableCell>{c.teacher}</TableCell>
-                <TableCell>{c.teacherEmail || ""}</TableCell>
-              </TableRow>
-            ))}
+            {isLoading
+              ? Array.from({ length: 7 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton
+                        {...(theme === "dark"
+                          ? { baseColor: "#202020", highlightColor: "#444" }
+                          : {})}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton
+                        {...(theme === "dark"
+                          ? { baseColor: "#202020", highlightColor: "#444" }
+                          : {})}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton
+                        {...(theme === "dark"
+                          ? { baseColor: "#202020", highlightColor: "#444" }
+                          : {})}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton
+                        {...(theme === "dark"
+                          ? { baseColor: "#202020", highlightColor: "#444" }
+                          : {})}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton
+                        {...(theme === "dark"
+                          ? { baseColor: "#202020", highlightColor: "#444" }
+                          : {})}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              : classes.map((c) => (
+                  <TableRow key={c.period}>
+                    <TableCell>{c.period}</TableCell>
+                    <TableCell>{c.courseTitle}</TableCell>
+                    <TableCell>{c.room}</TableCell>
+                    <TableCell>{c.teacher}</TableCell>
+                    <TableCell>{c.teacherEmail || ""}</TableCell>
+                  </TableRow>
+                ))}
           </TableBody>
         </Table>
       )}

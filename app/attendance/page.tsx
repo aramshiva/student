@@ -10,6 +10,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import { useTheme } from "next-themes";
 
 interface APIAbsencePeriod {
   _Number: string;
@@ -101,6 +104,7 @@ interface ScheduleClassListing {
 }
 
 export default function AttendancePage() {
+  const { theme } = useTheme();
   const [dataShape, setDataShape] = useState<AttendanceDataShape | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -316,12 +320,14 @@ export default function AttendancePage() {
     run();
   }, []);
 
-  if (isLoading) return <div className="p-8">Loading attendance...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
     <div className="p-8">
-      {!dataShape?.absenceDays?.length ? (
+      <p className="text-xl font-medium pb-3">
+        {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} width={120} /> : "Attendance"}
+      </p>
+      {!isLoading && !dataShape?.absenceDays?.length ? (
         <div>No attendance anomalies found.</div>
       ) : (
         <>
@@ -330,16 +336,52 @@ export default function AttendancePage() {
           <Table className="px-8">
             <TableHeader>
               <TableRow>
-                <TableHead>Period</TableHead>
-                <TableHead>Activities</TableHead>
-                <TableHead>Excused</TableHead>
-                <TableHead>Tardies</TableHead>
-                <TableHead>Unexcused</TableHead>
-                <TableHead>Unexcused Tardies</TableHead>
+                <TableHead>
+                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Period"}
+                </TableHead>
+                <TableHead>
+                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Activities"}
+                </TableHead>
+                <TableHead>
+                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Excused"}
+                </TableHead>
+                <TableHead>
+                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Tardies"}
+                </TableHead>
+                <TableHead>
+                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Unexcused"}
+                </TableHead>
+                <TableHead>
+                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Unexcused Tardies"}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(() => {
+              {isLoading ? (
+                Array.from({ length: 7 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+              (() => {
                 const nums = new Set<number>();
                 const pushNums = (list?: { number: number; total: number }[]) =>
                   list?.forEach((l) => nums.add(l.number));
@@ -393,11 +435,12 @@ export default function AttendancePage() {
                     );
                   })
                   .filter(Boolean);
-              })()}
+              })()
+              )}
             </TableBody>
           </Table>
           </>
-          {dataShape.absenceDays.map((a) => {
+          {!isLoading && dataShape?.absenceDays.map((a) => {
             const isOpen = expanded[a.date] ?? false;
             return (
               <Card key={a.date} className="p-4 space-y-3">
@@ -452,11 +495,29 @@ export default function AttendancePage() {
               </Card>
             );
           })}
+          {isLoading && Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <div className="pr-4 flex-1">
+                  <h2 className="font-semibold text-lg mb-2">
+                    <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} width={120} />
+                  </h2>
+                  <p className="text-sm pt-2">
+                    <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} width={200} />
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
           </div>
         </>
       )}
       <p className="text-xs text-gray-500 mt-4">
-        Rendered {dataShape?.absenceDays.length || 0} attendance anomalies.
+        {isLoading ? (
+          <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} width={200} />
+        ) : (
+          `Rendered ${dataShape?.absenceDays.length || 0} attendance anomalies.`
+        )}
       </p>
     </div>
   );

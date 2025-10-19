@@ -26,6 +26,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import Link from "next/link";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import { useTheme } from "next-themes";
 
 interface StudentDocument {
   comment: string;
@@ -36,6 +39,7 @@ interface StudentDocument {
 }
 
 export default function DocumentsPage() {
+  const { theme } = useTheme();
   const [docs, setDocs] = useState<StudentDocument[]>([]);
   const [dateSort, setDateSort] = useState<"desc" | "asc">("desc");
   const [isLoading, setIsLoading] = useState(true);
@@ -257,12 +261,11 @@ export default function DocumentsPage() {
     return clone;
   }, [docs, dateSort, selectedType]);
 
-  if (isLoading) return <div className="p-8">Loading documents...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
     <div className="p-8 space-y-6">
-      {!docs.length ? (
+      {!isLoading && !docs.length ? (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -280,24 +283,34 @@ export default function DocumentsPage() {
         <Card className="p-4">
           <div className="flex flex-wrap items-center gap-4 mb-4">
             <div className="flex items-center gap-2 text-sm">
-              <Select
-                value={selectedType}
-                onValueChange={(v) => setSelectedType(v)}
-              >
-                <SelectTrigger className="w-[190px] h-8">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All ({docs.length})</SelectItem>
-                  {types.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isLoading ? (
+                <Skeleton
+                  {...(theme === "dark"
+                    ? { baseColor: "#202020", highlightColor: "#444" }
+                    : {})}
+                  height={32}
+                  width={190}
+                />
+              ) : (
+                <Select
+                  value={selectedType}
+                  onValueChange={(v) => setSelectedType(v)}
+                >
+                  <SelectTrigger className="w-[190px] h-8">
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All ({docs.length})</SelectItem>
+                    {types.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
-            {selectedType !== "ALL" && (
+            {!isLoading && selectedType !== "ALL" && (
               <button
                 type="button"
                 className="text-xs underline text-muted-foreground"
@@ -317,64 +330,139 @@ export default function DocumentsPage() {
                   }
                   title="Click to sort by date"
                 >
-                  Date {dateSort === "desc" ? "↓" : "↑"}
+                  {isLoading ? (
+                    <Skeleton
+                      {...(theme === "dark"
+                        ? { baseColor: "#202020", highlightColor: "#444" }
+                        : {})}
+                    />
+                  ) : (
+                    `Date ${dateSort === "desc" ? "↓" : "↑"}`
+                  )}
                 </TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Name</TableHead>
-                {/* <TableHead className="w-[100px] text-right">Download</TableHead> */}
+                <TableHead>
+                  {isLoading ? (
+                    <Skeleton
+                      {...(theme === "dark"
+                        ? { baseColor: "#202020", highlightColor: "#444" }
+                        : {})}
+                    />
+                  ) : (
+                    "Type"
+                  )}
+                </TableHead>
+                <TableHead>
+                  {isLoading ? (
+                    <Skeleton
+                      {...(theme === "dark"
+                        ? { baseColor: "#202020", highlightColor: "#444" }
+                        : {})}
+                    />
+                  ) : (
+                    "Name"
+                  )}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedDocs.map((doc) => (
-                <TableRow
-                  key={doc.guid}
-                  onClick={() => (downloading ? null : openDocument(doc.guid))}
-                  onKeyDown={(e) => {
-                    if ((e.key === "Enter" || e.key === " ") && !downloading) {
-                      e.preventDefault();
-                      openDocument(doc.guid);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-disabled={downloading === doc.guid}
-                  className={`hover:underline {downloading === doc.guid ? 'opacity-60' : 'hover:bg-muted/50'} focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500`}
-                >
-                  <TableCell className="text-sm hover:cursor-pointer">
-                    {doc.date}
-                  </TableCell>
-                  <TableCell className="hover:cursor-pointer">
-                    {doc.type}
-                  </TableCell>
-                  <TableCell
-                    className="max-w-[420px] truncate hover:cursor-pointer"
-                    title={doc.comment}
-                  >
-                    {doc.comment}
-                  </TableCell>
-                  <TableCell
-                    className="text-right"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Button
-                      className="hover:cursor-pointer"
-                      variant="ghost"
-                      size="sm"
-                      disabled={downloading === doc.guid}
-                      onClick={(e) => downloadDocument(e, doc.guid)}
+              {isLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                          width={40}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : sortedDocs.map((doc) => (
+                    <TableRow
+                      key={doc.guid}
+                      onClick={() =>
+                        downloading ? null : openDocument(doc.guid)
+                      }
+                      onKeyDown={(e) => {
+                        if (
+                          (e.key === "Enter" || e.key === " ") &&
+                          !downloading
+                        ) {
+                          e.preventDefault();
+                          openDocument(doc.guid);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-disabled={downloading === doc.guid}
+                      className={`hover:underline {downloading === doc.guid ? 'opacity-60' : 'hover:bg-muted/50'} focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500`}
                     >
-                      <Download />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      <TableCell className="text-sm hover:cursor-pointer">
+                        {doc.date}
+                      </TableCell>
+                      <TableCell className="hover:cursor-pointer">
+                        {doc.type}
+                      </TableCell>
+                      <TableCell
+                        className="max-w-[420px] truncate hover:cursor-pointer"
+                        title={doc.comment}
+                      >
+                        {doc.comment}
+                      </TableCell>
+                      <TableCell
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Button
+                          className="hover:cursor-pointer"
+                          variant="ghost"
+                          size="sm"
+                          disabled={downloading === doc.guid}
+                          onClick={(e) => downloadDocument(e, doc.guid)}
+                        >
+                          <Download />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
         </Card>
       )}
-      {docs.length > 0 && (
+      {!isLoading && docs.length > 0 && (
         <p className="text-xs text-gray-500">
-          Showing {docs.length} document(s).
+          {isLoading ? (
+            <Skeleton
+              {...(theme === "dark"
+                ? { baseColor: "#202020", highlightColor: "#444" }
+                : {})}
+              width={150}
+            />
+          ) : (
+            `Showing ${docs.length} document(s).`
+          )}
         </p>
       )}
     </div>

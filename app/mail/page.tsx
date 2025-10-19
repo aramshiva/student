@@ -3,6 +3,9 @@ import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import { useTheme } from "next-themes";
 
 interface MailRecipient {
   _RecipientType?: string;
@@ -29,6 +32,7 @@ interface MailMessage {
 }
 
 export default function MailPage() {
+  const { theme } = useTheme();
   const [messages, setMessages] = useState<MailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,82 +149,129 @@ export default function MailPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Loading mail...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
+
+  const themeProps = theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {};
 
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Mail</h1>
+        <h1 className="text-xl font-semibold">
+          {loading ? <Skeleton width={60} {...themeProps} /> : "Mail"}
+        </h1>
         <div className="flex items-center gap-2">
-          {messages.filter(m => !deletedMessages.has(m._SMMessageGU || "")).length > 0 && (
-            <Button 
-              onClick={handleDeleteAll}
-              disabled={isDeleting}
-              variant="destructive"
-              size="sm"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              Delete All Visible
-            </Button>
+          {loading ? (
+            <>
+              <Skeleton width={150} height={32} {...themeProps} />
+              <Skeleton width={140} height={32} {...themeProps} />
+            </>
+          ) : (
+            <>
+              {messages.filter(m => !deletedMessages.has(m._SMMessageGU || "")).length > 0 && (
+                <Button 
+                  onClick={handleDeleteAll}
+                  disabled={isDeleting}
+                  variant="destructive"
+                  size="sm"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete All Visible
+                </Button>
+              )}
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.href = "/mail/deleted"}
+              >
+                View Deleted ({deletedMessages.size})
+              </Button>
+            </>
           )}
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={() => window.location.href = "/mail/deleted"}
-          >
-            View Deleted ({deletedMessages.size})
-          </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-4 md:col-span-1 max-h-[70vh] overflow-auto">
           <h2 className="font-medium mb-3 text-sm text-muted-foreground">
-            Inbox ({messages.filter(m => !deletedMessages.has(m._SMMessageGU || "")).length})
+            {loading ? (
+              <Skeleton width={100} {...themeProps} />
+            ) : (
+              `Inbox (${messages.filter(m => !deletedMessages.has(m._SMMessageGU || "")).length})`
+            )}
           </h2>
-          {!messages.length && (
-            <div className="text-xs text-muted-foreground">No messages.</div>
+          {loading ? (
+            <ul className="space-y-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <li key={i} className="rounded px-2 py-2 border">
+                  <div className="font-medium mb-1">
+                    <Skeleton {...themeProps} />
+                  </div>
+                  <div className="text-xs">
+                    <Skeleton width="60%" {...themeProps} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <>
+              {!messages.length && (
+                <div className="text-xs text-muted-foreground">No messages.</div>
+              )}
+              <ul className="space-y-1">
+                {messages
+                  .filter((m) => !deletedMessages.has(m._SMMessageGU || ""))
+                  .map((m) => {
+                    const sender = Array.isArray(m.From?.RecipientXML)
+                      ? m.From?.RecipientXML[0]
+                      : m.From?.RecipientXML;
+                    const messageId = m._SMMessageGU || "";
+                    return (
+                      <li key={m._SMMessageGU} className="group relative">
+                        <button
+                          onClick={() => setSelected(m)}
+                          className={`w-full text-left rounded px-2 py-2 border hover:bg-muted/40 transition text-sm ${selected?._SMMessageGU === m._SMMessageGU ? "bg-muted/60" : ""}`}
+                        >
+                          <div className="font-medium line-clamp-1">
+                            {m._Subject || "(No Subject)"}
+                          </div>
+                          <div className="text-xs text-muted-foreground line-clamp-1">
+                            {sender?._Details1 || "Unknown"} •{" "}
+                            {formatDate(m._SendDateTime)}
+                          </div>
+                        </button>
+                        <Button
+                          onClick={() => handleDeleteSingle(messageId)}
+                          disabled={isDeleting}
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </>
           )}
-          <ul className="space-y-1">
-            {messages
-              .filter((m) => !deletedMessages.has(m._SMMessageGU || ""))
-              .map((m) => {
-                const sender = Array.isArray(m.From?.RecipientXML)
-                  ? m.From?.RecipientXML[0]
-                  : m.From?.RecipientXML;
-                const messageId = m._SMMessageGU || "";
-                return (
-                  <li key={m._SMMessageGU} className="group relative">
-                    <button
-                      onClick={() => setSelected(m)}
-                      className={`w-full text-left rounded px-2 py-2 border hover:bg-muted/40 transition text-sm ${selected?._SMMessageGU === m._SMMessageGU ? "bg-muted/60" : ""}`}
-                    >
-                      <div className="font-medium line-clamp-1">
-                        {m._Subject || "(No Subject)"}
-                      </div>
-                      <div className="text-xs text-muted-foreground line-clamp-1">
-                        {sender?._Details1 || "Unknown"} •{" "}
-                        {formatDate(m._SendDateTime)}
-                      </div>
-                    </button>
-                    <Button
-                      onClick={() => handleDeleteSingle(messageId)}
-                      disabled={isDeleting}
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </li>
-                );
-              })}
-          </ul>
         </Card>
 
         <Card className="p-4 md:col-span-2 max-h-[70vh] overflow-auto">
-          {!selected ? (
+          {loading ? (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold mb-2">
+                  <Skeleton {...themeProps} />
+                </h2>
+                <p className="text-xs">
+                  <Skeleton width="40%" {...themeProps} />
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Skeleton count={3} {...themeProps} />
+              </div>
+            </div>
+          ) : !selected ? (
             <div className="text-muted-foreground text-sm">
               Select a message to view.
             </div>
