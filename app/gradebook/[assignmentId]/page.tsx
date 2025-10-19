@@ -55,12 +55,6 @@ export default function AssignmentDetailPage() {
   const fetchGradebook = useCallback(async () => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
-    const creds = localStorage.getItem("Student.creds");
-    if (!creds) {
-      router.push("/");
-      return;
-    }
-    const credentials = JSON.parse(creds);
     let stored: number | null = null;
     try {
       const raw = localStorage.getItem(REPORTING_PERIOD_STORAGE_KEY);
@@ -74,10 +68,11 @@ export default function AssignmentDetailPage() {
       setIsLoading(true);
       setError(null);
       const body =
-        stored != null ? { ...credentials, reportPeriod: stored } : credentials;
+        stored != null ? { reportPeriod: stored } : {};
       const res = await fetch("/api/synergy/gradebook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -108,7 +103,7 @@ export default function AssignmentDetailPage() {
       setIsLoading(false);
       inFlightRef.current = false;
     }
-  }, [assignmentId, router]);
+  }, [assignmentId]);
 
   useEffect(() => {
     fetchGradebook();
