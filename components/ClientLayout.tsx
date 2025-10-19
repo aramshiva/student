@@ -35,11 +35,35 @@ export default function ClientLayout({
       "/tests": "Test History",
       "/schedule": "Class Schedule",
     };
-    if (map[p]) return map[p];
+    if (Object.prototype.hasOwnProperty.call(map, p)) return map[p];
     if (p.startsWith("/gradebook/")) return "Assignment";
     const seg = p.split("/").filter(Boolean).pop();
     if (!seg) return "";
     return seg.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }, [pathname]);
+
+  React.useEffect(() => {
+    if (!pathname) return;
+    const p = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
+    const map: Record<string, string> = {
+      "/student": "Dashboard",
+      "/attendance": "Attendance",
+      "/documents": "Documents",
+      "/gradebook": "Gradebook",
+      "/mail": "Mail",
+      "/settings": "Settings",
+      "/student_info": "Student Info",
+      "/tests": "Test History",
+      "/schedule": "Class Schedule",
+    };
+    let title = "Student";
+    if (Object.prototype.hasOwnProperty.call(map, p)) title = `Student - ${map[p]}`;
+    else if (p.startsWith("/gradebook/")) title = "Student - Assignment";
+    else {
+      const seg = p.split("/").filter(Boolean).pop();
+      if (seg) title = `Student - ${seg.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}`;
+    }
+    document.title = title;
   }, [pathname]);
   return showSidebar ? (
     <SidebarProvider>
