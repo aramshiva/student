@@ -1,27 +1,27 @@
 import { NextResponse } from "next/server";
 import { SynergyClient } from "@/lib/synergy";
+import { getCredentialsFromRequest } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json().catch(() => null);
-    if (!body)
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-
-    const { district_url, username, password, reportPeriod, term_index } = body;
-
-    if (!district_url || !username || !password) {
+    const credentials = await getCredentialsFromRequest(req);
+    
+    if (!credentials) {
       return NextResponse.json(
-        { error: "district_url, username, and password are required" },
-        { status: 400 },
+        { error: "Authentication required. Please log in again." },
+        { status: 401 }
       );
     }
 
+    const body = await req.json().catch(() => ({}));
+    const { reportPeriod, term_index } = body;
+
     const client = new SynergyClient(
-      String(district_url),
-      String(username),
-      String(password),
+      credentials.district_url,
+      credentials.username,
+      credentials.password,
     );
 
     const param: Record<string, unknown> = {};
@@ -33,7 +33,13 @@ export async function POST(req: Request) {
       raw && typeof raw === "object" && "StudentClassList" in raw
         ? (raw as { StudentClassList: unknown }).StudentClassList
         : (raw ?? {});
-    return NextResponse.json(schedule, { status: 200 });
+    
+    const response = NextResponse.json(schedule, { status: 200 });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (e: unknown) {
     const msg =
       e instanceof Error
@@ -41,6 +47,12 @@ export async function POST(req: Request) {
           ? "Request timed out"
           : e.message
         : "Unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    
+    const response = NextResponse.json({ error: msg }, { status: 500 });
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   }
 }

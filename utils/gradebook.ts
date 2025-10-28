@@ -214,7 +214,7 @@ export function percentToGPA(pct: number): number | null {
 const CALC_GRADES_STORAGE_KEY = "Student.calcGrades";
 
 export function loadCalculateGradesEnabled(): boolean {
-  if (typeof window === "undefined") return false; // default off
+  if (typeof window === "undefined") return false;
   try {
     const raw = localStorage.getItem(CALC_GRADES_STORAGE_KEY);
     if (raw === null) return false;

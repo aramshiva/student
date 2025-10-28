@@ -95,11 +95,6 @@ export default function SchedulePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const creds = localStorage.getItem("Student.creds");
-    if (!creds) {
-      window.location.href = "/";
-      return;
-    }
     (async () => {
       try {
         setIsLoading(true);
@@ -108,10 +103,10 @@ export default function SchedulePage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ...JSON.parse(creds),
             term_index:
               selectedTerm === TODAY_SENTINEL ? undefined : selectedTerm,
           }),
+          credentials: "include",
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const raw: APIRawStudentClassScheduleRoot = await res.json();

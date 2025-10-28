@@ -63,18 +63,13 @@ export default function DocumentsPage() {
   };
 
   useEffect(() => {
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) {
-      window.location.href = "/";
-      return;
-    }
-    const creds = JSON.parse(credsRaw);
     setIsLoading(true);
     setError(null);
     fetch("/api/synergy/documents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(creds),
+      body: JSON.stringify({}),
+      credentials: "include",
     })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -107,13 +102,11 @@ export default function DocumentsPage() {
   }, []);
 
   const fetchDocumentBase64 = async (guid: string) => {
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) return null;
-    const creds = JSON.parse(credsRaw);
     const res = await fetch("/api/synergy/document", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...creds, document_guid: guid }),
+      body: JSON.stringify({ document_guid: guid }),
+      credentials: "include",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const ct = res.headers.get("content-type") || "";
@@ -159,13 +152,11 @@ export default function DocumentsPage() {
   const openDocument = async (guid: string) => {
     setDownloading(guid);
     try {
-      const credsRaw = localStorage.getItem("Student.creds");
-      if (!credsRaw) return;
-      const creds = JSON.parse(credsRaw);
       const res = await fetch("/api/synergy/document", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...creds, document_guid: guid }),
+        body: JSON.stringify({ document_guid: guid }),
+        credentials: "include",
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const ct = res.headers.get("content-type") || "";
