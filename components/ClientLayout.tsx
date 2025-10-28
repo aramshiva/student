@@ -34,6 +34,7 @@ export default function ClientLayout({
       "/student_info": "Student Info",
       "/tests": "Test History",
       "/schedule": "Class Schedule",
+      "/calendar": "Assignment Calendar",
     };
     if (Object.prototype.hasOwnProperty.call(map, p)) return map[p];
     if (p.startsWith("/gradebook/")) return "Assignment";
@@ -55,6 +56,7 @@ export default function ClientLayout({
       "/student_info": "Student Info",
       "/tests": "Test History",
       "/schedule": "Class Schedule",
+      "/calendar": "Calendar",
     };
     let title = "Student";
     if (Object.prototype.hasOwnProperty.call(map, p)) title = `Student - ${map[p]}`;

@@ -15,16 +15,19 @@ import {
   File,
   Home,
   Mail,
+  Sheet,
 } from "lucide-react";
 
 const items = [
   { title: "Home", url: "/student", icon: Home },
   { title: "Gradebook", url: "/gradebook", icon: BookUser },
-  { title: "Schedule", url: "/schedule", icon: Calendar },
+  { title: "Calendar", url: "/calendar", icon: CalendarClock },
+  { title: "Schedule", url: "/schedule", icon: Sheet },
   { title: "Attendance", url: "/attendance", icon: CalendarClock },
   { title: "Documents", url: "/documents", icon: File },
   { title: "Mail", url: "/mail", icon: Mail },
   { title: "Test History", url: "/tests", icon: File },
+  { title: "Calendar", url: "/calendar", icon: Calendar },
 ];
 
 export function AppSidebar() {

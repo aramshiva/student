@@ -14,6 +14,7 @@ import {
   Table2,
   CalendarDays,
   BookOpen,
+  Table,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,7 +42,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const primaryNav = [
   { name: "Home", href: "/student", icon: Home },
   { name: "Gradebook", href: "/gradebook", icon: BookOpen },
-  { name: "Schedule", href: "/schedule", icon: CalendarDays },
+  { name: "Schedule", href: "/schedule", icon: Table },
+  { name: "Calendar", href: "/calendar", icon: CalendarDays },
   { name: "Attendance", href: "/attendance", icon: Table2 },
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "Mail", href: "/mail", icon: Mail },

@@ -65,6 +65,11 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           icon: <BookOpen className="text-sm" />,
         },
         {
+          label: "Calendar",
+          action: () => navigate("/calendar"),
+          icon: <CalendarDays className="text-sm" />,
+        },
+        {
           label: "Schedule",
           action: () => navigate("/schedule"),
           icon: <CalendarDays className="text-sm" />,
@@ -94,6 +99,11 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           action: () => navigate("/settings"),
           icon: <Settings className="text-sm" />,
         },
+        {
+          label: "Calendar",
+          action: () => navigate("/calendar"),
+          icon: <CalendarDays className="text-sm" />,
+        }
       ],
     },
     {
