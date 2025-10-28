@@ -43,6 +43,8 @@ interface DashboardProps {
   reportingPeriods?: ReportingPeriodMeta[];
   selectedReportingPeriod?: number | null;
   onSelectReportingPeriod?: (index: number) => void;
+  onRefresh?: () => void;
+  lastRefreshed?: Date | null;
   isLoading?: boolean;
 }
 
@@ -52,6 +54,8 @@ export default function Dashboard({
   reportingPeriods = [],
   selectedReportingPeriod = null,
   onSelectReportingPeriod,
+  onRefresh,
+  lastRefreshed,
   isLoading = false,
 }: DashboardProps) {
   const gbRoot = gradebookData.data.Gradebook ?? gradebookData.data;
@@ -214,6 +218,19 @@ export default function Dashboard({
               },
             )}
           </div>
+        </div>
+        
+        <div className="mt-4 text-center">
+          <span className="text-xs text-gray-500">
+            {lastRefreshed && `Last refreshed ${lastRefreshed.toLocaleTimeString()} • `}
+            <button
+              onClick={onRefresh}
+              disabled={isLoading}
+              className="text-xs hover:cursor-pointer underline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Refresh
+            </button>
+          </span>
         </div>
       </div>
     </>

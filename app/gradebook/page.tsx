@@ -35,6 +35,7 @@ function GradebookPageContent() {
   const [selectedReportingPeriod, setSelectedReportingPeriod] = useState<
     number | null
   >(null);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
   const QUICK_STATS_STORAGE_KEY = "Student.quickStats";
 
@@ -219,6 +220,7 @@ function GradebookPageContent() {
         setGradebookData({ data });
         computeAndStoreQuickStats(data);
         setSelectedCourse(null);
+        setLastRefreshed(new Date());
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -318,7 +320,7 @@ function GradebookPageContent() {
                   : {})}
                 height={28}
                 width={70}
-              />
+               />
             </div>
           </div>
         </div>
@@ -397,6 +399,8 @@ function GradebookPageContent() {
       reportingPeriods={reportingPeriods}
       selectedReportingPeriod={selectedReportingPeriod}
       onSelectReportingPeriod={(idx: number) => fetchGradebook(idx)}
+      onRefresh={() => fetchGradebook(selectedReportingPeriod)}
+      lastRefreshed={lastRefreshed}
       isLoading={isLoading}
     />
   );
