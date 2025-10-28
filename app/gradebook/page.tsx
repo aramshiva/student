@@ -320,7 +320,7 @@ function GradebookPageContent() {
                   : {})}
                 height={28}
                 width={70}
-               />
+              />
             </div>
           </div>
         </div>

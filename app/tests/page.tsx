@@ -46,36 +46,48 @@ export default function TestsPage() {
   const [data, setData] = useState<AnalysisTest[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const theme = useTheme();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const credsRaw = localStorage.getItem("Student.creds");
-        if (!credsRaw) {
-          window.location.href = "/";
-          return;
-        }
-        const res = await fetch("/api/synergy/tests", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: credsRaw,
-        });
-        if (!res.ok) {
-          throw new Error(`Tests HTTP ${res.status}`);
-        }
-        const json: TestsApiResponse = await res.json();
-        const tests = json?.analysis?.availableTests || [];
-        setData(tests);
-      } catch (e) {
-        setError((e as Error).message);
-      } finally {
+  const fetchTests = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const credsRaw = localStorage.getItem("Student.creds");
+      if (!credsRaw) {
+        window.location.href = "/";
+        return;
+      }
+      const res = await fetch("/api/synergy/tests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: credsRaw,
+      });
+      if (!res.ok) {
+        throw new Error(`Tests HTTP ${res.status}`);
+      }
+      const json: TestsApiResponse = await res.json();
+      const tests = json?.analysis?.availableTests || [];
+      setData(tests);
+      
+      if (tests.length === 0 && retryCount < 3) {
+        const delays = [1000, 5000, 30000];
+        const delay = delays[retryCount];
+        setTimeout(() => {
+          setRetryCount((prev) => prev + 1);
+        }, delay);
+      } else {
         setLoading(false);
       }
-    })();
-  }, []);
+    } catch (e) {
+      setError((e as Error).message);
+      setLoading(false);
+    }
+  }, [retryCount]);
+
+  useEffect(() => {
+    fetchTests();
+  }, [fetchTests]);
 
   const content = useMemo(() => {
     const prettify = (label: string) => {
