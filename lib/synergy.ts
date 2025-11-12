@@ -1,3 +1,4 @@
+// this is where the magic happens!
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 
 export type MailData = Record<string, unknown>;
@@ -48,7 +49,6 @@ const escapeXmlText = (s: string) =>
 
 const sanitizeDomain = (raw: string): string => {
   // sanitize and validate a synergy host string
-  // this is due to CWE-1333, CWE-400 and CWE-730.
   let s = (raw || "").trim();
 
   const lower = s.toLowerCase();
@@ -72,7 +72,7 @@ const sanitizeDomain = (raw: string): string => {
   // no need for trailing slashes ^
 
   while (s.endsWith(".")) s = s.slice(0, -1);
-  // also no need for trailing dots
+  // also no need for trailing dots ^
 
   s = s.toLowerCase();
 
@@ -106,7 +106,6 @@ async function fetchWithTimeout(
   const parsedUrl = new URL(url);
 
   if (parsedUrl.protocol !== "https:") {
-    // only allow https!
     throw new Error("Only HTTPS URLs are allowed");
   }
   const c = new AbortController();
@@ -141,6 +140,7 @@ export class SynergyClient {
     const paramStr = `&lt;Parms&gt;&lt;Key&gt;5E4B7859-B805-474B-A833-FDB15D205D40&lt;/Key&gt;&lt;MatchToDistrictZipCode&gt;${zipStr}&lt;/MatchToDistrictZipCode&gt;&lt;/Parms&gt;`;
     const soapBody = `<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <ProcessWebServiceRequest xmlns=\"http://edupoint.com/webservices/\">\n      <userID>EdupointDistrictInfo</userID>\n      <password>Edup01nt</password>\n      <skipLoginLog>1</skipLoginLog>\n      <parent>0</parent>\n      <webServiceHandleName>HDInfoServices</webServiceHandleName>\n      <methodName>GetMatchingDistrictList</methodName>\n      <paramStr>${paramStr}</paramStr>\n    </ProcessWebServiceRequest>\n  </soap:Body>\n</soap:Envelope>`;
 
+    // builds a SOAP body to edupoint's support database, which returns all districts using StudentVUE.
     const res = await fetch(
       "https://support.edupoint.com/Service/HDInfoCommunication.asmx",
       {
@@ -262,7 +262,7 @@ export class SynergyClient {
     const raw = await res.text().catch(() => "");
     if (!res.ok)
       throw new Error(
-        process.env.NODE_ENV === "development"
+        process.env.NODE_ENV === "development" // only log in dev, resuting in no logging of user data.
           ? `HTTP ${res.status} from Synergy: ${raw.slice(0, 400)}`
           : `HTTP ${res.status} from Synergy`,
       );
@@ -348,17 +348,6 @@ export class SynergyClient {
     const r = await this.request("SynergyMailGetData");
     return r?.SynergyMailDataXML ?? {};
   }
-
-  // async getSchedule(termIndex?: number): Promise<Schedule> {
-  //     const params: Record<string, unknown> = {};
-
-  //     if (termIndex !== undefined) {
-  //         params.TermIndex = termIndex;
-  //     }
-
-  //     const r = await this.request('StudentClassList', params);
-  //     return r?.StudentClassList ?? {};
-  // }
 
   async getSchedule(termIndex?: number): Promise<Schedule> {
     const r = await this.request(

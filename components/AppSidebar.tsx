@@ -137,7 +137,7 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    
+
     const calculateNextPeriod = async () => {
       try {
         const credsRaw = localStorage.getItem("Student.creds");
@@ -145,99 +145,108 @@ export function AppSidebar() {
           setNextPeriod(null);
           return;
         }
-        
+
         const now = new Date();
         const currentTime = now.getHours() * 60 + now.getMinutes();
-        const dayOfWeek = now.getDay(); 
-        
+        const dayOfWeek = now.getDay();
+
         if (dayOfWeek === 0 || dayOfWeek === 6) {
           setNextPeriod(null);
           return;
         }
-        
+
         const creds = JSON.parse(credsRaw);
         const res = await fetch("/api/synergy/schedule", {
-          method: "POST", 
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...creds,
           }),
         });
-        
+
         if (!res.ok) {
           return;
         }
-        
+
         const data = await res.json();
-        const todayClasses = data?.StudentClassSchedule?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes?.ClassInfo;
-        
+        const todayClasses =
+          data?.StudentClassSchedule?.TodayScheduleInfoData?.SchoolInfos
+            ?.SchoolInfo?.Classes?.ClassInfo;
+
         if (!todayClasses) {
           return;
         }
-        
+
         const parseTime = (timeStr?: string) => {
           if (!timeStr) return null;
           const match = timeStr.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
           if (!match) return null;
-          
+
           const [, hours, minutes, period] = match;
           let h = parseInt(hours);
           const m = parseInt(minutes);
-          
+
           if (period) {
-            if (period.toUpperCase() === 'PM' && h !== 12) h += 12;
-            if (period.toUpperCase() === 'AM' && h === 12) h = 0;
+            if (period.toUpperCase() === "PM" && h !== 12) h += 12;
+            if (period.toUpperCase() === "AM" && h === 12) h = 0;
           }
-          
+
           return h * 60 + m;
         };
 
-        const classes = (Array.isArray(todayClasses) ? todayClasses : [todayClasses])
-          .map((c: { 
-            _Period?: string; 
-            _ClassName?: string; 
-            _RoomName?: string; 
-            _TeacherName?: string;
-            _StartTime?: string;
-            _EndTime?: string;
-          }) => ({
-            period: Number(c._Period || 0),
-            courseTitle: c._ClassName || "",
-            room: c._RoomName || "",
-            teacher: c._TeacherName || "",
-            startTime: parseTime(c._StartTime),
-            endTime: parseTime(c._EndTime),
-          }))
-          .filter((c) => c.courseTitle && c.startTime !== null && c.endTime !== null)
-          .sort((a, b) => (a.startTime! - b.startTime!) || (a.period - b.period));
-        
+        const classes = (
+          Array.isArray(todayClasses) ? todayClasses : [todayClasses]
+        )
+          .map(
+            (c: {
+              _Period?: string;
+              _ClassName?: string;
+              _RoomName?: string;
+              _TeacherName?: string;
+              _StartTime?: string;
+              _EndTime?: string;
+            }) => ({
+              period: Number(c._Period || 0),
+              courseTitle: c._ClassName || "",
+              room: c._RoomName || "",
+              teacher: c._TeacherName || "",
+              startTime: parseTime(c._StartTime),
+              endTime: parseTime(c._EndTime),
+            }),
+          )
+          .filter(
+            (c) => c.courseTitle && c.startTime !== null && c.endTime !== null,
+          )
+          .sort((a, b) => a.startTime! - b.startTime! || a.period - b.period);
+
         if (classes.length === 0) {
           return;
         }
-        
+
         const firstClass = classes[0];
         const lastClass = classes[classes.length - 1];
         const schoolStartTime = firstClass.startTime!;
         const schoolEndTime = lastClass.endTime!;
-        
+
         if (currentTime < schoolStartTime || currentTime > schoolEndTime) {
           setNextPeriod(null);
           return;
         }
-        
+
         for (let i = 0; i < classes.length; i++) {
           const classInfo = classes[i];
           const startTime = classInfo.startTime!;
           const endTime = classInfo.endTime!;
-          
+
           if (currentTime < endTime) {
             const minutesUntil = Math.max(0, startTime - currentTime);
-            const timeUntilText = minutesUntil === 0 
-              ? "Now" 
-              : minutesUntil < 60 
-                ? `${minutesUntil}m` 
-                : `${Math.floor(minutesUntil / 60)}h ${minutesUntil % 60}m`;
-                
+            const timeUntilText =
+              minutesUntil === 0
+                ? "Now"
+                : minutesUntil < 60
+                  ? `${minutesUntil}m`
+                  : `${Math.floor(minutesUntil / 60)}h ${minutesUntil % 60}m`;
+
             setNextPeriod({
               period: classInfo.period,
               courseTitle: classInfo.courseTitle,
@@ -249,17 +258,16 @@ export function AppSidebar() {
             return;
           }
         }
-        
+
         setNextPeriod(null);
-        
-        } catch {
+      } catch {
         setNextPeriod(null);
       }
     };
-    
+
     calculateNextPeriod();
     const interval = setInterval(calculateNextPeriod, 3000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -269,7 +277,7 @@ export function AppSidebar() {
         <div className="flex items-center justify-between h-8 px-2">
           <Link
             href="/student"
-            className="pt-5 font-bold font-[Gosha] text-xl tracking-tight select-none"
+            className="group-data-[collapsible=icon]:pt-1 pt-5 font-bold font-[Gosha] text-xl tracking-tight select-none"
           >
             <span className="inline group-data-[collapsible=icon]:hidden">
               student
@@ -307,85 +315,91 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <div>
-        {quickStats && quickStats.gradedCourses > 0 && (
-          <>
-            <SidebarSeparator />
-            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-              <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="grid grid-cols-1 gap-2 text-xs pl-1">
-                  <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
-                    <div className="flex items-baseline justify-between">
-                      <p className="font-medium tracking-tight">GPA</p>
-                      <p className="text-sm font-semibold">{quickStats.gpa}</p>
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <p className="font-medium tracking-tight">Missing</p>
-                      <p
-                        className={`text-sm font-semibold ${
-                          (quickStats.missing || 0) > 0 ? "text-red-600" : ""
-                        }`}
-                      >
-                        {quickStats.missing}
-                      </p>
-                    </div>
-                    <div className="flex items-baseline justify-between text-[10px] pt-1 opacity-70 border-t mt-1">
-                      <span>Courses</span>
-                      <span>
-                        {quickStats.gradedCourses}/{quickStats.totalCourses}
-                      </span>
+          {quickStats && quickStats.gradedCourses > 0 && (
+            <>
+              <SidebarSeparator />
+              <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+                <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <div className="grid grid-cols-1 gap-2 text-xs pl-1">
+                    <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
+                      <div className="flex items-baseline justify-between">
+                        <p className="font-medium tracking-tight">GPA</p>
+                        <p className="text-sm font-semibold">
+                          {quickStats.gpa}
+                        </p>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <p className="font-medium tracking-tight">Missing</p>
+                        <p
+                          className={`text-sm font-semibold ${
+                            (quickStats.missing || 0) > 0 ? "text-red-600" : ""
+                          }`}
+                        >
+                          {quickStats.missing}
+                        </p>
+                      </div>
+                      <div className="flex items-baseline justify-between text-[10px] pt-1 opacity-70 border-t mt-1">
+                        <span>Courses</span>
+                        <span>
+                          {quickStats.gradedCourses}/{quickStats.totalCourses}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        )}
-        {nextPeriod && (
-          <>
-            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-              <SidebarGroupLabel>Next Period</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="grid grid-cols-1 gap-2 text-xs pl-1">
-                  <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium tracking-tight truncate">
-                          Period {nextPeriod.period}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          {nextPeriod.courseTitle}
-                        </p>
-                        {nextPeriod.room && (
-                          <p className="text-[10px] text-muted-foreground/80 truncate">
-                            Room {nextPeriod.room}
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          )}
+          {nextPeriod && (
+            <>
+              <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+                <SidebarGroupLabel>Next Period</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <div className="grid grid-cols-1 gap-2 text-xs pl-1">
+                    <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium tracking-tight truncate">
+                            Period {nextPeriod.period}
                           </p>
-                        )}
-                      </div>
-                      <div className="text-right flex-shrink-0 ml-2">
-                        <p className={`text-sm font-semibold ${
-                          nextPeriod.isNext ? "text-blue-600" : "text-green-600"
-                        }`}>
-                          {nextPeriod.timeUntil}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {nextPeriod.isNext ? "starts" : "current"}
-                        </p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            {nextPeriod.courseTitle}
+                          </p>
+                          {nextPeriod.room && (
+                            <p className="text-[10px] text-muted-foreground/80 truncate">
+                              Room {nextPeriod.room}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-2">
+                          <p
+                            className={`text-sm font-semibold ${
+                              nextPeriod.isNext
+                                ? "text-blue-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {nextPeriod.timeUntil}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {nextPeriod.isNext ? "starts" : "current"}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        )}
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          )}
         </div>
       </SidebarContent>
       <SidebarFooter>
         {(studentPhoto || permId || school) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md mt-1 flex items-center gap-2 p-2 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1">
+              <button className="cursor-pointer w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md mt-1 flex items-center gap-2 p-2 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1">
                 {studentPhoto ? (
                   <Avatar>
                     <AvatarImage
@@ -393,12 +407,12 @@ export function AppSidebar() {
                       src={`data:image/png;base64,${studentPhoto}`}
                     />
                     <AvatarFallback>
-                      {(studentName || permId || school || "U").slice(0, 2)}
+                      {(studentName || permId || school || "S").slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
                   <div className="size-9 shrink-0 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-medium uppercase group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:text-sm">
-                    {(studentName || permId || school || "U").slice(0, 2)}
+                    {(studentName || permId || school || "S").slice(0, 2)}
                   </div>
                 )}
                 <div className="min-w-0 text-left group-data-[collapsible=icon]:hidden md:block">

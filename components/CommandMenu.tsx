@@ -24,6 +24,7 @@ import {
   Table2,
   BookCheck,
   SunMoon,
+  Table,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -65,13 +66,13 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           icon: <BookOpen className="text-sm" />,
         },
         {
-          label: "Calendar",
-          action: () => navigate("/calendar"),
-          icon: <CalendarDays className="text-sm" />,
-        },
-        {
           label: "Schedule",
           action: () => navigate("/schedule"),
+          icon: <Table className="text-sm" />,
+        },
+        {
+          label: "Calendar",
+          action: () => navigate("/calendar"),
           icon: <CalendarDays className="text-sm" />,
         },
         {
@@ -103,7 +104,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           label: "Calendar",
           action: () => navigate("/calendar"),
           icon: <CalendarDays className="text-sm" />,
-        }
+        },
       ],
     },
     {

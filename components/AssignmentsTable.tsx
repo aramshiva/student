@@ -375,11 +375,12 @@ function AssignmentsTableBase({
                 .filter((t) => t.length > 0),
             ),
           );
-          
-          const allTypes = availableTypes && availableTypes.length > 0 
-            ? availableTypes 
-            : assignmentTypes;
-            
+
+          const allTypes =
+            availableTypes && availableTypes.length > 0
+              ? availableTypes
+              : assignmentTypes;
+
           const curType =
             row.original._Type && row.original._Type.trim().length > 0
               ? row.original._Type

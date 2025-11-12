@@ -37,7 +37,9 @@ export default function MailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<MailMessage | null>(null);
-  const [deletedMessages, setDeletedMessages] = useState<Set<string>>(new Set());
+  const [deletedMessages, setDeletedMessages] = useState<Set<string>>(
+    new Set(),
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function MailPage() {
 
     const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) {
-      window.location.href = "/";
+      window.location.href = "/login";
       return;
     }
     const creds = JSON.parse(credsRaw);
@@ -100,15 +102,18 @@ export default function MailPage() {
 
   const handleDeleteSingle = async (messageId: string) => {
     if (!confirm("Are you sure you want to delete this message?")) return;
-    
+
     setIsDeleting(true);
     try {
       const newDeletedMessages = new Set(deletedMessages);
       newDeletedMessages.add(messageId);
       setDeletedMessages(newDeletedMessages);
-      
-      localStorage.setItem("Student.deletedMails", JSON.stringify([...newDeletedMessages]));
-      
+
+      localStorage.setItem(
+        "Student.deletedMails",
+        JSON.stringify([...newDeletedMessages]),
+      );
+
       if (selected?._SMMessageGU === messageId) {
         setSelected(null);
       }
@@ -121,23 +126,33 @@ export default function MailPage() {
   };
 
   const handleDeleteAll = async () => {
-    const visibleMessages = messages.filter(m => !deletedMessages.has(m._SMMessageGU || ""));
+    const visibleMessages = messages.filter(
+      (m) => !deletedMessages.has(m._SMMessageGU || ""),
+    );
     if (visibleMessages.length === 0) return;
-    
-    if (!confirm(`Are you sure you want to delete all ${visibleMessages.length} visible message(s)?`)) return;
-    
+
+    if (
+      !confirm(
+        `Are you sure you want to delete all ${visibleMessages.length} visible message(s)?`,
+      )
+    )
+      return;
+
     setIsDeleting(true);
     try {
       const newDeletedMessages = new Set(deletedMessages);
-      visibleMessages.forEach(m => {
+      visibleMessages.forEach((m) => {
         if (m._SMMessageGU) {
           newDeletedMessages.add(m._SMMessageGU);
         }
       });
       setDeletedMessages(newDeletedMessages);
-      
-      localStorage.setItem("Student.deletedMails", JSON.stringify([...newDeletedMessages]));
-      
+
+      localStorage.setItem(
+        "Student.deletedMails",
+        JSON.stringify([...newDeletedMessages]),
+      );
+
       if (selected && newDeletedMessages.has(selected._SMMessageGU || "")) {
         setSelected(null);
       }
@@ -151,7 +166,8 @@ export default function MailPage() {
 
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
-  const themeProps = theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {};
+  const themeProps =
+    theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {};
 
   return (
     <div className="p-8 space-y-6">
@@ -167,8 +183,10 @@ export default function MailPage() {
             </>
           ) : (
             <>
-              {messages.filter(m => !deletedMessages.has(m._SMMessageGU || "")).length > 0 && (
-                <Button 
+              {messages.filter(
+                (m) => !deletedMessages.has(m._SMMessageGU || ""),
+              ).length > 0 && (
+                <Button
                   onClick={handleDeleteAll}
                   disabled={isDeleting}
                   variant="destructive"
@@ -178,10 +196,10 @@ export default function MailPage() {
                   Delete All Visible
                 </Button>
               )}
-              <Button 
+              <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.href = "/mail/deleted"}
+                onClick={() => (window.location.href = "/mail/deleted")}
               >
                 View Deleted ({deletedMessages.size})
               </Button>
@@ -196,7 +214,7 @@ export default function MailPage() {
             {loading ? (
               <Skeleton width={100} {...themeProps} />
             ) : (
-              `Inbox (${messages.filter(m => !deletedMessages.has(m._SMMessageGU || "")).length})`
+              `Inbox (${messages.filter((m) => !deletedMessages.has(m._SMMessageGU || "")).length})`
             )}
           </h2>
           {loading ? (
@@ -215,7 +233,9 @@ export default function MailPage() {
           ) : (
             <>
               {!messages.length && (
-                <div className="text-xs text-muted-foreground">No messages.</div>
+                <div className="text-xs text-muted-foreground">
+                  No messages.
+                </div>
               )}
               <ul className="space-y-1">
                 {messages

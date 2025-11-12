@@ -35,12 +35,12 @@ interface CourseDetailProps {
   onStateChange?: (sticky: boolean, hypothetical: boolean) => void;
 }
 
-export default function CourseDetail({ 
-  course, 
+export default function CourseDetail({
+  course,
   onBack,
   initialSticky = false,
   initialHypothetical = false,
-  onStateChange
+  onStateChange,
 }: CourseDetailProps) {
   const marks = course.Marks.Mark;
   const currentMark = getCurrentMark(marks);
@@ -51,7 +51,8 @@ export default function CourseDetail({
   const [editableAssignments, setEditableAssignments] = React.useState<
     Assignment[]
   >(() => [...originalAssignments]);
-  const [hypotheticalMode, setHypotheticalMode] = React.useState(initialHypothetical);
+  const [hypotheticalMode, setHypotheticalMode] =
+    React.useState(initialHypothetical);
 
   const dontShowGradeCalcWarning = localStorage.getItem(
     "Student.dontShowGradeCalcWarning",
@@ -146,21 +147,25 @@ export default function CourseDetail({
   );
 
   const recalcTotals = React.useMemo(() => {
-    const gradeCalcs = currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
-    
+    const gradeCalcs =
+      currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
+
     if (gradeCalcs && gradeCalcs.length > 0) {
-      const byType: Record<string, { points: number; possible: number; weight: string }> = {};
-      
+      const byType: Record<
+        string,
+        { points: number; possible: number; weight: string }
+      > = {};
+
       gradeCalcs.forEach((calc) => {
         if (calc._Type && calc._Type.toUpperCase() !== "TOTAL") {
-          byType[calc._Type] = { 
-            points: 0, 
-            possible: 0, 
-            weight: calc._Weight || "0%" 
+          byType[calc._Type] = {
+            points: 0,
+            possible: 0,
+            weight: calc._Weight || "0%",
           };
         }
       });
-      
+
       workingAssignments.forEach((a) => {
         const type = a._Type || "Other";
         const { score, max } = extractScoreMax(a);
@@ -178,11 +183,11 @@ export default function CourseDetail({
           byType[type].possible += max;
         }
       });
-      
+
       const activeWeightSum = Object.values(byType).reduce((acc, v) => {
         return v.possible > 0 ? acc + parseWeightString(v.weight) : acc;
       }, 0);
-      
+
       let weightedTotal = 0;
       if (activeWeightSum > 0) {
         Object.values(byType).forEach((v) => {
@@ -193,17 +198,23 @@ export default function CourseDetail({
           }
         });
       }
-      
-      const totalEarned = Object.values(byType).reduce((acc, v) => acc + v.points, 0);
-      const totalPossible = Object.values(byType).reduce((acc, v) => acc + v.possible, 0);
-      
-      return { 
-        earned: totalEarned, 
-        possible: totalPossible, 
-        pct: Number.isFinite(weightedTotal) ? weightedTotal : NaN 
+
+      const totalEarned = Object.values(byType).reduce(
+        (acc, v) => acc + v.points,
+        0,
+      );
+      const totalPossible = Object.values(byType).reduce(
+        (acc, v) => acc + v.possible,
+        0,
+      );
+
+      return {
+        earned: totalEarned,
+        possible: totalPossible,
+        pct: Number.isFinite(weightedTotal) ? weightedTotal : NaN,
       };
     }
-    
+
     let earned = 0;
     let possible = 0;
     workingAssignments.forEach((a) => {
@@ -294,9 +305,7 @@ export default function CourseDetail({
       const rows = Object.entries(byType).map(([type, v]) => {
         const pct = v.possible > 0 ? (v.points / v.possible) * 100 : NaN;
         const weightNum = parseWeightString(v.weight);
-        const weightedPct = Number.isFinite(pct)
-          ? (pct * weightNum) / 100
-          : 0;
+        const weightedPct = Number.isFinite(pct) ? (pct * weightNum) / 100 : 0;
         const mark = Number.isFinite(pct)
           ? numericToLetterGrade(Math.round(pct))
           : "Not graded";
@@ -315,16 +324,17 @@ export default function CourseDetail({
     }, [workingAssignments, currentMark, hypotheticalMode, extractScoreMax]);
 
   const availableTypes = React.useMemo(() => {
-    const gradeCalcs = hypotheticalMode && recalculatedBreakdown 
-      ? recalculatedBreakdown
-      : currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
-    
+    const gradeCalcs =
+      hypotheticalMode && recalculatedBreakdown
+        ? recalculatedBreakdown
+        : currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
+
     if (!gradeCalcs) return [];
-    
+
     return gradeCalcs
-      .map(calc => calc._Type?.trim())
+      .map((calc) => calc._Type?.trim())
       .filter((type): type is string => Boolean(type && type.length > 0))
-      .filter(type => type.toUpperCase() !== "TOTAL");
+      .filter((type) => type.toUpperCase() !== "TOTAL");
   }, [hypotheticalMode, recalculatedBreakdown, currentMark]);
 
   const onUpdateAssignmentScore = React.useCallback(

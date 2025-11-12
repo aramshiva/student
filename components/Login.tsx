@@ -26,6 +26,7 @@ import {
   DrawerFooter,
   DrawerClose,
 } from "./ui/drawer";
+import Link from "next/link";
 
 interface LoginProps {
   onLogin: (credentials: LoginCredentials) => void;
@@ -116,6 +117,12 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                 </strong>{" "}
                 We use them to connect your device with StudentVUE/Synergy{"'"}s
                 servers to get you the data.
+                <br />
+                <br />
+                Student is currently in contact with the Northshore IT
+                department for getting approval. At the current time, Student
+                does not officially recommend using the app unless asked to beta
+                test
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -145,7 +152,9 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
     <>
       <div className="flex flex-col items-center justify-center bg-white min-h-screen text-black">
         <div className="text-left w-full max-w-md mb-4">
-          <p className="font-bold font-[Gosha]">student</p>
+          <Link href="/">
+            <p className="font-bold font-[Gosha]">student</p>
+          </Link>
           <p className="text-gray-500">
             A alternative client for StudentVUE, with a refreshed UI and more
             powerful features to help maintain academics.

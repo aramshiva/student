@@ -39,43 +39,46 @@ function GradebookPageContent() {
   const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
   const QUICK_STATS_STORAGE_KEY = "Student.quickStats";
 
-  const initialCourseId = searchParams.get('course');
-  const initialSticky = searchParams.get('sticky') === '1';
-  const initialHypothetical = searchParams.get('hypothetical') === '1';
+  const initialCourseId = searchParams.get("course");
+  const initialSticky = searchParams.get("sticky") === "1";
+  const initialHypothetical = searchParams.get("hypothetical") === "1";
 
-  const updateURL = useCallback((params: {
-    courseId?: string | null;
-    sticky?: boolean;
-    hypothetical?: boolean;
-  }) => {
-    const current = new URLSearchParams(searchParams.toString());
-    
-    if (params.courseId) {
-      current.set('course', params.courseId);
-    } else if (params.courseId === null) {
-      current.delete('course');
-    }
-    
-    if (params.sticky !== undefined) {
-      if (params.sticky) {
-        current.set('sticky', '1');
-      } else {
-        current.delete('sticky');
+  const updateURL = useCallback(
+    (params: {
+      courseId?: string | null;
+      sticky?: boolean;
+      hypothetical?: boolean;
+    }) => {
+      const current = new URLSearchParams(searchParams.toString());
+
+      if (params.courseId) {
+        current.set("course", params.courseId);
+      } else if (params.courseId === null) {
+        current.delete("course");
       }
-    }
-    
-    if (params.hypothetical !== undefined) {
-      if (params.hypothetical) {
-        current.set('hypothetical', '1');
-      } else {
-        current.delete('hypothetical');
+
+      if (params.sticky !== undefined) {
+        if (params.sticky) {
+          current.set("sticky", "1");
+        } else {
+          current.delete("sticky");
+        }
       }
-    }
-    
-    const queryString = current.toString();
-    const newURL = queryString ? `/gradebook?${queryString}` : '/gradebook';
-    router.push(newURL, { scroll: false });
-  }, [searchParams, router]);
+
+      if (params.hypothetical !== undefined) {
+        if (params.hypothetical) {
+          current.set("hypothetical", "1");
+        } else {
+          current.delete("hypothetical");
+        }
+      }
+
+      const queryString = current.toString();
+      const newURL = queryString ? `/gradebook?${queryString}` : "/gradebook";
+      router.push(newURL, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
   function getCurrentMark(m: Mark | Mark[] | undefined): Mark | null {
     if (!m) return null;
@@ -164,7 +167,7 @@ function GradebookPageContent() {
       inFlightRef.current = true;
       const creds = localStorage.getItem("Student.creds");
       if (!creds) {
-        window.location.href = "/";
+        window.location.href = "/login";
         return;
       }
       const credentials = JSON.parse(creds);
@@ -245,35 +248,41 @@ function GradebookPageContent() {
 
   useEffect(() => {
     if (!gradebookData || !initialCourseId) return;
-    
+
     const gbRoot = gradebookData.data?.Gradebook || gradebookData.data || {};
     const courses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
-    const course = courses.find(c => c?._CourseID === initialCourseId);
-    
+    const course = courses.find((c) => c?._CourseID === initialCourseId);
+
     if (course && !selectedCourse) {
       setSelectedCourse(course);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gradebookData, initialCourseId]);
 
-  const handleCourseSelect = useCallback((course: Course) => {
-    setSelectedCourse(course);
-    updateURL({ courseId: course._CourseID });
-  }, [updateURL]);
+  const handleCourseSelect = useCallback(
+    (course: Course) => {
+      setSelectedCourse(course);
+      updateURL({ courseId: course._CourseID });
+    },
+    [updateURL],
+  );
 
   const handleBack = useCallback(() => {
     setSelectedCourse(null);
     updateURL({ courseId: null, sticky: false, hypothetical: false });
   }, [updateURL]);
 
-  const handleStateChange = useCallback((sticky: boolean, hypothetical: boolean) => {
-    const currentSticky = searchParams.get('sticky') === '1';
-    const currentHypothetical = searchParams.get('hypothetical') === '1';
-    
-    if (sticky !== currentSticky || hypothetical !== currentHypothetical) {
-      updateURL({ sticky, hypothetical });
-    }
-  }, [searchParams, updateURL]);
+  const handleStateChange = useCallback(
+    (sticky: boolean, hypothetical: boolean) => {
+      const currentSticky = searchParams.get("sticky") === "1";
+      const currentHypothetical = searchParams.get("hypothetical") === "1";
+
+      if (sticky !== currentSticky || hypothetical !== currentHypothetical) {
+        updateURL({ sticky, hypothetical });
+      }
+    },
+    [searchParams, updateURL],
+  );
 
   if (isLoading) {
     return (
@@ -394,7 +403,7 @@ function GradebookPageContent() {
       onCourseSelect={handleCourseSelect}
       onLogout={() => {
         localStorage.removeItem("Student.creds");
-        window.location.href = "/";
+        window.location.href = "/login";
       }}
       reportingPeriods={reportingPeriods}
       selectedReportingPeriod={selectedReportingPeriod}

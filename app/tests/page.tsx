@@ -55,7 +55,7 @@ export default function TestsPage() {
       setError(null);
       const credsRaw = localStorage.getItem("Student.creds");
       if (!credsRaw) {
-        window.location.href = "/";
+        window.location.href = "/login";
         return;
       }
       const res = await fetch("/api/synergy/tests", {
@@ -69,7 +69,7 @@ export default function TestsPage() {
       const json: TestsApiResponse = await res.json();
       const tests = json?.analysis?.availableTests || [];
       setData(tests);
-      
+
       if (tests.length === 0 && retryCount < 3) {
         const delays = [1000, 5000, 30000];
         const delay = delays[retryCount];
@@ -132,9 +132,9 @@ export default function TestsPage() {
               <CardHeader className="py-2 px-0">
                 <CardTitle className="text-sm font-medium">
                   <Skeleton
-                {...(theme.theme === "dark"
-                  ? { baseColor: "#202020", highlightColor: "#444" }
-                  : {})}
+                    {...(theme.theme === "dark"
+                      ? { baseColor: "#202020", highlightColor: "#444" }
+                      : {})}
                     className="h-4 w-48"
                   />
                 </CardTitle>
@@ -143,9 +143,9 @@ export default function TestsPage() {
                 {Array.from({ length: 4 }).map((__, r) => (
                   <Skeleton
                     key={r}
-                {...(theme.theme === "dark"
-                  ? { baseColor: "#202020", highlightColor: "#444" }
-                  : {})}
+                    {...(theme.theme === "dark"
+                      ? { baseColor: "#202020", highlightColor: "#444" }
+                      : {})}
                     className="h-3 w-full"
                   />
                 ))}
@@ -232,9 +232,5 @@ export default function TestsPage() {
     );
   }, [data, error, loading, theme.theme]);
 
-  return (
-    <div className="p-6 space-y-6">
-      {content}
-    </div>
-  );
+  return <div className="p-6 space-y-6">{content}</div>;
 }

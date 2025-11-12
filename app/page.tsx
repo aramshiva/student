@@ -1,69 +1,134 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import Login from "@/components/Login";
-import { LoginCredentials } from "@/types/gradebook";
-import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { SiGithub } from "react-icons/si";
+import Image from "next/image";
+import Link from "next/link";
+import { Lock, EyeOff, Rocket } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { setTheme } = useTheme();
-
-  useEffect(() => {
-    setTheme("light");
-  }, [setTheme]);
-
-  const handleLogin = async (credentials: LoginCredentials) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/synergy/gradebook`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
-      if (!response.ok) {
-        let serverMessage: string | null = null;
-        try {
-          const maybeJson = await response.json();
-          if (
-            maybeJson &&
-            typeof maybeJson === "object" &&
-            typeof maybeJson.error === "string"
-          ) {
-            serverMessage = maybeJson.error;
-          }
-        } catch {}
-        throw new Error(
-          serverMessage || `HTTP error! status: ${response.status}`,
-        );
-      }
-      const raw = await response.json();
-      const gradebookRoot = raw?.Gradebook ?? raw;
-      const errorMessage =
-        gradebookRoot?.["@ErrorMessage"] || gradebookRoot?._ErrorMessage;
-      if (errorMessage) {
-        throw new Error(String(errorMessage));
-      }
-      localStorage.setItem("Student.creds", JSON.stringify(credentials));
-      // saves creds in LOCAL STORAGE (not cloud)
-      // redirects to student page
-      window.location.href = "/student";
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message || "Login failed");
-      } else {
-        setError("Login failed");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="bg-white min-h-screen text-black px-9">
-      <Login onLogin={handleLogin} isLoading={isLoading} error={error} />
-    </div>
+    <>
+      <div>
+        <div className="p-20">
+          <div className="grid grid-col-2">
+            {/* header */}
+            <div className="w-96">
+              <p className="text-4xl font-medium pb-1">
+                Empower your academia. <Badge variant="outline">BETA</Badge>
+              </p>
+              <p className="text-xl pb-5 wrap-normal">
+                Student is a clean, minimalist, powerful, open-source StudentVUE
+                client. Built by students, for students.
+              </p>
+              <div className="flex gap-2">
+                <Link href="/login">
+                  <Button className="cursor-pointer">
+                    <Image
+                      src="/studentvue.png"
+                      alt="StudentVUE logo"
+                      width="16"
+                      height="16"
+                    />{" "}
+                    Log in with StudentVUE
+                  </Button>
+                </Link>
+                <Link href="https://github.com/aramshiva/student">
+                  <Button className="cursor-pointer" variant="outline">
+                    <SiGithub /> View Source Code
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div></div>
+          </div>
+        </div>
+        <div className="bg-black text-white w-screen">
+          {/* design */}
+          <div className="p-20 w-[30rem]">
+            <p className="text-2xl">Clean, minimalistic UI</p>
+            <p>
+              Student features an ultra slick, clean interface. It{"'"}s miles
+              ahead of StudentVUE{"'"}s clunky old interface.
+            </p>
+          </div>
+        </div>
+
+        {/* secure */}
+        <div className="p-20">
+          <div className=" grid grid-cols-2 grid-rows-1">
+            <div />
+            <div className=" w-[30rem] text-right wrap-normal">
+              <p className="text-2xl inline-flex items-center gap-x-2">
+                <Lock className="w-5" /> Secure, and <EyeOff className="w-5" />{" "}
+                Private
+              </p>
+              <p>
+                Student was made with privacy and security in mind. Your
+                credientials and grades are stored locally and is never seen,
+                stored, or saved by us.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-black text-white w-screen">
+          {/* speed and power */}
+          <div className="p-20 w-[30rem]">
+            <p className="text-2xl">
+              Powerful features that make you go{" "}
+              <span className="font-bold">wow</span>.
+            </p>
+            <p>
+              Student features hypothetical mode, a powerful mode that allows an
+              student to dynamically see how your grades will change with a
+              certain grade on a test or assignment.
+            </p>
+          </div>
+        </div>
+        <div className="p-20">
+          {/* start / contact  */}
+          <p className="text-2xl pb-5 font-medium inline-flex items-center gap-x-2">
+            Ready to power up your academics? <Rocket />{" "}
+          </p>
+          <div className="grid grid-cols-2 grid-rows-1">
+            <div className="pr-10">
+              <p className="text-xl pb-1">Students</p>
+              <p className="pb-5">
+                Log in today to experience a better StudentVUE experience.
+              </p>
+              <Link href="/login">
+                <Button className="cursor-pointer">
+                  <Image
+                    src="/studentvue.png"
+                    alt="StudentVUE logo"
+                    width="16"
+                    height="16"
+                  />{" "}
+                  Log in with StudentVUE
+                </Button>
+              </Link>
+            </div>
+            <div>
+              <p className="text-xl">Districts or Teachers</p>
+              <p className="pb-5">
+                Contact us with questions, concerns or how we can integrate
+                Student into your district. Student is{" "}
+                <Link
+                  href="https://github.com/aramshiva/student"
+                  className="underline"
+                >
+                  open-source
+                </Link>{" "}
+                (meaning the code is avaliable for anyone to audit, or read!)
+                and built by a student that cares about privacy.
+              </p>
+              <Link className="underline" href="mailto:inquires@aram.sh">
+                <p>Reach out via email</p>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

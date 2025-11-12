@@ -20,7 +20,8 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const showSidebar = pathname !== "/" && pathname !== "/privacy";
+  const showSidebar =
+    pathname !== "/" && pathname !== "/privacy" && pathname !== "/login";
   const pageTitle = React.useMemo(() => {
     if (!pathname) return "";
     const p = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
@@ -35,6 +36,7 @@ export default function ClientLayout({
       "/tests": "Test History",
       "/schedule": "Class Schedule",
       "/calendar": "Assignment Calendar",
+      "/login": "Log In",
     };
     if (Object.prototype.hasOwnProperty.call(map, p)) return map[p];
     if (p.startsWith("/gradebook/")) return "Assignment";
@@ -57,13 +59,18 @@ export default function ClientLayout({
       "/tests": "Test History",
       "/schedule": "Class Schedule",
       "/calendar": "Calendar",
+      "/login": "Log In",
     };
     let title = "Student";
-    if (Object.prototype.hasOwnProperty.call(map, p)) title = `Student - ${map[p]}`;
+    if (Object.prototype.hasOwnProperty.call(map, p))
+      title = `Student - ${map[p]}`;
     else if (p.startsWith("/gradebook/")) title = "Student - Assignment";
     else {
       const seg = p.split("/").filter(Boolean).pop();
-      if (seg) title = `Student - ${seg.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}`;
+      if (seg)
+        title = `Student - ${seg
+          .replace(/[-_]+/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase())}`;
     }
     document.title = title;
   }, [pathname]);

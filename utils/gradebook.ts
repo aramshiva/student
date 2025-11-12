@@ -41,6 +41,7 @@ export function getGradeColor(grade: string): string {
 }
 
 export function getCourseIcon(imageType: string): string {
+  // all known course types at the moment, if you know more, please let me kow!
   switch (imageType.toLowerCase()) {
     case "math":
       return "📊";

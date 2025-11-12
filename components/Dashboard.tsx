@@ -219,10 +219,11 @@ export default function Dashboard({
             )}
           </div>
         </div>
-        
+
         <div className="mt-4 text-center">
           <span className="text-xs text-gray-500">
-            {lastRefreshed && `Last refreshed ${lastRefreshed.toLocaleTimeString()} • `}
+            {lastRefreshed &&
+              `Last refreshed ${lastRefreshed.toLocaleTimeString()} • `}
             <button
               onClick={onRefresh}
               disabled={isLoading}

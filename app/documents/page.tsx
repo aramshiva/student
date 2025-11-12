@@ -65,7 +65,7 @@ export default function DocumentsPage() {
   useEffect(() => {
     const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) {
-      window.location.href = "/";
+      window.location.href = "/login";
       return;
     }
     const creds = JSON.parse(credsRaw);

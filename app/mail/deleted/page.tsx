@@ -33,7 +33,9 @@ export default function DeletedMailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<MailMessage | null>(null);
-  const [deletedMessages, setDeletedMessages] = useState<Set<string>>(new Set());
+  const [deletedMessages, setDeletedMessages] = useState<Set<string>>(
+    new Set(),
+  );
   const [isRestoring, setIsRestoring] = useState(false);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function DeletedMailPage() {
 
     const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) {
-      window.location.href = "/";
+      window.location.href = "/login";
       return;
     }
     const creds = JSON.parse(credsRaw);
@@ -96,14 +98,17 @@ export default function DeletedMailPage() {
 
   const handleRestore = async (messageId: string) => {
     if (!confirm("Are you sure you want to restore this message?")) return;
-    
+
     setIsRestoring(true);
     try {
       const newDeletedMessages = new Set(deletedMessages);
       newDeletedMessages.delete(messageId);
       setDeletedMessages(newDeletedMessages);
-      
-      localStorage.setItem("Student.deletedMails", JSON.stringify([...newDeletedMessages]));
+
+      localStorage.setItem(
+        "Student.deletedMails",
+        JSON.stringify([...newDeletedMessages]),
+      );
     } catch (error) {
       console.error("Failed to restore message:", error);
       alert("Failed to restore message");
@@ -113,11 +118,18 @@ export default function DeletedMailPage() {
   };
 
   const handleRestoreAll = async () => {
-    const deletedMessagesList = messages.filter(m => deletedMessages.has(m._SMMessageGU || ""));
+    const deletedMessagesList = messages.filter((m) =>
+      deletedMessages.has(m._SMMessageGU || ""),
+    );
     if (deletedMessagesList.length === 0) return;
-    
-    if (!confirm(`Are you sure you want to restore all ${deletedMessagesList.length} deleted message(s)?`)) return;
-    
+
+    if (
+      !confirm(
+        `Are you sure you want to restore all ${deletedMessagesList.length} deleted message(s)?`,
+      )
+    )
+      return;
+
     setIsRestoring(true);
     try {
       setDeletedMessages(new Set());
@@ -131,7 +143,9 @@ export default function DeletedMailPage() {
     }
   };
 
-  const deletedMessagesList = messages.filter(m => deletedMessages.has(m._SMMessageGU || ""));
+  const deletedMessagesList = messages.filter((m) =>
+    deletedMessages.has(m._SMMessageGU || ""),
+  );
 
   if (loading) return <div className="p-8">Loading deleted mail...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
@@ -140,10 +154,10 @@ export default function DeletedMailPage() {
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => window.location.href = "/mail"}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => (window.location.href = "/mail")}
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Mail
@@ -152,7 +166,7 @@ export default function DeletedMailPage() {
         </div>
         <div className="flex items-center gap-2">
           {deletedMessagesList.length > 0 && (
-            <Button 
+            <Button
               onClick={handleRestoreAll}
               disabled={isRestoring}
               variant="outline"
@@ -171,7 +185,9 @@ export default function DeletedMailPage() {
             Deleted Messages ({deletedMessagesList.length})
           </h2>
           {deletedMessagesList.length === 0 && (
-            <div className="text-xs text-muted-foreground">No deleted messages.</div>
+            <div className="text-xs text-muted-foreground">
+              No deleted messages.
+            </div>
           )}
           <ul className="space-y-1">
             {deletedMessagesList.map((m) => {

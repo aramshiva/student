@@ -120,7 +120,7 @@ export default function AttendancePage() {
   useEffect(() => {
     const creds = localStorage.getItem("Student.creds");
     if (!creds) {
-      window.location.href = "/";
+      window.location.href = "/login";
       return;
     }
     const run = async () => {
@@ -146,15 +146,15 @@ export default function AttendancePage() {
           if (!w) return [];
           const totals = normalizeArray(w.PeriodTotal);
           const result: PeriodTotal[] = [];
-          
+
           totals.forEach((pt, index) => {
             const total = Number(pt._Total || 0);
-            
+
             const actualPeriod = index;
-            
+
             result.push({ number: actualPeriod, total });
           });
-          
+
           return result;
         };
 
@@ -251,7 +251,7 @@ export default function AttendancePage() {
         }
 
         // so you may be like "aram, why are you manually calculating 7th period??"
-        // for some reason, the synergy api sometimes omits period 7 totals 
+        // for some reason, the synergy api sometimes omits period 7 totals
         // it has 21 periods but not 7th.
         const calculatePeriod7Totals = () => {
           const period7Totals = {
@@ -265,20 +265,26 @@ export default function AttendancePage() {
           dataShape.absenceDays.forEach((day) => {
             const period7 = day.periods.find((p) => p.number === 7);
             if (period7) {
-              const iconName = period7.iconName?.toLowerCase() || '';
-              const name = period7.name?.toLowerCase() || '';
-              
-              if (iconName.includes('tardy') || name.includes('tardy')) {
-                if (iconName.includes('unx') || iconName.includes('unexcused')) {
+              const iconName = period7.iconName?.toLowerCase() || "";
+              const name = period7.name?.toLowerCase() || "";
+
+              if (iconName.includes("tardy") || name.includes("tardy")) {
+                if (
+                  iconName.includes("unx") ||
+                  iconName.includes("unexcused")
+                ) {
                   period7Totals.unexcusedTardies++;
                 } else {
                   period7Totals.tardies++;
                 }
-              } else if (iconName.includes('excused') || name.includes('illness')) {
+              } else if (
+                iconName.includes("excused") ||
+                name.includes("illness")
+              ) {
                 period7Totals.excused++;
-              } else if (iconName.includes('unexcused')) {
+              } else if (iconName.includes("unexcused")) {
                 period7Totals.unexcused++;
-              } else if (iconName.includes('activity')) {
+              } else if (iconName.includes("activity")) {
                 period7Totals.activities++;
               }
             }
@@ -288,27 +294,47 @@ export default function AttendancePage() {
         };
 
         const period7Totals = calculatePeriod7Totals();
-        
+
         // add period 7 to totals if it exists (why? bc studentvue api doesnt show any totals for 7th period???)
-        if (period7Totals.excused > 0 || period7Totals.tardies > 0 || 
-            period7Totals.unexcused > 0 || period7Totals.activities > 0 || 
-            period7Totals.unexcusedTardies > 0 ||
-            dataShape.absenceDays.some(day => day.periods.some(p => p.number === 7))) {
-          
-          if (!dataShape.totals.excused?.find(p => p.number === 7)) {
-            dataShape.totals.excused?.push({ number: 7, total: period7Totals.excused });
+        if (
+          period7Totals.excused > 0 ||
+          period7Totals.tardies > 0 ||
+          period7Totals.unexcused > 0 ||
+          period7Totals.activities > 0 ||
+          period7Totals.unexcusedTardies > 0 ||
+          dataShape.absenceDays.some((day) =>
+            day.periods.some((p) => p.number === 7),
+          )
+        ) {
+          if (!dataShape.totals.excused?.find((p) => p.number === 7)) {
+            dataShape.totals.excused?.push({
+              number: 7,
+              total: period7Totals.excused,
+            });
           }
-          if (!dataShape.totals.tardies?.find(p => p.number === 7)) {
-            dataShape.totals.tardies?.push({ number: 7, total: period7Totals.tardies });
+          if (!dataShape.totals.tardies?.find((p) => p.number === 7)) {
+            dataShape.totals.tardies?.push({
+              number: 7,
+              total: period7Totals.tardies,
+            });
           }
-          if (!dataShape.totals.unexcused?.find(p => p.number === 7)) {
-            dataShape.totals.unexcused?.push({ number: 7, total: period7Totals.unexcused });
+          if (!dataShape.totals.unexcused?.find((p) => p.number === 7)) {
+            dataShape.totals.unexcused?.push({
+              number: 7,
+              total: period7Totals.unexcused,
+            });
           }
-          if (!dataShape.totals.activities?.find(p => p.number === 7)) {
-            dataShape.totals.activities?.push({ number: 7, total: period7Totals.activities });
+          if (!dataShape.totals.activities?.find((p) => p.number === 7)) {
+            dataShape.totals.activities?.push({
+              number: 7,
+              total: period7Totals.activities,
+            });
           }
-          if (!dataShape.totals.unexcusedTardies?.find(p => p.number === 7)) {
-            dataShape.totals.unexcusedTardies?.push({ number: 7, total: period7Totals.unexcusedTardies });
+          if (!dataShape.totals.unexcusedTardies?.find((p) => p.number === 7)) {
+            dataShape.totals.unexcusedTardies?.push({
+              number: 7,
+              total: period7Totals.unexcusedTardies,
+            });
           }
         }
       } catch (e) {
@@ -325,196 +351,314 @@ export default function AttendancePage() {
   return (
     <div className="p-8">
       <p className="text-xl font-medium pb-3">
-        {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} width={120} /> : "Attendance"}
+        {isLoading ? (
+          <Skeleton
+            {...(theme === "dark"
+              ? { baseColor: "#202020", highlightColor: "#444" }
+              : {})}
+            width={120}
+          />
+        ) : (
+          "Attendance"
+        )}
       </p>
       {!isLoading && !dataShape?.absenceDays?.length ? (
         <div>No attendance anomalies found.</div>
       ) : (
         <>
-        <div className="space-y-5">
-          <>
-          <Table className="px-8">
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Period"}
-                </TableHead>
-                <TableHead>
-                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Activities"}
-                </TableHead>
-                <TableHead>
-                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Excused"}
-                </TableHead>
-                <TableHead>
-                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Tardies"}
-                </TableHead>
-                <TableHead>
-                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Unexcused"}
-                </TableHead>
-                <TableHead>
-                  {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Unexcused Tardies"}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 7 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell>
-                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} />
-                    </TableCell>
+          <div className="space-y-5">
+            <>
+              <Table className="px-8">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      {isLoading ? (
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      ) : (
+                        "Period"
+                      )}
+                    </TableHead>
+                    <TableHead>
+                      {isLoading ? (
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      ) : (
+                        "Activities"
+                      )}
+                    </TableHead>
+                    <TableHead>
+                      {isLoading ? (
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      ) : (
+                        "Excused"
+                      )}
+                    </TableHead>
+                    <TableHead>
+                      {isLoading ? (
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      ) : (
+                        "Tardies"
+                      )}
+                    </TableHead>
+                    <TableHead>
+                      {isLoading ? (
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      ) : (
+                        "Unexcused"
+                      )}
+                    </TableHead>
+                    <TableHead>
+                      {isLoading ? (
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                        />
+                      ) : (
+                        "Unexcused Tardies"
+                      )}
+                    </TableHead>
                   </TableRow>
-                ))
-              ) : (
-              (() => {
-                const nums = new Set<number>();
-                const pushNums = (list?: { number: number; total: number }[]) =>
-                  list?.forEach((l) => nums.add(l.number));
-                pushNums(dataShape?.totals.activities);
-                pushNums(dataShape?.totals.excused);
-                pushNums(dataShape?.totals.tardies);
-                pushNums(dataShape?.totals.unexcused);
-                pushNums(dataShape?.totals.unexcusedTardies);
-                Object.keys(periodNameMap).forEach((k) => nums.add(Number(k)));
-                dataShape?.absenceDays.forEach((day) =>
-                  day.periods.forEach((p) => nums.add(p.number)),
-                );
-                const sorted = Array.from(nums).sort((a, b) => a - b);
-                return sorted
-                  .map((n) => {
-                    const find = (list?: { number: number; total: number }[]) =>
-                      list?.find((l) => l.number === n)?.total ?? 0;
-                    const a = find(dataShape?.totals.activities);
-                    const e = find(dataShape?.totals.excused);
-                    const t = find(dataShape?.totals.tardies);
-                    const u = find(dataShape?.totals.unexcused);
-                    const ut = find(dataShape?.totals.unexcusedTardies);
-                    
-                    const hasAbsences = dataShape?.absenceDays.some((day) =>
-                      day.periods.some((p) => p.number === n)
-                    );
-                    
-                    if (
-                      !periodNameMap[n] &&
-                      a + e + t + u + ut === 0 &&
-                      !hasAbsences
-                    )
-                      return null;
-                    const label = periodNameMap[n]
-                      ? `${n} – ${periodNameMap[n]}`
-                      : String(n);
-                    return (
-                      <TableRow key={n}>
-                        <TableCell
-                          className="max-w-[260px] truncate"
-                          title={label}
-                        >
-                          {label}
-                        </TableCell>
-                        <TableCell>{a}</TableCell>
-                        <TableCell>{e}</TableCell>
-                        <TableCell>{t}</TableCell>
-                        <TableCell>{u}</TableCell>
-                        <TableCell>{ut}</TableCell>
-                      </TableRow>
-                    );
-                  })
-                  .filter(Boolean);
-              })()
-              )}
-            </TableBody>
-          </Table>
-          </>
-          {!isLoading && dataShape?.absenceDays.map((a) => {
-            const isOpen = expanded[a.date] ?? false;
-            return (
-              <Card key={a.date} className="p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="pr-4">
-                    <h2 className="font-semibold text-lg flex items-center gap-2">
-                      <button
-                        type="button"
-                        aria-label={isOpen ? "Collapse" : "Expand"}
-                        onClick={() => toggleExpand(a.date)}
-                        className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:hover:bg-gray-950 transition"
-                      >
-                        {isOpen ? "−" : "+"}
-                      </button>
-                      {a.displayDate}
-                    </h2>
-                    <p className="text-sm pt-2 text-gray-500">
-                      {a.reason || "(No reason)"} -{" "}
-                      {a.note && <span>{a.note}</span>}
-                    </p>
-                  </div>
-                </div>
-                {isOpen && (
-                  <div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[60px]">#</TableHead>
-                          <TableHead>Course</TableHead>
-                          <TableHead>Staff</TableHead>
-                          <TableHead>Reason</TableHead>
+                </TableHeader>
+                <TableBody>
+                  {isLoading
+                    ? Array.from({ length: 7 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell>
+                            <Skeleton
+                              {...(theme === "dark"
+                                ? {
+                                    baseColor: "#202020",
+                                    highlightColor: "#444",
+                                  }
+                                : {})}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton
+                              {...(theme === "dark"
+                                ? {
+                                    baseColor: "#202020",
+                                    highlightColor: "#444",
+                                  }
+                                : {})}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton
+                              {...(theme === "dark"
+                                ? {
+                                    baseColor: "#202020",
+                                    highlightColor: "#444",
+                                  }
+                                : {})}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton
+                              {...(theme === "dark"
+                                ? {
+                                    baseColor: "#202020",
+                                    highlightColor: "#444",
+                                  }
+                                : {})}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton
+                              {...(theme === "dark"
+                                ? {
+                                    baseColor: "#202020",
+                                    highlightColor: "#444",
+                                  }
+                                : {})}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Skeleton
+                              {...(theme === "dark"
+                                ? {
+                                    baseColor: "#202020",
+                                    highlightColor: "#444",
+                                  }
+                                : {})}
+                            />
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {a.periods.map((p) => (
-                          <TableRow key={p.number}>
-                            <TableCell>{p.number}</TableCell>
-                            <TableCell
-                              className="max-w-[260px] truncate"
-                              title={p.course}
-                            >
-                              {p.course}
-                            </TableCell>
-                            <TableCell>{p.staff}</TableCell>
-                            <TableCell>{p.reason || p.name}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                      ))
+                    : (() => {
+                        const nums = new Set<number>();
+                        const pushNums = (
+                          list?: { number: number; total: number }[],
+                        ) => list?.forEach((l) => nums.add(l.number));
+                        pushNums(dataShape?.totals.activities);
+                        pushNums(dataShape?.totals.excused);
+                        pushNums(dataShape?.totals.tardies);
+                        pushNums(dataShape?.totals.unexcused);
+                        pushNums(dataShape?.totals.unexcusedTardies);
+                        Object.keys(periodNameMap).forEach((k) =>
+                          nums.add(Number(k)),
+                        );
+                        dataShape?.absenceDays.forEach((day) =>
+                          day.periods.forEach((p) => nums.add(p.number)),
+                        );
+                        const sorted = Array.from(nums).sort((a, b) => a - b);
+                        return sorted
+                          .map((n) => {
+                            const find = (
+                              list?: { number: number; total: number }[],
+                            ) => list?.find((l) => l.number === n)?.total ?? 0;
+                            const a = find(dataShape?.totals.activities);
+                            const e = find(dataShape?.totals.excused);
+                            const t = find(dataShape?.totals.tardies);
+                            const u = find(dataShape?.totals.unexcused);
+                            const ut = find(dataShape?.totals.unexcusedTardies);
+
+                            const hasAbsences = dataShape?.absenceDays.some(
+                              (day) => day.periods.some((p) => p.number === n),
+                            );
+
+                            if (
+                              !periodNameMap[n] &&
+                              a + e + t + u + ut === 0 &&
+                              !hasAbsences
+                            )
+                              return null;
+                            const label = periodNameMap[n]
+                              ? `${n} – ${periodNameMap[n]}`
+                              : String(n);
+                            return (
+                              <TableRow key={n}>
+                                <TableCell
+                                  className="max-w-[260px] truncate"
+                                  title={label}
+                                >
+                                  {label}
+                                </TableCell>
+                                <TableCell>{a}</TableCell>
+                                <TableCell>{e}</TableCell>
+                                <TableCell>{t}</TableCell>
+                                <TableCell>{u}</TableCell>
+                                <TableCell>{ut}</TableCell>
+                              </TableRow>
+                            );
+                          })
+                          .filter(Boolean);
+                      })()}
+                </TableBody>
+              </Table>
+            </>
+            {!isLoading &&
+              dataShape?.absenceDays.map((a) => {
+                const isOpen = expanded[a.date] ?? false;
+                return (
+                  <Card key={a.date} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="pr-4">
+                        <h2 className="font-semibold text-lg flex items-center gap-2">
+                          <button
+                            type="button"
+                            aria-label={isOpen ? "Collapse" : "Expand"}
+                            onClick={() => toggleExpand(a.date)}
+                            className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:hover:bg-gray-950 transition"
+                          >
+                            {isOpen ? "−" : "+"}
+                          </button>
+                          {a.displayDate}
+                        </h2>
+                        <p className="text-sm pt-2 text-gray-500">
+                          {a.reason || "(No reason)"} -{" "}
+                          {a.note && <span>{a.note}</span>}
+                        </p>
+                      </div>
+                    </div>
+                    {isOpen && (
+                      <div>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[60px]">#</TableHead>
+                              <TableHead>Course</TableHead>
+                              <TableHead>Staff</TableHead>
+                              <TableHead>Reason</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {a.periods.map((p) => (
+                              <TableRow key={p.number}>
+                                <TableCell>{p.number}</TableCell>
+                                <TableCell
+                                  className="max-w-[260px] truncate"
+                                  title={p.course}
+                                >
+                                  {p.course}
+                                </TableCell>
+                                <TableCell>{p.staff}</TableCell>
+                                <TableCell>{p.reason || p.name}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            {isLoading &&
+              Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="pr-4 flex-1">
+                      <h2 className="font-semibold text-lg mb-2">
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                          width={120}
+                        />
+                      </h2>
+                      <p className="text-sm pt-2">
+                        <Skeleton
+                          {...(theme === "dark"
+                            ? { baseColor: "#202020", highlightColor: "#444" }
+                            : {})}
+                          width={200}
+                        />
+                      </p>
+                    </div>
                   </div>
-                )}
-              </Card>
-            );
-          })}
-          {isLoading && Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="p-4 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="pr-4 flex-1">
-                  <h2 className="font-semibold text-lg mb-2">
-                    <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} width={120} />
-                  </h2>
-                  <p className="text-sm pt-2">
-                    <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} width={200} />
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
+                </Card>
+              ))}
           </div>
         </>
       )}
       <p className="text-xs text-gray-500 mt-4">
         {isLoading ? (
-          <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} width={200} />
+          <Skeleton
+            {...(theme === "dark"
+              ? { baseColor: "#202020", highlightColor: "#444" }
+              : {})}
+            width={200}
+          />
         ) : (
           `Rendered ${dataShape?.absenceDays.length || 0} attendance anomalies.`
         )}

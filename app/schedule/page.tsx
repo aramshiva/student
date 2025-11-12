@@ -232,19 +232,59 @@ export default function SchedulePage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">
-                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Period"}
+                {isLoading ? (
+                  <Skeleton
+                    {...(theme === "dark"
+                      ? { baseColor: "#202020", highlightColor: "#444" }
+                      : {})}
+                  />
+                ) : (
+                  "Period"
+                )}
               </TableHead>
               <TableHead>
-                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Course"}
+                {isLoading ? (
+                  <Skeleton
+                    {...(theme === "dark"
+                      ? { baseColor: "#202020", highlightColor: "#444" }
+                      : {})}
+                  />
+                ) : (
+                  "Course"
+                )}
               </TableHead>
               <TableHead>
-                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Room"}
+                {isLoading ? (
+                  <Skeleton
+                    {...(theme === "dark"
+                      ? { baseColor: "#202020", highlightColor: "#444" }
+                      : {})}
+                  />
+                ) : (
+                  "Room"
+                )}
               </TableHead>
               <TableHead>
-                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Teacher"}
+                {isLoading ? (
+                  <Skeleton
+                    {...(theme === "dark"
+                      ? { baseColor: "#202020", highlightColor: "#444" }
+                      : {})}
+                  />
+                ) : (
+                  "Teacher"
+                )}
               </TableHead>
               <TableHead>
-                {isLoading ? <Skeleton {...(theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {})} /> : "Teacher Email"}
+                {isLoading ? (
+                  <Skeleton
+                    {...(theme === "dark"
+                      ? { baseColor: "#202020", highlightColor: "#444" }
+                      : {})}
+                  />
+                ) : (
+                  "Teacher Email"
+                )}
               </TableHead>
             </TableRow>
           </TableHeader>

@@ -34,42 +34,43 @@ export default function CalendarPage() {
   const fetchGradebook = useCallback(async () => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
-    
+
     const creds = localStorage.getItem("Student.creds");
     if (!creds) {
-      router.push("/");
+      router.push("/login");
       return;
     }
-    
+
     const credentials = JSON.parse(creds);
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const res = await fetch("/api/synergy/gradebook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
-      
+
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
-      
+
       if (data["@ErrorMessage"]) {
         throw new Error(data["@ErrorMessage"]);
       }
-      
+
       const gbRoot = data?.Gradebook || data || {};
       const courses: Course[] = gbRoot?.Courses?.Course || [];
-      
+
       const allAssignments: AssignmentEvent[] = [];
-      
+
       for (const course of courses) {
         const currentMark = getCurrentMark(course?.Marks?.Mark);
         if (!currentMark) continue;
-        
-        const courseAssignments: Assignment[] = currentMark?.Assignments?.Assignment || [];
-        
+
+        const courseAssignments: Assignment[] =
+          currentMark?.Assignments?.Assignment || [];
+
         for (const assignment of courseAssignments) {
           if (assignment._DueDate) {
             const dueDate = new Date(assignment._DueDate);
@@ -85,7 +86,7 @@ export default function CalendarPage() {
           }
         }
       }
-      
+
       allAssignments.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
       setAssignments(allAssignments);
     } catch (err) {
@@ -113,35 +114,43 @@ export default function CalendarPage() {
       (a) =>
         a.dueDate.getDate() === date.getDate() &&
         a.dueDate.getMonth() === date.getMonth() &&
-        a.dueDate.getFullYear() === date.getFullYear()
+        a.dueDate.getFullYear() === date.getFullYear(),
     );
   };
 
   const previousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1),
+    );
   };
 
   const nextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1),
+    );
   };
 
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDay = getFirstDayOfMonth(currentDate);
     const days = [];
-    
+
     for (let i = 0; i < firstDay; i++) {
       days.push(<div key={`empty-${i}`} className="min-h-28 p-3"></div>);
     }
-    
+
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const date = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        day,
+      );
       const dayAssignments = getAssignmentsForDate(date);
       const isToday =
         date.getDate() === new Date().getDate() &&
         date.getMonth() === new Date().getMonth() &&
         date.getFullYear() === new Date().getFullYear();
-      
+
       days.push(
         <div
           key={day}
@@ -149,7 +158,9 @@ export default function CalendarPage() {
             isToday ? "bg-neutral-100 dark:bg-neutral-900" : ""
           }`}
         >
-          <div className={`text-sm font-medium mb-2 ${isToday ? "font-bold" : "text-neutral-600 dark:text-neutral-400"}`}>
+          <div
+            className={`text-sm font-medium mb-2 ${isToday ? "font-bold" : "text-neutral-600 dark:text-neutral-400"}`}
+          >
             {day}
           </div>
           <div className="space-y-1.5">
@@ -161,19 +172,27 @@ export default function CalendarPage() {
                 rel="noopener noreferrer"
                 className="block text-xs p-2 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg transition-all group relative cursor-pointer"
               >
-                <div className="font-medium truncate text-black dark:text-white group-hover:invisible">{event.courseTitle}</div>
-                <div className="truncate text-neutral-500 dark:text-neutral-400 mt-0.5 group-hover:invisible">{event.assignment._Measure}</div>
+                <div className="font-medium truncate text-black dark:text-white group-hover:invisible">
+                  {event.courseTitle}
+                </div>
+                <div className="truncate text-neutral-500 dark:text-neutral-400 mt-0.5 group-hover:invisible">
+                  {event.assignment._Measure}
+                </div>
                 <div className="hidden group-hover:block absolute z-10 left-0 top-0 w-max max-w-xs p-2 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
-                  <div className="font-medium text-black dark:text-white">{event.courseTitle}</div>
-                  <div className="text-neutral-500 dark:text-neutral-400 mt-0.5">{event.assignment._Measure}</div>
+                  <div className="font-medium text-black dark:text-white">
+                    {event.courseTitle}
+                  </div>
+                  <div className="text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    {event.assignment._Measure}
+                  </div>
                 </div>
               </a>
             ))}
           </div>
-        </div>
+        </div>,
       );
     }
-    
+
     return days;
   };
 
@@ -295,7 +314,10 @@ export default function CalendarPage() {
             <ChevronLeft size={20} />
           </button>
           <h2 className="text-xl font-semibold">
-            {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            {currentDate.toLocaleDateString("en-US", {
+              month: "long",
+              year: "numeric",
+            })}
           </h2>
           <button
             onClick={nextMonth}
@@ -317,9 +339,7 @@ export default function CalendarPage() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-0">
-          {renderCalendar()}
-        </div>
+        <div className="grid grid-cols-7 gap-0">{renderCalendar()}</div>
       </div>
 
       <div className="mt-8">
@@ -331,7 +351,9 @@ export default function CalendarPage() {
             .map((event, idx) => (
               <button
                 key={idx}
-                onClick={() => router.push(`/gradebook/${event.assignment._GradebookID}`)}
+                onClick={() =>
+                  router.push(`/gradebook/${event.assignment._GradebookID}`)
+                }
                 className="w-full p-4 border hover:cursor-pointer border-neutral-200 dark:border-neutral-900 rounded-lg hover:shadow-sm transition-shadow text-left"
               >
                 <div className="flex justify-between items-start">
