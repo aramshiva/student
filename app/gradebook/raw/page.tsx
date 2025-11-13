@@ -42,7 +42,9 @@ export default function GradebookApiTestPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-xl font-semibold mb-4">DEV MODE - Raw Gradebook Data</h1>
+      <h1 className="text-xl font-semibold mb-4">Raw Gradebook Data</h1>
+      <p className="text-yellow-500">This is a dev mode page.</p>
+      <p className="text-red-500">Do not share the data on this page to users you do not trust! It contains your entire gradebook data.</p>
       {loading && <div>Loading gradebook...</div>}
       {error && <div className="text-red-600">{error}</div>}
       {!loading && !error && (
