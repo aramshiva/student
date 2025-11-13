@@ -42,7 +42,7 @@ export default function GradebookApiTestPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-xl font-semibold mb-4">Gradebook (via Synergy API)</h1>
+      <h1 className="text-xl font-semibold mb-4">DEV MODE - Raw Gradebook Data</h1>
       {loading && <div>Loading gradebook...</div>}
       {error && <div className="text-red-600">{error}</div>}
       {!loading && !error && (
