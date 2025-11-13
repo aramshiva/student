@@ -78,7 +78,7 @@ export default function CourseDetail({
         if (!pointsStr) return null;
         const cleaned = pointsStr.replace(/of/i, "/");
         const m = cleaned.match(
-          /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/,
+          /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
         );
         if (!m) return null;
         return { e: parseFloat(m[1]), p: parseFloat(m[2]) };

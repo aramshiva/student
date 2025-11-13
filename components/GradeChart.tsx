@@ -77,7 +77,7 @@ export function GradeChart({
         if (typeof a._Points === "string" && a._Points.includes("/")) {
           const cleaned = a._Points.replace(/of/i, "/");
           const m = cleaned.match(
-            /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/,
+            /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
           );
           if (m) {
             pts = parseFloat(m[1]);

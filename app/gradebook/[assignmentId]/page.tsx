@@ -161,7 +161,7 @@ export default function AssignmentDetailPage() {
   let pointsDisplay = assignment._Points || "—";
   if (pointsRaw) {
     const m = pointsRaw.match(
-      /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/,
+      /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
     );
     if (m) {
       const s = parseFloat(m[1]);

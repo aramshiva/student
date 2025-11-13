@@ -514,7 +514,7 @@ function AssignmentsTableBase({
               const src = ra._Points && ra._Points.replace(/of/i, "/");
               if (src) {
                 const m = src.match(
-                  /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/,
+                  /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
                 );
                 if (m) {
                   score = parseFloat(m[1]);
@@ -551,7 +551,7 @@ function AssignmentsTableBase({
             const cleaned = a._Points && a._Points.replace(/of/i, "/");
             if (cleaned) {
               const m = cleaned.match(
-                /([0-9]+(?:\.[0-9]+)?)\s*\/\s*([0-9]+(?:\.[0-9]+)?)/,
+                /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
               );
               if (m) {
                 rawScore = parseFloat(m[1]);
