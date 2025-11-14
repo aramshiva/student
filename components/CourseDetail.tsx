@@ -13,6 +13,15 @@ import {
   parseWeightString,
   loadCalculateGradesEnabled,
 } from "@/utils/gradebook";
+import {
+  parseSynergyAssignment,
+  getSynergyCourseAssignmentCategories,
+  getCalculableAssignments,
+  getPointsByCategory,
+  calculateCourseGradePercentageFromCategories,
+  calculateCourseGradePercentageFromTotals,
+  getAssignmentPointTotals,
+} from "@/lib/gradeCalc";
 import * as React from "react";
 import { GradeChart } from "@/components/GradeChart";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
@@ -147,92 +156,36 @@ export default function CourseDetail({
   );
 
   const recalcTotals = React.useMemo(() => {
-    const gradeCalcs =
-      currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
+    const parsedAssignments = workingAssignments.map((a) =>
+      parseSynergyAssignment(a),
+    );
+    const calculable = getCalculableAssignments(parsedAssignments);
 
+    const gradeCalcs = currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
     if (gradeCalcs && gradeCalcs.length > 0) {
-      const byType: Record<
-        string,
-        { points: number; possible: number; weight: string }
-      > = {};
-
-      gradeCalcs.forEach((calc) => {
-        if (calc._Type && calc._Type.toUpperCase() !== "TOTAL") {
-          byType[calc._Type] = {
-            points: 0,
-            possible: 0,
-            weight: calc._Weight || "0%",
-          };
-        }
-      });
-
-      workingAssignments.forEach((a) => {
-        const type = a._Type || "Other";
-        const { score, max } = extractScoreMax(a);
-        if (
-          score !== null &&
-          max !== null &&
-          Number.isFinite(score) &&
-          Number.isFinite(max) &&
-          max > 0
-        ) {
-          if (!byType[type]) {
-            byType[type] = { points: 0, possible: 0, weight: "0%" };
-          }
-          byType[type].points += score;
-          byType[type].possible += max;
-        }
-      });
-
-      const activeWeightSum = Object.values(byType).reduce((acc, v) => {
-        return v.possible > 0 ? acc + parseWeightString(v.weight) : acc;
-      }, 0);
-
-      let weightedTotal = 0;
-      if (activeWeightSum > 0) {
-        Object.values(byType).forEach((v) => {
-          if (v.possible > 0) {
-            const categoryPct = (v.points / v.possible) * 100;
-            const weightNum = parseWeightString(v.weight);
-            weightedTotal += (categoryPct * weightNum) / activeWeightSum;
-          }
-        });
+      const categories = getSynergyCourseAssignmentCategories(course);
+      if (categories && categories.length > 0) {
+        const pointsByCategory = getPointsByCategory(calculable);
+        const earned = Object.values(pointsByCategory).reduce(
+          (acc, v) => acc + v.pointsEarned,
+          0,
+        );
+        const possible = Object.values(pointsByCategory).reduce(
+          (acc, v) => acc + v.pointsPossible,
+          0,
+        );
+        const pct = calculateCourseGradePercentageFromCategories(
+          pointsByCategory,
+          categories,
+        );
+        return { earned, possible, pct };
       }
-
-      const totalEarned = Object.values(byType).reduce(
-        (acc, v) => acc + v.points,
-        0,
-      );
-      const totalPossible = Object.values(byType).reduce(
-        (acc, v) => acc + v.possible,
-        0,
-      );
-
-      return {
-        earned: totalEarned,
-        possible: totalPossible,
-        pct: Number.isFinite(weightedTotal) ? weightedTotal : NaN,
-      };
     }
 
-    let earned = 0;
-    let possible = 0;
-    workingAssignments.forEach((a) => {
-      const { score, max } = extractScoreMax(a);
-      if (
-        score !== null &&
-        max !== null &&
-        Number.isFinite(score) &&
-        Number.isFinite(max) &&
-        max > 0
-      ) {
-        earned += score;
-        possible += max;
-      }
-    });
-    const pct = possible > 0 ? (earned / possible) * 100 : NaN;
-    return { earned, possible, pct };
-  }, [workingAssignments, extractScoreMax, currentMark]);
+    const totals = getAssignmentPointTotals(calculable);
+    const pct = calculateCourseGradePercentageFromTotals(calculable);
+    return { earned: totals.pointsEarned, possible: totals.pointsPossible, pct };
+  }, [workingAssignments, course, currentMark]);
 
   const hasRubric = React.useMemo(
     () => workingAssignments.some((a) => isRubric(a)),

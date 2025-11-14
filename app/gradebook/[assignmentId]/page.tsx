@@ -172,6 +172,19 @@ export default function AssignmentDetailPage() {
     }
   }
 
+  const derivedPoint = assignment._Point ? Number(assignment._Point) : NaN;
+  const derivedPossible = assignment._PointPossible
+    ? Number(assignment._PointPossible)
+    : NaN;
+  const derivedRatio =
+    Number.isFinite(derivedPoint) && Number.isFinite(derivedPossible) && derivedPossible > 0
+      ? derivedPoint / derivedPossible
+      : NaN;
+  if (Number.isFinite(derivedRatio)) {
+    type AugmentedAssignment = Assignment & { __derivedScoreRatio?: number };
+    (assignment as AugmentedAssignment).__derivedScoreRatio = derivedRatio;
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
       <div className="border-b">

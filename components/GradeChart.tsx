@@ -100,15 +100,22 @@ export function GradeChart({
             ptsPossible = maxVal;
           }
         }
+        const notForGrading = typeof a._Notes === "string" && a._Notes.includes("(Not For Grading)");
+        if (notForGrading) {
+          pts = null;
+          ptsPossible = null;
+        }
+        const isExtraCredit = a._PointPossible === "";
+        const possibleForAccum = isExtraCredit ? 0 : (ptsPossible as number);
         if (
           pts !== null &&
           ptsPossible !== null &&
           Number.isFinite(pts) &&
-          Number.isFinite(ptsPossible) &&
-          (ptsPossible as number) > 0
+          Number.isFinite(possibleForAccum) &&
+          possibleForAccum >= 0
         ) {
           total += pts as number;
-          possible += ptsPossible as number;
+          possible += possibleForAccum;
         }
       });
       const grade = possible > 0 ? Math.round((total / possible) * 100) : 0;
