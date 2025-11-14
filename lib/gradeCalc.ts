@@ -27,14 +27,12 @@ export interface AssignmentBase {
   category: string | undefined;
   date: Date;
   comments?: string;
-  newHypothetical: boolean;
 }
 
 export interface RealAssignment extends AssignmentBase {
   id: string;
   hidden: false;
   category: string;
-  newHypothetical: false;
 }
 
 export interface HiddenAssignment extends AssignmentBase {
@@ -46,7 +44,6 @@ export interface HiddenAssignment extends AssignmentBase {
   notForGrade: false;
   hidden: true;
   category: string;
-  newHypothetical: false;
 }
 
 export type Calculable<T extends AssignmentBase> = T & {
@@ -242,7 +239,6 @@ export function getHiddenAssignmentsFromCategories(categories: Category[], point
         hidden: true,
         category: category.name,
         date: new Date(),
-        newHypothetical: false,
       };
 
       return hiddenAssignment;
@@ -363,7 +359,6 @@ export function parseSynergyAssignment(synergyAssignment: SynergyAssignment): Re
     category: _Type,
     date: new Date(_Date),
     comments: notesFormatted && notesFormatted.length > 0 ? notesFormatted : undefined,
-    newHypothetical: false,
   };
 
   return assignment;
