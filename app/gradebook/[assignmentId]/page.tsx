@@ -210,7 +210,29 @@ export default function AssignmentDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
               <Info label="Type" value={assignment._Type || "—"} />
               <Info label="Date" value={formatDate(assignment._Date)} />
-              <Info label="Due" value={formatDate(assignment._DueDate)} />
+              <Info
+                label="Due"
+                value={(function () {
+                  const rawDue = assignment._DueDate;
+                  let label = formatDate(rawDue);
+                  try {
+                    const endStr = localStorage.getItem("Student.reportingPeriodEnd") || "";
+                    if (endStr) {
+                      const due = new Date(rawDue);
+                      const end = new Date(endStr);
+                      const now = new Date();
+                      const sameDay =
+                        due.getFullYear() === end.getFullYear() &&
+                        due.getMonth() === end.getMonth() &&
+                        due.getDate() === end.getDate();
+                      if (sameDay && due >= new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+                        label = "Not due";
+                      }
+                    }
+                  } catch {}
+                  return label;
+                })()}
+              />
               <Info label="Score" value={scoreDisplay} />
               <Info label="Points" value={pointsDisplay} />
               <Info label="Notes" value={assignment._Notes || "—"} />

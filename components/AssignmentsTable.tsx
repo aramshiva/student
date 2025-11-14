@@ -615,11 +615,30 @@ function AssignmentsTableBase({
         id: "dueDate",
         accessorFn: (row) => row._DueDate,
         header: "Due Date",
-        cell: ({ row }) => (
-          <span className="text-sm text-black dark:text-white">
-            {formatDate(row.original._DueDate)}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const rawDue = row.original._DueDate;
+          let label = formatDate(rawDue);
+          try {
+            const endStr = localStorage.getItem("Student.reportingPeriodEnd") || "";
+            if (endStr) {
+              const due = new Date(rawDue);
+              const end = new Date(endStr);
+              const now = new Date();
+              const sameDay =
+                due.getFullYear() === end.getFullYear() &&
+                due.getMonth() === end.getMonth() &&
+                due.getDate() === end.getDate();
+              if (sameDay && due >= new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+                label = "Not due";
+              }
+            }
+          } catch {}
+          return (
+            <span className="text-sm text-black dark:text-white">
+              {label}
+            </span>
+          );
+        },
       },
       {
         id: "notes",
