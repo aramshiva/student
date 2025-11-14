@@ -58,6 +58,8 @@ export function getCourseIcon(imageType: string): string {
       return "🎨";
     case "music":
       return "🎵";
+    case "health":
+      return "🏥";
     default:
       return "📖";
   }
