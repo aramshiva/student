@@ -154,26 +154,33 @@ function AssignmentsTableBase({
 
   const getScoreAndMax = React.useCallback(
     (a: Assignment): { score: number; max: number } | null => {
-      const rawScore = a._Score ? parseFloat(a._Score) : NaN;
-      const rawMax = a._ScoreMaxValue
+      const parseFraction = (s: string | undefined): { s: number; p: number } | null => {
+        if (!s) return null;
+        const cleaned = s.replace(/of/gi, '/').trim();
+        const m = cleaned.match(/([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/);
+        return m ? { s: parseFloat(m[1]), p: parseFloat(m[2]) } : null;
+      };
+      let score = a._Score ? parseFloat(a._Score) : NaN;
+      let max = a._ScoreMaxValue
         ? parseFloat(a._ScoreMaxValue)
         : a._PointPossible
         ? parseFloat(a._PointPossible)
         : NaN;
-      let score = rawScore;
-      let max = rawMax;
-      // as a fallback, parse _points type which has a data type of "8 / 10"
-      if ((!Number.isFinite(score) || !Number.isFinite(max)) && a._Points) {
-        const cleaned = a._Points.replace(/of/i, "/");
-        const m = cleaned.match(/([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/); // regex stuff
-        if (m) {
-          score = parseFloat(m[1]);
-          max = parseFloat(m[2]);
+      if ((!Number.isFinite(score) || !Number.isFinite(max)) && a._DisplayScore) {
+        const frac = parseFraction(a._DisplayScore);
+        if (frac) {
+          score = frac.s;
+          max = frac.p;
         }
       }
-      if (!Number.isFinite(score) || !Number.isFinite(max) || max <= 0) {
-        return null;
+      if ((!Number.isFinite(score) || !Number.isFinite(max)) && a._Points) {
+        const frac = parseFraction(a._Points);
+        if (frac) {
+          score = frac.s;
+          max = frac.p;
+        }
       }
+      if (!Number.isFinite(score) || !Number.isFinite(max) || max <= 0) return null;
       return { score, max };
     },
     []
@@ -358,17 +365,31 @@ function AssignmentsTableBase({
             return <span className="text-sm text-gray-400">—</span>;
           }
           const letter = numericToLetterGrade(Math.round(pct));
-          const gradeClasses = getGradeColor(letter);
-          const bgMatch = gradeClasses.match(/bg-([a-z]+)-\d+/);
-          const colorName = bgMatch ? bgMatch[1] : "gray";
-          const barLight = `bg-${colorName}-500`;
-          const barDark = `dark:bg-${colorName}-700`;
+          getGradeColor(letter);
+          const letterBarMap: Record<string, string> = {
+            A: "bg-green-600 dark:bg-green-700",
+            "A-": "bg-green-600 dark:bg-green-700",
+            P: "bg-green-600 dark:bg-green-700",
+            "A+": "bg-green-600 dark:bg-green-700",
+            B: "bg-blue-600 dark:bg-blue-700",
+            "B-": "bg-blue-600 dark:bg-blue-700",
+            "B+": "bg-blue-600 dark:bg-blue-700",
+            C: "bg-yellow-500 dark:bg-yellow-600",
+            "C-": "bg-yellow-500 dark:bg-yellow-600",
+            "C+": "bg-yellow-500 dark:bg-yellow-600",
+            D: "bg-orange-500 dark:bg-orange-600",
+            "D-": "bg-orange-500 dark:bg-orange-600",
+            "D+": "bg-orange-500 dark:bg-orange-600",
+            F: "bg-red-600 dark:bg-red-700",
+            E: "bg-red-600 dark:bg-red-700",
+          };
+          const barFill = letterBarMap[letter] || "bg-gray-500 dark:bg-gray-600";
           const width = Math.max(0, Math.min(100, pct));
           return (
             <div className="w-16" aria-label={`Assignment scored ${pct.toFixed(1)} percent (${letter})`}>
               <div className="h-2 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
                 <div
-                  className={`h-2 transition-all duration-300 ${barLight} ${barDark}`}
+                  className={`h-2 transition-all duration-300 ${barFill}`}
                   style={{ width: `${width}%` }}
                 />
               </div>
