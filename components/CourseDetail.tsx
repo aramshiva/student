@@ -512,16 +512,8 @@ export default function CourseDetail({
           assignments={workingAssignments}
           getTypeColor={getAssignmentTypeColor}
           onEditScore={onUpdateAssignmentScore}
-          hypotheticalMode={hypotheticalMode}
-          onToggleHypothetical={setHypotheticalMode}
           onEditType={onEditAssignmentType}
           onEditName={onEditAssignmentName}
-          onCreateHypothetical={onCreateHypothetical}
-          onDeleteHypothetical={(id) => {
-            setEditableAssignments((prev) =>
-              prev.filter((a) => a._GradebookID !== id),
-            );
-          }}
           availableTypes={availableTypes}
         />
       </div>
