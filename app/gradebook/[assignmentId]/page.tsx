@@ -189,9 +189,18 @@ export default function AssignmentDetailPage() {
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
       <div className="border-b">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" onClick={() => router.back()}>
-            &larr; Back
-          </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                const id = course?._CourseID;
+                const target = id
+                  ? `/gradebook?course=${encodeURIComponent(String(id))}`
+                  : "/gradebook";
+                router.push(target);
+              }}
+            >
+              &larr; Back
+            </Button>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg md:text-xl font-semibold text-black dark:text-white truncate">
               {assignment._Measure || "Assignment"}

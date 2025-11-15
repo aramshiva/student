@@ -402,7 +402,7 @@ function AssignmentsTableBase({
                   style={{ width: `${width}%` }}
                 />
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400 tabular-nums">{pct}%</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400 tabular-nums">{Math.round(pct)}%</span>
             </div>
           );
         },
