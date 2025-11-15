@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -52,22 +52,22 @@ export function GradeChart({
     () =>
       [...assignments].sort(
         (a, b) =>
-          new Date(a["_Date"]).getTime() - new Date(b["_Date"]).getTime(),
+          new Date(a["_Date"]).getTime() - new Date(b["_Date"]).getTime()
       ),
-    [assignments],
+    [assignments]
   );
   const assignmentDates = React.useMemo(
     () =>
       Array.from(new Set(sortedAssignments.map((a) => a["_Date"]))).sort(
-        (a, b) => new Date(a).getTime() - new Date(b).getTime(),
+        (a, b) => new Date(a).getTime() - new Date(b).getTime()
       ),
-    [sortedAssignments],
+    [sortedAssignments]
   );
 
   const chartData = React.useMemo(() => {
     return assignmentDates.map((date) => {
       const upTo = sortedAssignments.filter(
-        (a) => new Date(a["_Date"]).getTime() <= new Date(date).getTime(),
+        (a) => new Date(a["_Date"]).getTime() <= new Date(date).getTime()
       );
       let total = 0;
       let possible = 0;
@@ -76,9 +76,7 @@ export function GradeChart({
         let ptsPossible: number | null = null;
         if (typeof a._Points === "string" && a._Points.includes("/")) {
           const cleaned = a._Points.replace(/of/i, "/");
-          const m = cleaned.match(
-            /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
-          );
+          const m = cleaned.match(/([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/);
           if (m) {
             pts = parseFloat(m[1]);
             ptsPossible = parseFloat(m[2]);
@@ -88,19 +86,21 @@ export function GradeChart({
           const scoreVal = a._Score
             ? parseFloat(a._Score)
             : a._Point
-              ? parseFloat(a._Point)
-              : NaN;
+            ? parseFloat(a._Point)
+            : NaN;
           const maxVal = a._ScoreMaxValue
             ? parseFloat(a._ScoreMaxValue)
             : a._PointPossible
-              ? parseFloat(a._PointPossible)
-              : NaN;
+            ? parseFloat(a._PointPossible)
+            : NaN;
           if (Number.isFinite(scoreVal) && Number.isFinite(maxVal)) {
             pts = scoreVal;
             ptsPossible = maxVal;
           }
         }
-        const notForGrading = typeof a._Notes === "string" && a._Notes.includes("(Not For Grading)");
+        const notForGrading =
+          typeof a._Notes === "string" &&
+          a._Notes.includes("(Not For Grading)");
         if (notForGrading) {
           pts = null;
           ptsPossible = null;
@@ -148,7 +148,7 @@ export function GradeChart({
       if (!isControlled) setUncontrolledSticky(v);
       onStickyChange?.(v);
     },
-    [isControlled, onStickyChange],
+    [isControlled, onStickyChange]
   );
 
   if (!assignments.length) return null;
@@ -156,14 +156,18 @@ export function GradeChart({
   if (minimal) {
     return (
       <Card
-        className={`${forceStickyInHeader ? "mb-0 shadow-none border-0 bg-transparent" : "mb-2"} `}
+        className={`${
+          forceStickyInHeader
+            ? "mb-0 shadow-none border-0 bg-transparent"
+            : "mb-2"
+        } `}
       >
         <CardContent className="p-1 pb-1">
           <ChartContainer
             config={chartConfig}
             className="aspect-auto h-[150px] w-full"
           >
-            <AreaChart data={filteredData}>
+            <AreaChart data={filteredData} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="fillGrade" x1="0" y1="0" x2="0" y2="1">
                   <stop
@@ -179,6 +183,7 @@ export function GradeChart({
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} />
+              <YAxis hide domain={[0, 'dataMax + 1']} allowDecimals={false} />
               <XAxis
                 dataKey="date"
                 tickLine={false}
@@ -224,7 +229,15 @@ export function GradeChart({
 
   return (
     <Card
-      className={`${forceStickyInHeader ? "mb-0 shadow-none border-0 bg-transparent" : "mb-8 pt-0"} ${!forceStickyInHeader && effectiveSticky ? "sticky top-0 z-30 shadow-md border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70" : ""}`}
+      className={`${
+        forceStickyInHeader
+          ? "mb-0 shadow-none border-0 bg-transparent"
+          : "mb-8 pt-0"
+      } ${
+        !forceStickyInHeader && effectiveSticky
+          ? "sticky z-30 shadow-md border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70"
+          : ""
+      }`}
     >
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-3 sm:flex-row">
         <div className="grid flex-1 gap-0.5">
@@ -258,12 +271,12 @@ export function GradeChart({
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="px-2 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-2">
+      <CardContent className="px-2 pt-1 pb-1 sm:px-4 sm:pt-2 sm:pb-1">
         <ChartContainer
           config={chartConfig}
           className="aspect-auto h-[240px] w-full"
         >
-          <AreaChart data={filteredData}>
+          <AreaChart data={filteredData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="fillGrade" x1="0" y1="0" x2="0" y2="1">
                 <stop
@@ -279,6 +292,7 @@ export function GradeChart({
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
+            <YAxis hide domain={[0, 'dataMax + 1']} allowDecimals={false} />
             <XAxis
               dataKey="date"
               tickLine={false}
