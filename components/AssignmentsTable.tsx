@@ -38,6 +38,15 @@ import {
 import { Badge } from "./ui/badge";
 import { getGradeColor, numericToLetterGrade } from "@/utils/gradebook";
 import Link from "next/link";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface AssignmentsTableProps {
   assignments: Assignment[];
@@ -570,29 +579,67 @@ function AssignmentsTableBase({
       </CardContent>
       {table.getPageCount() > 1 && (
         <CardFooter>
-          <div className="flex items-center justify-between w-full">
-            <div className="text-xs text-gray-500">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
-            </div>
+          <div className="w-full flex items-center justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (table.getCanPreviousPage()) table.previousPage();
+                    }}
+                    className={!table.getCanPreviousPage() ? "pointer-events-none opacity-50" : undefined}
+                  />
+                </PaginationItem>
+                {(() => {
+                  const pages: Array<number | string> = [];
+                  const total = table.getPageCount();
+                  const current = table.getState().pagination.pageIndex;
+                  const first = 0;
+                  const last = total - 1;
+                  if (total <= 7) {
+                    for (let i = 0; i < total; i++) pages.push(i);
+                  } else {
+                    pages.push(first);
+                    if (current > 2) pages.push("ellipsis-start");
+                    const start = Math.max(first + 1, current - 1);
+                    const end = Math.min(last - 1, current + 1);
+                    for (let i = start; i <= end; i++) pages.push(i);
+                    if (current < last - 2) pages.push("ellipsis-end");
+                    pages.push(last);
+                  }
+                  return pages.map((p, idx) => (
+                    <PaginationItem key={`${p}-${idx}`}>
+                      {typeof p === "string" ? (
+                        <PaginationEllipsis />
+                      ) : (
+                        <PaginationLink
+                          href="#"
+                          isActive={p === current}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            table.setPageIndex(p);
+                          }}
+                        >
+                          {p + 1}
+                        </PaginationLink>
+                      )}
+                    </PaginationItem>
+                  ));
+                })()}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (table.getCanNextPage()) table.nextPage();
+                    }}
+                    className={!table.getCanNextPage() ? "pointer-events-none opacity-50" : undefined}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         </CardFooter>
       )}
