@@ -79,9 +79,9 @@ export default function Home() {
               <span className="font-bold">wow</span>.
             </p>
             <p>
-              Student features hypothetical mode, a powerful mode that allows an
-              student to dynamically see how your grades will change with a
-              certain grade on a test or assignment.
+              Student gives clear fast analytics for your grades: per-assignment
+              impact, progress bars, category breakdowns, and GPA stats. All
+              computed locally and privately.
             </p>
           </div>
         </div>
