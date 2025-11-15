@@ -244,9 +244,10 @@ export default function CourseDetail({
             onStickyChange={setChartSticky}
           />
         )}
-        {currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
-          <GradeBreakdown calcs={currentMark.GradeCalculationSummary.AssignmentGradeCalc} />
-        )}
+        <GradeBreakdown
+          calcs={currentMark?.GradeCalculationSummary?.AssignmentGradeCalc || []}
+          assignments={originalAssignments}
+        />
         <AssignmentsTable assignments={originalAssignments} getTypeColor={getAssignmentTypeColor} />
       </div>
     </div>
