@@ -24,6 +24,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Assignment } from "@/types/gradebook";
+import {
+  type Category,
+  parseSynergyAssignment,
+  getCalculableAssignments,
+  getPointsByCategory,
+  calculateCourseGradePercentageFromCategories,
+  calculateCourseGradePercentageFromTotals,
+} from "@/lib/gradeCalc";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface GradeChartProps {
@@ -32,6 +40,7 @@ interface GradeChartProps {
   forceStickyInHeader?: boolean;
   sticky?: boolean;
   minimal?: boolean;
+  categories?: Category[];
 }
 
 const chartConfig = {
@@ -47,6 +56,7 @@ export function GradeChart({
   forceStickyInHeader = false,
   sticky,
   minimal = false,
+  categories,
 }: GradeChartProps) {
   const sortedAssignments = React.useMemo(
     () =>
@@ -64,64 +74,27 @@ export function GradeChart({
     [sortedAssignments]
   );
 
+  const parsedAssignments = React.useMemo(
+    () => assignments.map((a) => parseSynergyAssignment(a)),
+    [assignments],
+  );
+
   const chartData = React.useMemo(() => {
     return assignmentDates.map((date) => {
-      const upTo = sortedAssignments.filter(
-        (a) => new Date(a["_Date"]).getTime() <= new Date(date).getTime()
-      );
-      let total = 0;
-      let possible = 0;
-      upTo.forEach((a) => {
-        let pts: number | null = null;
-        let ptsPossible: number | null = null;
-        if (typeof a._Points === "string" && a._Points.includes("/")) {
-          const cleaned = a._Points.replace(/of/i, "/");
-          const m = cleaned.match(/([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/);
-          if (m) {
-            pts = parseFloat(m[1]);
-            ptsPossible = parseFloat(m[2]);
-          }
-        }
-        if (pts === null || ptsPossible === null) {
-          const scoreVal = a._Score
-            ? parseFloat(a._Score)
-            : a._Point
-            ? parseFloat(a._Point)
-            : NaN;
-          const maxVal = a._ScoreMaxValue
-            ? parseFloat(a._ScoreMaxValue)
-            : a._PointPossible
-            ? parseFloat(a._PointPossible)
-            : NaN;
-          if (Number.isFinite(scoreVal) && Number.isFinite(maxVal)) {
-            pts = scoreVal;
-            ptsPossible = maxVal;
-          }
-        }
-        const notForGrading =
-          typeof a._Notes === "string" &&
-          a._Notes.includes("(Not For Grading)");
-        if (notForGrading) {
-          pts = null;
-          ptsPossible = null;
-        }
-        const isExtraCredit = a._PointPossible === "";
-        const possibleForAccum = isExtraCredit ? 0 : (ptsPossible as number);
-        if (
-          pts !== null &&
-          ptsPossible !== null &&
-          Number.isFinite(pts) &&
-          Number.isFinite(possibleForAccum) &&
-          possibleForAccum >= 0
-        ) {
-          total += pts as number;
-          possible += possibleForAccum;
-        }
-      });
-      const grade = possible > 0 ? Math.round((total / possible) * 100) : 0;
+      const cutoff = new Date(date).getTime();
+      const upTo = parsedAssignments.filter((a) => a.date.getTime() <= cutoff);
+      const calculable = getCalculableAssignments(upTo);
+      let pct: number = 0;
+      if (categories && categories.length > 0) {
+        const byCat = getPointsByCategory(calculable);
+        pct = calculateCourseGradePercentageFromCategories(byCat, categories);
+      } else {
+        pct = calculateCourseGradePercentageFromTotals(calculable);
+      }
+      const grade = Number.isFinite(pct) ? Math.round(pct) : 0;
       return { date, grade };
     });
-  }, [assignmentDates, sortedAssignments]);
+  }, [assignmentDates, parsedAssignments, categories]);
 
   const [timeRange, setTimeRange] = React.useState("all");
 

@@ -99,6 +99,11 @@ export default function CourseDetail({
     [originalAssignments, isRubric],
   );
 
+  const courseCategories = React.useMemo(
+    () => getSynergyCourseAssignmentCategories(course) || [],
+    [course],
+  );
+
   const calcGrades = loadCalculateGradesEnabled();
   let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
   let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw ? parseFloat(currentMark._CalculatedScoreRaw) : undefined;
@@ -218,6 +223,7 @@ export default function CourseDetail({
               <div className="mt-2 -mb-2 -mx-1">
                 <GradeChart
                   assignments={originalAssignments}
+                  categories={courseCategories}
                   sticky={chartSticky}
                   onStickyChange={setChartSticky}
                   forceStickyInHeader
@@ -233,6 +239,7 @@ export default function CourseDetail({
         {!chartSticky && (
           <GradeChart
             assignments={originalAssignments}
+            categories={courseCategories}
             sticky={chartSticky}
             onStickyChange={setChartSticky}
           />
