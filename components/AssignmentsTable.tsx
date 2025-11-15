@@ -314,7 +314,7 @@ function AssignmentsTableBase({
       {
         id: "type",
         accessorFn: (row) => row._Type,
-        header: "Assignment Type",
+        header: "Type",
         cell: ({ row }) => {
           const a = row.original;
           const curType = (a._Type || "").trim();
@@ -349,7 +349,7 @@ function AssignmentsTableBase({
       },
       {
         id: "progress",
-        header: "Progress",
+        header: "Percentage",
         accessorFn: (row) => assignmentPercents[row._GradebookID],
         sortingFn: (a: Row<Assignment>, b: Row<Assignment>, columnId: string) => {
           const av = Number(a.getValue(columnId));
@@ -386,13 +386,14 @@ function AssignmentsTableBase({
           const barFill = letterBarMap[letter] || "bg-gray-500 dark:bg-gray-600";
           const width = Math.max(0, Math.min(100, pct));
           return (
-            <div className="w-16" aria-label={`Assignment scored ${pct.toFixed(1)} percent (${letter})`}>
-              <div className="h-2 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
+            <div className="flex items-center gap-2" aria-label={`Assignment scored ${pct.toFixed(1)} percent (${letter})`}>
+              <div className="h-2 w-16 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
                 <div
                   className={`h-2 transition-all duration-300 ${barFill}`}
                   style={{ width: `${width}%` }}
                 />
               </div>
+              <span className="text-xs text-gray-600 dark:text-gray-400 tabular-nums">{pct}%</span>
             </div>
           );
         },
