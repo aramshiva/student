@@ -21,7 +21,7 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
   const showSidebar =
-    pathname !== "/" && pathname !== "/privacy" && pathname !== "/login";
+    pathname !== "/" && pathname !== "/privacy" && pathname !== "/login" && pathname !== "/404";
   const pageTitle = React.useMemo(() => {
     if (!pathname) return "";
     const p = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
