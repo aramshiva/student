@@ -47,6 +47,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AssignmentsTableProps {
   assignments: Assignment[];
@@ -55,12 +56,92 @@ interface AssignmentsTableProps {
   onEditType?: (id: string, newType: string) => void;
   onEditName?: (id: string, name: string) => void;
   availableTypes?: string[];
+  hypotheticalMode?: boolean;
+  onToggleHypothetical?: (enabled: boolean) => void;
+}
+
+function ScoreEditor({
+  assignmentId,
+  draftScoresRef,
+  setDraftScores,
+  onEditScoreRef,
+  debounceTimers,
+}: {
+  assignmentId: string;
+  draftScoresRef: React.MutableRefObject<Record<string, { score: string; max: string }>>;
+  setDraftScores: React.Dispatch<React.SetStateAction<Record<string, { score: string; max: string }>>>;
+  onEditScoreRef: React.MutableRefObject<((id: string, score: string, max: string) => void) | undefined>;
+  debounceTimers: React.MutableRefObject<Record<string, ReturnType<typeof setTimeout>>>;
+}) {
+  const draft = draftScoresRef.current[assignmentId];
+  
+  if (!draft) return null;
+  
+  return (
+    <div className="flex gap-1 items-center">
+      <Input
+        type="text"
+        defaultValue={draft.score}
+        onChange={(e) => {
+          const val = e.target.value;
+          const currentMax = draftScoresRef.current[assignmentId]?.max || draft.max;
+          setDraftScores((prev) => ({
+            ...prev,
+            [assignmentId]: { ...prev[assignmentId], score: val },
+          }));
+          
+          if (debounceTimers.current[assignmentId]) {
+            clearTimeout(debounceTimers.current[assignmentId]);
+          }
+          
+          debounceTimers.current[assignmentId] = setTimeout(() => {
+            onEditScoreRef.current?.(assignmentId, val, currentMax);
+          }, 500);
+        }}
+        onFocus={() => {
+          if (debounceTimers.current[assignmentId]) {
+            clearTimeout(debounceTimers.current[assignmentId]);
+          }
+        }}
+        className="h-7 w-16 text-xs"
+      />
+      <span className="text-xs text-gray-500">/</span>
+      <Input
+        type="text"
+        defaultValue={draft.max}
+        onChange={(e) => {
+          const val = e.target.value;
+          const currentScore = draftScoresRef.current[assignmentId]?.score || draft.score;
+          setDraftScores((prev) => ({
+            ...prev,
+            [assignmentId]: { ...prev[assignmentId], max: val },
+          }));
+          
+          if (debounceTimers.current[assignmentId]) {
+            clearTimeout(debounceTimers.current[assignmentId]);
+          }
+          
+          debounceTimers.current[assignmentId] = setTimeout(() => {
+            onEditScoreRef.current?.(assignmentId, currentScore, val);
+          }, 500);
+        }}
+        onFocus={() => {
+          if (debounceTimers.current[assignmentId]) {
+            clearTimeout(debounceTimers.current[assignmentId]);
+          }
+        }}
+        className="h-7 w-16 text-xs"
+      />
+    </div>
+  );
 }
 
 function AssignmentsTableBase({
   assignments,
   getTypeColor,
   onEditScore,
+  hypotheticalMode = false,
+  onToggleHypothetical,
 }: AssignmentsTableProps) {
   const isRubric = React.useCallback(
     (a: Pick<Assignment, "_ScoreType"> | Assignment | undefined | null) =>
@@ -107,6 +188,11 @@ function AssignmentsTableBase({
   const debounceTimers = React.useRef<
     Record<string, ReturnType<typeof setTimeout>>
   >({});
+  const onEditScoreRef = React.useRef(onEditScore);
+  
+  React.useEffect(() => {
+    onEditScoreRef.current = onEditScore;
+  }, [onEditScore]);
   React.useEffect(() => {
     setDraftScores((prev) => {
       const next = { ...prev };
@@ -339,21 +425,26 @@ function AssignmentsTableBase({
         header: "Score",
         cell: ({ row }) => {
           const a = row.original;
-          const display = a._DisplayScore || a._Score || "—";
           const assignmentId = a._GradebookID;
-          return assignmentId ? (
-            <Link
-              href={`/gradebook/${assignmentId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Open grade details for assignment ${assignmentId} in a new tab`}
-              className="text-sm text-black dark:text-white hover:underline focus:outline-none"
-            >
-              {display}
-            </Link>
-          ) : (
-            <span className="text-sm text-black dark:text-white">{display}</span>
-          );
+          const display = a._DisplayScore || a._Score || "—";
+          
+          if (!hypotheticalMode) {
+            return assignmentId ? (
+              <Link
+                href={`/gradebook/${assignmentId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open grade details for assignment ${assignmentId} in a new tab`}
+                className="text-sm text-black dark:text-white hover:underline focus:outline-none"
+              >
+                {display}
+              </Link>
+            ) : (
+              <span className="text-sm text-black dark:text-white">{display}</span>
+            );
+          }
+          
+          return <ScoreEditor assignmentId={assignmentId} draftScoresRef={draftScoresRef} setDraftScores={setDraftScores} onEditScoreRef={onEditScoreRef} debounceTimers={debounceTimers} />;
         },
       },
       {
@@ -483,7 +574,7 @@ function AssignmentsTableBase({
         },
       },
     ],
-    [decodeEntities, getTypeColor, expandedDesc, deltas, assignmentPercents]
+    [decodeEntities, getTypeColor, expandedDesc, deltas, assignmentPercents, hypotheticalMode]
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([
@@ -513,6 +604,15 @@ function AssignmentsTableBase({
         <CardDescription>List of all assignments</CardDescription>
         <CardAction>
           <div className="flex items-center justify-between gap-4">
+                        {onToggleHypothetical && (
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <Checkbox
+                  checked={hypotheticalMode}
+                  onCheckedChange={(checked) => onToggleHypothetical(checked === true)}
+                />
+                <span>Hypothetical Mode</span>
+              </label>
+            )}
             <Input
               placeholder="Filter assignments..."
               value={

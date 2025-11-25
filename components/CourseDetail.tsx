@@ -50,6 +50,40 @@ export default function CourseDetail({
     [currentMark],
   );
 
+  const [hypotheticalMode, setHypotheticalMode] = React.useState(false);
+  const [hypotheticalScores, setHypotheticalScores] = React.useState<
+    Record<string, { score: string; max: string }>
+  >({});
+
+  const effectiveAssignments = React.useMemo(() => {
+    if (!hypotheticalMode || Object.keys(hypotheticalScores).length === 0) {
+      return originalAssignments;
+    }
+    return originalAssignments.map((a) => {
+      const hypo = hypotheticalScores[a._GradebookID];
+      if (!hypo) return a;
+      return {
+        ...a,
+        _Score: hypo.score,
+        _Point: hypo.score,
+        _ScoreMaxValue: hypo.max,
+        _PointPossible: hypo.max,
+        _DisplayScore: `${hypo.score} out of ${hypo.max}`,
+        _Points: `${hypo.score} / ${hypo.max}`,
+      };
+    });
+  }, [originalAssignments, hypotheticalMode, hypotheticalScores]);
+
+  const handleHypotheticalScoreChange = React.useCallback(
+    (id: string, score: string, max: string) => {
+      setHypotheticalScores((prev) => ({
+        ...prev,
+        [id]: { score, max },
+      }));
+    },
+    []
+  );
+
   const dontShowGradeCalcWarning = localStorage.getItem(
     "Student.dontShowGradeCalcWarning",
   );
@@ -63,7 +97,7 @@ export default function CourseDetail({
 
 
   const recalcTotals = React.useMemo(() => {
-    const parsedAssignments = originalAssignments.map((a: Assignment) =>
+    const parsedAssignments = effectiveAssignments.map((a: Assignment) =>
       parseSynergyAssignment(a),
     );
     const calculable = getCalculableAssignments(parsedAssignments);
@@ -92,7 +126,7 @@ export default function CourseDetail({
     const totals = getAssignmentPointTotals(calculable);
     const pct = calculateCourseGradePercentageFromTotals(calculable);
     return { earned: totals.pointsEarned, possible: totals.pointsPossible, pct };
-  }, [originalAssignments, course, currentMark]);
+  }, [effectiveAssignments, course, currentMark]);
 
   const hasRubric = React.useMemo(
     () => originalAssignments.some((a) => isRubric(a)),
@@ -107,7 +141,7 @@ export default function CourseDetail({
   const calcGrades = loadCalculateGradesEnabled();
   let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
   let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw ? parseFloat(currentMark._CalculatedScoreRaw) : undefined;
-  if (calcGrades || hasRubric) {
+  if (calcGrades || hasRubric || hypotheticalMode) {
     if (Number.isFinite(recalcTotals.pct)) {
       effectivePct = recalcTotals.pct;
       effectiveLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
@@ -200,6 +234,7 @@ export default function CourseDetail({
             {!dontShowGradeCalcWarning &&
               !calcGrades &&
               !hasRubric &&
+              !hypotheticalMode &&
               Number.isFinite(recalcTotals.pct) &&
               currentMark?._CalculatedScoreRaw &&
               Math.round(recalcTotals.pct) !== Math.round(parseFloat(currentMark._CalculatedScoreRaw || "0")) && (
@@ -222,7 +257,7 @@ export default function CourseDetail({
             {chartSticky && (
               <div className="mt-2 -mb-2 -mx-1">
                 <GradeChart
-                  assignments={originalAssignments}
+                  assignments={effectiveAssignments}
                   categories={courseCategories}
                   sticky={chartSticky}
                   onStickyChange={setChartSticky}
@@ -238,7 +273,7 @@ export default function CourseDetail({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
         {!chartSticky && (
           <GradeChart
-            assignments={originalAssignments}
+            assignments={effectiveAssignments}
             categories={courseCategories}
             sticky={chartSticky}
             onStickyChange={setChartSticky}
@@ -246,9 +281,15 @@ export default function CourseDetail({
         )}
         <GradeBreakdown
           calcs={currentMark?.GradeCalculationSummary?.AssignmentGradeCalc || []}
-          assignments={originalAssignments}
+          assignments={effectiveAssignments}
         />
-        <AssignmentsTable assignments={originalAssignments} getTypeColor={getAssignmentTypeColor} />
+        <AssignmentsTable
+          assignments={effectiveAssignments}
+          getTypeColor={getAssignmentTypeColor}
+          hypotheticalMode={hypotheticalMode}
+          onToggleHypothetical={setHypotheticalMode}
+          onEditScore={handleHypotheticalScoreChange}
+        />
       </div>
     </div>
   );

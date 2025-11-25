@@ -29,6 +29,18 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
   });
 
   if (hasWeightedData) {
+    const parsed = (assignments || []).map(a => parseSynergyAssignment(a));
+    const usable = parsed.filter(p => !p.notForGrade && p.pointsEarned !== undefined && p.pointsPossible !== undefined);
+    const byType: Record<string, { earned: number; possible: number; count: number }> = {};
+    for (const a of usable) {
+      const key = a.category || "Other";
+      const entry = byType[key] || { earned: 0, possible: 0, count: 0 };
+      entry.earned += a.pointsEarned || 0;
+      if (!a.extraCredit) entry.possible += a.pointsPossible || 0;
+      entry.count += 1;
+      byType[key] = entry;
+    }
+
     return (
       <Card className="mb-8 pt-0">
         <CardHeader className="border-b py-5">
@@ -48,12 +60,17 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
               </TableHeader>
               <TableBody>
                 {calcs.map((calc, idx) => {
-                  const fraction = `${calc._Points}/${calc._PointsPossible}`;
-                  const hasAssignments = parseFloat(calc._PointsPossible) > 0;
+                  const typeData = byType[calc._Type];
+                  const earned = typeData?.earned || 0;
+                  const possible = typeData?.possible || 0;
+                  const fraction = `${earned}/${possible}`;
+                  const hasAssignments = possible > 0;
+                  const pct = hasAssignments ? (earned / possible) * 100 : 0;
+                  const grade = hasAssignments ? `${Math.round(pct)}%` : "N/A";
                   return (
                     <TableRow key={idx}>
                       <TableCell className="font-medium text-black dark:text-white">{calc._Type}</TableCell>
-                      <TableCell>{hasAssignments ? calc._CalculatedMark : "N/A"}</TableCell>
+                      <TableCell>{grade}</TableCell>
                       <TableCell>{calc._Weight}</TableCell>
                       <TableCell>{hasAssignments ? fraction : "N/A"}</TableCell>
                     </TableRow>
