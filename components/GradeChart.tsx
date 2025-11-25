@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Card,
   CardContent,
@@ -24,6 +24,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Assignment } from "@/types/gradebook";
+import {
+  type Category,
+  parseSynergyAssignment,
+  getCalculableAssignments,
+  getPointsByCategory,
+  calculateCourseGradePercentageFromCategories,
+  calculateCourseGradePercentageFromTotals,
+} from "@/lib/gradeCalc";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface GradeChartProps {
@@ -32,6 +40,7 @@ interface GradeChartProps {
   forceStickyInHeader?: boolean;
   sticky?: boolean;
   minimal?: boolean;
+  categories?: Category[];
 }
 
 const chartConfig = {
@@ -47,6 +56,7 @@ export function GradeChart({
   forceStickyInHeader = false,
   sticky,
   minimal = false,
+  categories,
 }: GradeChartProps) {
   const sortedAssignments = React.useMemo(
     () =>
@@ -64,57 +74,27 @@ export function GradeChart({
     [sortedAssignments],
   );
 
+  const parsedAssignments = React.useMemo(
+    () => assignments.map((a) => parseSynergyAssignment(a)),
+    [assignments],
+  );
+
   const chartData = React.useMemo(() => {
     return assignmentDates.map((date) => {
-      const upTo = sortedAssignments.filter(
-        (a) => new Date(a["_Date"]).getTime() <= new Date(date).getTime(),
-      );
-      let total = 0;
-      let possible = 0;
-      upTo.forEach((a) => {
-        let pts: number | null = null;
-        let ptsPossible: number | null = null;
-        if (typeof a._Points === "string" && a._Points.includes("/")) {
-          const cleaned = a._Points.replace(/of/i, "/");
-          const m = cleaned.match(
-            /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
-          );
-          if (m) {
-            pts = parseFloat(m[1]);
-            ptsPossible = parseFloat(m[2]);
-          }
-        }
-        if (pts === null || ptsPossible === null) {
-          const scoreVal = a._Score
-            ? parseFloat(a._Score)
-            : a._Point
-              ? parseFloat(a._Point)
-              : NaN;
-          const maxVal = a._ScoreMaxValue
-            ? parseFloat(a._ScoreMaxValue)
-            : a._PointPossible
-              ? parseFloat(a._PointPossible)
-              : NaN;
-          if (Number.isFinite(scoreVal) && Number.isFinite(maxVal)) {
-            pts = scoreVal;
-            ptsPossible = maxVal;
-          }
-        }
-        if (
-          pts !== null &&
-          ptsPossible !== null &&
-          Number.isFinite(pts) &&
-          Number.isFinite(ptsPossible) &&
-          (ptsPossible as number) > 0
-        ) {
-          total += pts as number;
-          possible += ptsPossible as number;
-        }
-      });
-      const grade = possible > 0 ? Math.round((total / possible) * 100) : 0;
+      const cutoff = new Date(date).getTime();
+      const upTo = parsedAssignments.filter((a) => a.date.getTime() <= cutoff);
+      const calculable = getCalculableAssignments(upTo);
+      let pct: number = 0;
+      if (categories && categories.length > 0) {
+        const byCat = getPointsByCategory(calculable);
+        pct = calculateCourseGradePercentageFromCategories(byCat, categories);
+      } else {
+        pct = calculateCourseGradePercentageFromTotals(calculable);
+      }
+      const grade = Number.isFinite(pct) ? Math.round(pct) : 0;
       return { date, grade };
     });
-  }, [assignmentDates, sortedAssignments]);
+  }, [assignmentDates, parsedAssignments, categories]);
 
   const [timeRange, setTimeRange] = React.useState("all");
 
@@ -149,14 +129,21 @@ export function GradeChart({
   if (minimal) {
     return (
       <Card
-        className={`${forceStickyInHeader ? "mb-0 shadow-none border-0 bg-transparent" : "mb-2"} `}
+        className={`${
+          forceStickyInHeader
+            ? "mb-0 shadow-none border-0 bg-transparent"
+            : "mb-2"
+        } `}
       >
         <CardContent className="p-1 pb-1">
           <ChartContainer
             config={chartConfig}
             className="aspect-auto h-[150px] w-full"
           >
-            <AreaChart data={filteredData}>
+            <AreaChart
+              data={filteredData}
+              margin={{ top: 2, right: 0, bottom: 0, left: 0 }}
+            >
               <defs>
                 <linearGradient id="fillGrade" x1="0" y1="0" x2="0" y2="1">
                   <stop
@@ -172,6 +159,7 @@ export function GradeChart({
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} />
+              <YAxis hide domain={[0, "dataMax + 1"]} allowDecimals={false} />
               <XAxis
                 dataKey="date"
                 tickLine={false}
@@ -217,7 +205,15 @@ export function GradeChart({
 
   return (
     <Card
-      className={`${forceStickyInHeader ? "mb-0 shadow-none border-0 bg-transparent" : "mb-8 pt-0"} ${!forceStickyInHeader && effectiveSticky ? "sticky top-0 z-30 shadow-md border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70" : ""}`}
+      className={`${
+        forceStickyInHeader
+          ? "mb-0 shadow-none border-0 bg-transparent"
+          : "mb-8 pt-0"
+      } ${
+        !forceStickyInHeader && effectiveSticky
+          ? "sticky z-30 shadow-md border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70"
+          : ""
+      }`}
     >
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-3 sm:flex-row">
         <div className="grid flex-1 gap-0.5">
@@ -251,12 +247,15 @@ export function GradeChart({
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="px-2 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-2">
+      <CardContent className="px-2 pt-1 pb-1 sm:px-4 sm:pt-2 sm:pb-1">
         <ChartContainer
           config={chartConfig}
           className="aspect-auto h-[240px] w-full"
         >
-          <AreaChart data={filteredData}>
+          <AreaChart
+            data={filteredData}
+            margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+          >
             <defs>
               <linearGradient id="fillGrade" x1="0" y1="0" x2="0" y2="1">
                 <stop
@@ -272,6 +271,7 @@ export function GradeChart({
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
+            <YAxis hide domain={[0, "dataMax + 1"]} allowDecimals={false} />
             <XAxis
               dataKey="date"
               tickLine={false}

@@ -1,18 +1,21 @@
 "use client";
 
-import {
-  Course,
-  Mark,
-  Assignment,
-  AssignmentGradeCalc,
-} from "@/types/gradebook";
+import { Course, Mark, Assignment } from "@/types/gradebook";
 import {
   getGradeColor,
   getCourseIcon,
   numericToLetterGrade,
-  parseWeightString,
   loadCalculateGradesEnabled,
 } from "@/utils/gradebook";
+import {
+  parseSynergyAssignment,
+  getSynergyCourseAssignmentCategories,
+  getCalculableAssignments,
+  getPointsByCategory,
+  calculateCourseGradePercentageFromCategories,
+  calculateCourseGradePercentageFromTotals,
+  getAssignmentPointTotals,
+} from "@/lib/gradeCalc";
 import * as React from "react";
 import { GradeChart } from "@/components/GradeChart";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
@@ -31,15 +34,13 @@ interface CourseDetailProps {
   course: Course;
   onBack: () => void;
   initialSticky?: boolean;
-  initialHypothetical?: boolean;
-  onStateChange?: (sticky: boolean, hypothetical: boolean) => void;
+  onStateChange?: (sticky: boolean) => void;
 }
 
 export default function CourseDetail({
   course,
   onBack,
   initialSticky = false,
-  initialHypothetical = false,
   onStateChange,
 }: CourseDetailProps) {
   const marks = course.Marks.Mark;
@@ -48,23 +49,109 @@ export default function CourseDetail({
     () => currentMark?.Assignments?.Assignment || [],
     [currentMark],
   );
-  const [editableAssignments, setEditableAssignments] = React.useState<
-    Assignment[]
-  >(() => [...originalAssignments]);
-  const [hypotheticalMode, setHypotheticalMode] =
-    React.useState(initialHypothetical);
+
+  const [hypotheticalMode, setHypotheticalMode] = React.useState(false);
+  const [hypotheticalScores, setHypotheticalScores] = React.useState<
+    Record<string, { score: string; max: string }>
+  >({});
+  const [hypotheticalCategories, setHypotheticalCategories] = React.useState<
+    Record<string, string>
+  >({});
+  const [hypotheticalNewAssignments, setHypotheticalNewAssignments] =
+    React.useState<Assignment[]>([]);
+
+  const effectiveAssignments = React.useMemo(() => {
+    let modifiedAssignments = originalAssignments;
+
+    if (
+      hypotheticalMode &&
+      (Object.keys(hypotheticalScores).length > 0 ||
+        Object.keys(hypotheticalCategories).length > 0)
+    ) {
+      modifiedAssignments = originalAssignments.map((a) => {
+        const hypoScore = hypotheticalScores[a._GradebookID];
+        const hypoCategory = hypotheticalCategories[a._GradebookID];
+
+        if (!hypoScore && !hypoCategory) return a;
+
+        const result = { ...a };
+
+        if (hypoScore) {
+          result._Score = hypoScore.score;
+          result._Point = hypoScore.score;
+          result._ScoreMaxValue = hypoScore.max;
+          result._PointPossible = hypoScore.max;
+          result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
+          result._Points = `${hypoScore.score} / ${hypoScore.max}`;
+        }
+
+        if (hypoCategory) {
+          result._Type = hypoCategory;
+        }
+
+        return result;
+      });
+    }
+
+    if (hypotheticalMode && hypotheticalNewAssignments.length > 0) {
+      const modifiedNewAssignments = hypotheticalNewAssignments.map((a) => {
+        const hypoScore = hypotheticalScores[a._GradebookID];
+        const hypoCategory = hypotheticalCategories[a._GradebookID];
+
+        if (!hypoScore && !hypoCategory) return a;
+
+        const result = { ...a };
+
+        if (hypoScore) {
+          result._Score = hypoScore.score;
+          result._Point = hypoScore.score;
+          result._ScoreMaxValue = hypoScore.max;
+          result._PointPossible = hypoScore.max;
+          result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
+          result._Points = `${hypoScore.score} / ${hypoScore.max}`;
+        }
+
+        if (hypoCategory) {
+          result._Type = hypoCategory;
+        }
+
+        return result;
+      });
+      return [...modifiedAssignments, ...modifiedNewAssignments];
+    }
+
+    return modifiedAssignments;
+  }, [
+    originalAssignments,
+    hypotheticalMode,
+    hypotheticalScores,
+    hypotheticalCategories,
+    hypotheticalNewAssignments,
+  ]);
+
+  const handleHypotheticalScoreChange = React.useCallback(
+    (id: string, score: string, max: string) => {
+      setHypotheticalScores((prev) => ({
+        ...prev,
+        [id]: { score, max },
+      }));
+    },
+    [],
+  );
+
+  const handleHypotheticalCategoryChange = React.useCallback(
+    (id: string, category: string) => {
+      setHypotheticalCategories((prev) => ({
+        ...prev,
+        [id]: category,
+      }));
+    },
+    [],
+  );
 
   const dontShowGradeCalcWarning = localStorage.getItem(
     "Student.dontShowGradeCalcWarning",
   );
-
-  React.useEffect(() => {
-    setEditableAssignments([...originalAssignments]);
-  }, [course, currentMark, originalAssignments]);
-
-  const workingAssignments = hypotheticalMode
-    ? editableAssignments
-    : originalAssignments;
 
   const isRubric = React.useCallback(
     (a: Assignment | undefined | null) =>
@@ -72,339 +159,108 @@ export default function CourseDetail({
     [],
   );
 
-  const extractScoreMax = React.useCallback(
-    (a: Assignment): { score: number | null; max: number | null } => {
-      const parsePoints = (pointsStr: string | undefined) => {
-        if (!pointsStr) return null;
-        const cleaned = pointsStr.replace(/of/i, "/");
-        const m = cleaned.match(
-          /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
-        );
-        if (!m) return null;
-        return { e: parseFloat(m[1]), p: parseFloat(m[2]) };
-      };
-
-      const rubric = isRubric(a);
-      let score: number | null = null;
-      let max: number | null = null;
-
-      const s = a._Score ? parseFloat(a._Score) : NaN;
-      const rawMax = a._ScoreMaxValue
-        ? parseFloat(a._ScoreMaxValue)
-        : a._PointPossible
-          ? parseFloat(a._PointPossible)
-          : NaN;
-
-      const deriveRubricMax = (): number => {
-        const type = (a._ScoreType || "").toLowerCase();
-        const explicit = type.match(/(\d+)\s*point/);
-        if (explicit) {
-          const n = parseInt(explicit[1], 10);
-          if (n > 0 && n <= 20) return n;
-        }
-        const parsedPts = parsePoints(a._Points);
-        if (parsedPts && parsedPts.p > 0 && parsedPts.p <= 20) {
-          return parsedPts.p === 100 ? 4 : parsedPts.p;
-        }
-        if (
-          Number.isFinite(rawMax) &&
-          rawMax > 0 &&
-          rawMax <= 10 &&
-          rawMax !== 100
-        ) {
-          return rawMax;
-        }
-        return 4;
-      };
-
-      let mVal = rawMax;
-      if (rubric) {
-        mVal = deriveRubricMax();
-      }
-
-      if (Number.isFinite(s) && Number.isFinite(mVal)) {
-        score = s;
-        max = mVal;
-      } else {
-        const parsed = parsePoints(a._Points);
-        if (parsed) {
-          score = parsed.e;
-          if (rubric) {
-            max = deriveRubricMax();
-          } else {
-            max = parsed.p;
-          }
-        }
-      }
-
-      if (rubric && max === 100) {
-        max = deriveRubricMax();
-      }
-
-      return { score, max };
-    },
-    [isRubric],
-  );
-
   const recalcTotals = React.useMemo(() => {
+    const parsedAssignments = effectiveAssignments.map((a: Assignment) =>
+      parseSynergyAssignment(a),
+    );
+    const calculable = getCalculableAssignments(parsedAssignments);
+
     const gradeCalcs =
       currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
-
     if (gradeCalcs && gradeCalcs.length > 0) {
-      const byType: Record<
-        string,
-        { points: number; possible: number; weight: string }
-      > = {};
-
-      gradeCalcs.forEach((calc) => {
-        if (calc._Type && calc._Type.toUpperCase() !== "TOTAL") {
-          byType[calc._Type] = {
-            points: 0,
-            possible: 0,
-            weight: calc._Weight || "0%",
-          };
-        }
-      });
-
-      workingAssignments.forEach((a) => {
-        const type = a._Type || "Other";
-        const { score, max } = extractScoreMax(a);
-        if (
-          score !== null &&
-          max !== null &&
-          Number.isFinite(score) &&
-          Number.isFinite(max) &&
-          max > 0
-        ) {
-          if (!byType[type]) {
-            byType[type] = { points: 0, possible: 0, weight: "0%" };
-          }
-          byType[type].points += score;
-          byType[type].possible += max;
-        }
-      });
-
-      const activeWeightSum = Object.values(byType).reduce((acc, v) => {
-        return v.possible > 0 ? acc + parseWeightString(v.weight) : acc;
-      }, 0);
-
-      let weightedTotal = 0;
-      if (activeWeightSum > 0) {
-        Object.values(byType).forEach((v) => {
-          if (v.possible > 0) {
-            const categoryPct = (v.points / v.possible) * 100;
-            const weightNum = parseWeightString(v.weight);
-            weightedTotal += (categoryPct * weightNum) / activeWeightSum;
-          }
-        });
+      const categories = getSynergyCourseAssignmentCategories(course);
+      if (categories && categories.length > 0) {
+        const pointsByCategory = getPointsByCategory(calculable);
+        const earned = Object.values(pointsByCategory).reduce(
+          (acc, v) => acc + v.pointsEarned,
+          0,
+        );
+        const possible = Object.values(pointsByCategory).reduce(
+          (acc, v) => acc + v.pointsPossible,
+          0,
+        );
+        const pct = calculateCourseGradePercentageFromCategories(
+          pointsByCategory,
+          categories,
+        );
+        return { earned, possible, pct };
       }
-
-      const totalEarned = Object.values(byType).reduce(
-        (acc, v) => acc + v.points,
-        0,
-      );
-      const totalPossible = Object.values(byType).reduce(
-        (acc, v) => acc + v.possible,
-        0,
-      );
-
-      return {
-        earned: totalEarned,
-        possible: totalPossible,
-        pct: Number.isFinite(weightedTotal) ? weightedTotal : NaN,
-      };
     }
 
-    let earned = 0;
-    let possible = 0;
-    workingAssignments.forEach((a) => {
-      const { score, max } = extractScoreMax(a);
-      if (
-        score !== null &&
-        max !== null &&
-        Number.isFinite(score) &&
-        Number.isFinite(max) &&
-        max > 0
-      ) {
-        earned += score;
-        possible += max;
-      }
-    });
-    const pct = possible > 0 ? (earned / possible) * 100 : NaN;
-    return { earned, possible, pct };
-  }, [workingAssignments, extractScoreMax, currentMark]);
+    const totals = getAssignmentPointTotals(calculable);
+    const pct = calculateCourseGradePercentageFromTotals(calculable);
+    return {
+      earned: totals.pointsEarned,
+      possible: totals.pointsPossible,
+      pct,
+    };
+  }, [effectiveAssignments, course, currentMark]);
 
   const hasRubric = React.useMemo(
-    () => workingAssignments.some((a) => isRubric(a)),
-    [workingAssignments, isRubric],
+    () => originalAssignments.some((a) => isRubric(a)),
+    [originalAssignments, isRubric],
   );
 
-  const simulatedLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
+  const courseCategories = React.useMemo(
+    () => getSynergyCourseAssignmentCategories(course) || [],
+    [course],
+  );
+
+  const handleCreateHypotheticalAssignment = React.useCallback(() => {
+    const gradeCalcs =
+      currentMark?.GradeCalculationSummary?.AssignmentGradeCalc || [];
+    const availableCategories =
+      gradeCalcs.length > 0
+        ? gradeCalcs.map((c) => c._Type)
+        : Array.from(new Set(originalAssignments.map((a) => a._Type)));
+
+    const defaultCategory = availableCategories[0] || "Assignment";
+    const newId = `hypo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const today = new Date().toISOString().split("T")[0];
+
+    const newAssignment: Assignment = {
+      _Date: today,
+      _DisplayScore: " / 100",
+      _DropEndDate: "",
+      _DropStartDate: "",
+      _DueDate: today,
+      _GradebookID: newId,
+      _HasDropBox: "false",
+      _Measure: "Hypothetical Assignment",
+      _MeasureDescription: "",
+      _Notes: "",
+      _Point: "",
+      _PointPossible: "100",
+      _Points: " / 100",
+      _Score: "",
+      _ScoreCalValue: "",
+      _ScoreMaxValue: "100",
+      _ScoreType: "Raw Score",
+      _StudentID: "",
+      _TeacherID: "",
+      _TimeSincePost: "Just now",
+      _TotalSecondsSincePost: "0",
+      _Type: defaultCategory,
+      Resources: {},
+      Standards: {},
+    };
+
+    setHypotheticalNewAssignments((prev) => [...prev, newAssignment]);
+  }, [currentMark, originalAssignments]);
+
   const calcGrades = loadCalculateGradesEnabled();
   let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
   let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw
     ? parseFloat(currentMark._CalculatedScoreRaw)
     : undefined;
-  if (hypotheticalMode) {
-    effectivePct = Number.isFinite(recalcTotals.pct)
-      ? recalcTotals.pct
-      : effectivePct;
-    effectiveLetter = simulatedLetter || effectiveLetter;
-  } else if (calcGrades) {
-    if (Number.isFinite(recalcTotals.pct)) {
-      effectivePct = recalcTotals.pct;
-      effectiveLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
-    }
-  } else if (hasRubric) {
+  if (calcGrades || hasRubric || hypotheticalMode) {
     if (Number.isFinite(recalcTotals.pct)) {
       effectivePct = recalcTotals.pct;
       effectiveLetter = numericToLetterGrade(Math.round(recalcTotals.pct));
     }
   }
-  const gradeColorClass = getGradeColor(
-    hypotheticalMode ? simulatedLetter || "" : effectiveLetter || "",
-  );
+  const gradeColorClass = getGradeColor(effectiveLetter || "");
 
-  const recalculatedBreakdown: AssignmentGradeCalc[] | null =
-    React.useMemo(() => {
-      if (
-        !hypotheticalMode ||
-        !currentMark?.GradeCalculationSummary?.AssignmentGradeCalc
-      )
-        return null;
-      const originals = currentMark.GradeCalculationSummary.AssignmentGradeCalc;
-      const byType: Record<
-        string,
-        { points: number; possible: number; weight: string }
-      > = {};
-      originals.forEach((o) => {
-        byType[o._Type] = { points: 0, possible: 0, weight: o._Weight };
-      });
-      workingAssignments.forEach((a) => {
-        const type = a._Type || "Other";
-        const { score, max } = extractScoreMax(a);
-        if (
-          score === null ||
-          max === null ||
-          !Number.isFinite(score) ||
-          !Number.isFinite(max) ||
-          max <= 0
-        )
-          return;
-        if (!byType[type]) {
-          const original = originals.find((o) => o._Type === type);
-          byType[type] = {
-            points: 0,
-            possible: 0,
-            weight: original?._Weight || "0%",
-          };
-        }
-        byType[type].points += score;
-        byType[type].possible += max;
-      });
-      const rows = Object.entries(byType).map(([type, v]) => {
-        const pct = v.possible > 0 ? (v.points / v.possible) * 100 : NaN;
-        const weightNum = parseWeightString(v.weight);
-        const weightedPct = Number.isFinite(pct) ? (pct * weightNum) / 100 : 0;
-        const mark = Number.isFinite(pct)
-          ? numericToLetterGrade(Math.round(pct))
-          : "Not graded";
-        return {
-          _Type: type,
-          _Points: v.points.toFixed(1),
-          _PointsPossible: v.possible.toFixed(1),
-          _Weight: v.weight,
-          _CalculatedMark: mark,
-          _WeightedPct: Number.isFinite(pct)
-            ? `${weightedPct.toFixed(1)}%`
-            : "—",
-        } as AssignmentGradeCalc;
-      });
-      return rows.filter((r) => r._Type.toUpperCase() !== "TOTAL");
-    }, [workingAssignments, currentMark, hypotheticalMode, extractScoreMax]);
-
-  const availableTypes = React.useMemo(() => {
-    const gradeCalcs =
-      hypotheticalMode && recalculatedBreakdown
-        ? recalculatedBreakdown
-        : currentMark?.GradeCalculationSummary?.AssignmentGradeCalc;
-
-    if (!gradeCalcs) return [];
-
-    return gradeCalcs
-      .map((calc) => calc._Type?.trim())
-      .filter((type): type is string => Boolean(type && type.length > 0))
-      .filter((type) => type.toUpperCase() !== "TOTAL");
-  }, [hypotheticalMode, recalculatedBreakdown, currentMark]);
-
-  const onUpdateAssignmentScore = React.useCallback(
-    (id: string, score: string, max: string) => {
-      setEditableAssignments((prev) =>
-        prev.map((a) =>
-          a._GradebookID === id
-            ? {
-                ...a,
-                _Score: score,
-                _ScoreMaxValue: max,
-                _Points:
-                  score && max && Number(max) > 0
-                    ? `${score} / ${max}`
-                    : a._Points,
-              }
-            : a,
-        ),
-      );
-    },
-    [],
-  );
-
-  const onEditAssignmentType = React.useCallback(
-    (id: string, newType: string) => {
-      setEditableAssignments((prev) =>
-        prev.map((a) => (a._GradebookID === id ? { ...a, _Type: newType } : a)),
-      );
-    },
-    [],
-  );
-
-  const onEditAssignmentName = React.useCallback((id: string, name: string) => {
-    setEditableAssignments((prev) =>
-      prev.map((a) => (a._GradebookID === id ? { ...a, _Measure: name } : a)),
-    );
-  }, []);
-
-  const onCreateHypothetical = React.useCallback(() => {
-    const newId = "hypo-" + Date.now().toString(36);
-    const defaultType = editableAssignments[0]?._Type || "Homework";
-    const newAssignment: Assignment = {
-      _Date: new Date().toISOString(),
-      _DisplayScore: "",
-      _DropEndDate: "",
-      _DropStartDate: "",
-      _DueDate: new Date().toISOString(),
-      _GradebookID: newId,
-      _HasDropBox: "false",
-      _Measure: "Untitled Assignment",
-      _MeasureDescription: "Hypothetical Assignment",
-      _Notes: "",
-      _Point: "",
-      _PointPossible: "",
-      _Points: "",
-      _Score: "",
-      _ScoreCalValue: "",
-      _ScoreMaxValue: "",
-      _ScoreType: "Score",
-      _StudentID: "",
-      _TeacherID: "",
-      _TimeSincePost: "0",
-      _TotalSecondsSincePost: "0",
-      _Type: defaultType,
-      Resources: {},
-      Standards: {},
-    };
-    setEditableAssignments((prev) => [newAssignment, ...prev]);
-    if (!hypotheticalMode) setHypotheticalMode(true);
-  }, [editableAssignments, hypotheticalMode]);
   const icon = getCourseIcon(course._ImageType);
 
   const getAssignmentTypeColor = (type: string) => {
@@ -436,10 +292,8 @@ export default function CourseDetail({
       isInitialMount.current = false;
       return;
     }
-    if (onStateChange) {
-      onStateChange(chartSticky, hypotheticalMode);
-    }
-  }, [chartSticky, hypotheticalMode, onStateChange]);
+    if (onStateChange) onStateChange(chartSticky);
+  }, [chartSticky, onStateChange]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
@@ -480,27 +334,19 @@ export default function CourseDetail({
                 <div
                   className={`inline-flex px-3 py-1.5 rounded-md text-base md:text-lg font-bold ${gradeColorClass}`}
                 >
-                  {hypotheticalMode
-                    ? simulatedLetter ||
-                      currentMark?._CalculatedScoreString ||
-                      "N/A"
-                    : effectiveLetter || "N/A"}
+                  {effectiveLetter || "N/A"}
                 </div>
                 <p className="text-xs md:text-sm text-gray-500 mt-1">
-                  {hypotheticalMode
-                    ? Number.isFinite(recalcTotals.pct)
-                      ? `${Math.round(recalcTotals.pct)}%`
-                      : "N/A"
-                    : effectivePct != null && Number.isFinite(effectivePct)
-                      ? `${Math.round(effectivePct)}%`
-                      : "N/A"}
+                  {effectivePct != null && Number.isFinite(effectivePct)
+                    ? `${Math.round(effectivePct)}%`
+                    : "N/A"}
                 </p>
               </div>
             </div>
             {!dontShowGradeCalcWarning &&
-              !hypotheticalMode &&
               !calcGrades &&
               !hasRubric &&
+              !hypotheticalMode &&
               Number.isFinite(recalcTotals.pct) &&
               currentMark?._CalculatedScoreRaw &&
               Math.round(recalcTotals.pct) !==
@@ -526,7 +372,8 @@ export default function CourseDetail({
             {chartSticky && (
               <div className="mt-2 -mb-2 -mx-1">
                 <GradeChart
-                  assignments={workingAssignments}
+                  assignments={effectiveAssignments}
+                  categories={courseCategories}
                   sticky={chartSticky}
                   onStickyChange={setChartSticky}
                   forceStickyInHeader
@@ -541,35 +388,26 @@ export default function CourseDetail({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
         {!chartSticky && (
           <GradeChart
-            assignments={workingAssignments}
+            assignments={effectiveAssignments}
+            categories={courseCategories}
             sticky={chartSticky}
             onStickyChange={setChartSticky}
           />
         )}
-        {hypotheticalMode && recalculatedBreakdown ? (
-          <GradeBreakdown calcs={recalculatedBreakdown} />
-        ) : (
-          currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
-            <GradeBreakdown
-              calcs={currentMark.GradeCalculationSummary.AssignmentGradeCalc}
-            />
-          )
-        )}
+        <GradeBreakdown
+          calcs={
+            currentMark?.GradeCalculationSummary?.AssignmentGradeCalc || []
+          }
+          assignments={effectiveAssignments}
+        />
         <AssignmentsTable
-          assignments={workingAssignments}
+          assignments={effectiveAssignments}
           getTypeColor={getAssignmentTypeColor}
-          onEditScore={onUpdateAssignmentScore}
           hypotheticalMode={hypotheticalMode}
           onToggleHypothetical={setHypotheticalMode}
-          onEditType={onEditAssignmentType}
-          onEditName={onEditAssignmentName}
-          onCreateHypothetical={onCreateHypothetical}
-          onDeleteHypothetical={(id) => {
-            setEditableAssignments((prev) =>
-              prev.filter((a) => a._GradebookID !== id),
-            );
-          }}
-          availableTypes={availableTypes}
+          onEditScore={handleHypotheticalScoreChange}
+          onEditCategory={handleHypotheticalCategoryChange}
+          onCreateAssignment={handleCreateHypotheticalAssignment}
         />
       </div>
     </div>

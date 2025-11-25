@@ -41,14 +41,9 @@ function GradebookPageContent() {
 
   const initialCourseId = searchParams.get("course");
   const initialSticky = searchParams.get("sticky") === "1";
-  const initialHypothetical = searchParams.get("hypothetical") === "1";
 
   const updateURL = useCallback(
-    (params: {
-      courseId?: string | null;
-      sticky?: boolean;
-      hypothetical?: boolean;
-    }) => {
+    (params: { courseId?: string | null; sticky?: boolean }) => {
       const current = new URLSearchParams(searchParams.toString());
 
       if (params.courseId) {
@@ -62,14 +57,6 @@ function GradebookPageContent() {
           current.set("sticky", "1");
         } else {
           current.delete("sticky");
-        }
-      }
-
-      if (params.hypothetical !== undefined) {
-        if (params.hypothetical) {
-          current.set("hypothetical", "1");
-        } else {
-          current.delete("hypothetical");
         }
       }
 
@@ -269,16 +256,14 @@ function GradebookPageContent() {
 
   const handleBack = useCallback(() => {
     setSelectedCourse(null);
-    updateURL({ courseId: null, sticky: false, hypothetical: false });
+    updateURL({ courseId: null, sticky: false });
   }, [updateURL]);
 
   const handleStateChange = useCallback(
-    (sticky: boolean, hypothetical: boolean) => {
+    (sticky: boolean) => {
       const currentSticky = searchParams.get("sticky") === "1";
-      const currentHypothetical = searchParams.get("hypothetical") === "1";
-
-      if (sticky !== currentSticky || hypothetical !== currentHypothetical) {
-        updateURL({ sticky, hypothetical });
+      if (sticky !== currentSticky) {
+        updateURL({ sticky });
       }
     },
     [searchParams, updateURL],
@@ -392,7 +377,6 @@ function GradebookPageContent() {
         course={selectedCourse}
         onBack={handleBack}
         initialSticky={initialSticky}
-        initialHypothetical={initialHypothetical}
         onStateChange={handleStateChange}
       />
     );

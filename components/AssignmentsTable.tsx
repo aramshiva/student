@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Assignment } from "@/types/gradebook";
-import { formatDate, calculatePercentage } from "@/utils/gradebook";
+import { formatDate } from "@/utils/gradebook";
 import {
   ColumnDef,
   SortingState,
@@ -13,9 +13,9 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   useReactTable,
+  Row,
 } from "@tanstack/react-table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowUpDown, Trash2 } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,97 +36,162 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "./ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "./ui/select";
+import { getGradeColor, numericToLetterGrade } from "@/utils/gradebook";
 import Link from "next/link";
-
-const NameEditor: React.FC<{
-  initial: string;
-  assignmentId: string;
-  draftNamesRef: React.MutableRefObject<Record<string, string>>;
-  setDraftNames: React.Dispatch<React.SetStateAction<Record<string, string>>>;
-  onEditName?: (id: string, name: string) => void;
-  originalMeasure: string;
-}> = ({
-  initial,
-  assignmentId,
-  draftNamesRef,
-  setDraftNames,
-  onEditName,
-  originalMeasure,
-}) => {
-  const [localName, setLocalName] = React.useState(initial);
-  const inputRef = React.useRef<HTMLInputElement | null>(null);
-  React.useEffect(() => {
-    const committed = draftNamesRef.current[assignmentId];
-    if (
-      committed != null &&
-      committed !== localName &&
-      document.activeElement !== inputRef.current
-    ) {
-      setLocalName(committed);
-    }
-  }, [assignmentId, draftNamesRef, localName]);
-  const commit = React.useCallback(() => {
-    const latest = inputRef.current?.value ?? localName;
-    const committed = draftNamesRef.current[assignmentId] ?? originalMeasure;
-    if (latest !== committed) {
-      setDraftNames((prev) => ({ ...prev, [assignmentId]: latest }));
-      onEditName?.(assignmentId, latest);
-    }
-  }, [
-    assignmentId,
-    localName,
-    onEditName,
-    originalMeasure,
-    setDraftNames,
-    draftNamesRef,
-  ]);
-  return (
-    <Input
-      ref={inputRef}
-      type="text"
-      defaultValue={localName}
-      onChange={(e) => setLocalName(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          commit();
-          (e.target as HTMLInputElement).blur();
-        } else if (e.key === "Escape") {
-          const committed =
-            draftNamesRef.current[assignmentId] ?? originalMeasure;
-          setLocalName(committed);
-          (e.target as HTMLInputElement).blur();
-        }
-      }}
-      placeholder="Assignment name"
-    />
-  );
-};
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AssignmentsTableProps {
   assignments: Assignment[];
   getTypeColor: (type: string) => string;
   onEditScore?: (id: string, score: string, max: string) => void;
-  hypotheticalMode?: boolean;
-  onToggleHypothetical?: (val: boolean) => void;
   onEditType?: (id: string, newType: string) => void;
   onEditName?: (id: string, name: string) => void;
-  onCreateHypothetical?: () => void;
-  onDeleteHypothetical?: (id: string) => void;
   availableTypes?: string[];
+  hypotheticalMode?: boolean;
+  onToggleHypothetical?: (enabled: boolean) => void;
+  onCreateAssignment?: () => void;
+  onEditCategory?: (id: string, category: string) => void;
+}
+
+function ScoreEditor({
+  assignmentId,
+  draftScoresRef,
+  setDraftScores,
+  onEditScoreRef,
+  debounceTimers,
+}: {
+  assignmentId: string;
+  draftScoresRef: React.MutableRefObject<
+    Record<string, { score: string; max: string }>
+  >;
+  setDraftScores: React.Dispatch<
+    React.SetStateAction<Record<string, { score: string; max: string }>>
+  >;
+  onEditScoreRef: React.MutableRefObject<
+    ((id: string, score: string, max: string) => void) | undefined
+  >;
+  debounceTimers: React.MutableRefObject<
+    Record<string, ReturnType<typeof setTimeout>>
+  >;
+}) {
+  const draft = draftScoresRef.current[assignmentId];
+
+  if (!draft) return null;
+
+  return (
+    <div className="flex gap-1 items-center">
+      <Input
+        type="text"
+        inputMode="decimal"
+        pattern="[0-9]*\.?[0-9]*"
+        defaultValue={draft.score}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (val !== "" && !/^[0-9]*\.?[0-9]*$/.test(val)) {
+            return;
+          }
+          const currentMax =
+            draftScoresRef.current[assignmentId]?.max || draft.max;
+          setDraftScores((prev) => ({
+            ...prev,
+            [assignmentId]: { ...prev[assignmentId], score: val },
+          }));
+
+          if (debounceTimers.current[assignmentId]) {
+            clearTimeout(debounceTimers.current[assignmentId]);
+          }
+
+          debounceTimers.current[assignmentId] = setTimeout(() => {
+            onEditScoreRef.current?.(assignmentId, val, currentMax);
+          }, 500);
+        }}
+        onFocus={() => {
+          if (debounceTimers.current[assignmentId]) {
+            clearTimeout(debounceTimers.current[assignmentId]);
+          }
+        }}
+        className="h-7 w-16 text-xs"
+      />
+      <span className="text-xs text-gray-500">/</span>
+      <Input
+        type="text"
+        inputMode="decimal"
+        pattern="[0-9]*\.?[0-9]*"
+        defaultValue={draft.max}
+        onChange={(e) => {
+          const val = e.target.value;
+          if (val !== "" && !/^[0-9]*\.?[0-9]*$/.test(val)) {
+            return;
+          }
+          const currentScore =
+            draftScoresRef.current[assignmentId]?.score || draft.score;
+          setDraftScores((prev) => ({
+            ...prev,
+            [assignmentId]: { ...prev[assignmentId], max: val },
+          }));
+
+          if (debounceTimers.current[assignmentId]) {
+            clearTimeout(debounceTimers.current[assignmentId]);
+          }
+
+          debounceTimers.current[assignmentId] = setTimeout(() => {
+            onEditScoreRef.current?.(assignmentId, currentScore, val);
+          }, 500);
+        }}
+        onFocus={() => {
+          if (debounceTimers.current[assignmentId]) {
+            clearTimeout(debounceTimers.current[assignmentId]);
+          }
+        }}
+        className="h-7 w-16 text-xs"
+      />
+    </div>
+  );
+}
+
+function CategoryEditor({
+  assignmentId,
+  currentCategory,
+  availableCategories,
+  onEditCategoryRef,
+  getTypeColor,
+}: {
+  assignmentId: string;
+  currentCategory: string;
+  availableCategories: string[];
+  onEditCategoryRef: React.MutableRefObject<
+    ((id: string, category: string) => void) | undefined
+  >;
+  getTypeColor: (type: string) => string;
+}) {
+  const [value, setValue] = React.useState(currentCategory);
+
+  return (
+    <select
+      value={value}
+      onChange={(e) => {
+        const newCat = e.target.value;
+        setValue(newCat);
+        onEditCategoryRef.current?.(assignmentId, newCat);
+      }}
+      className={`text-xs px-2 py-1 rounded-md border ${getTypeColor(value)}`}
+    >
+      {availableCategories.map((cat) => (
+        <option key={cat} value={cat}>
+          {cat}
+        </option>
+      ))}
+    </select>
+  );
 }
 
 function AssignmentsTableBase({
@@ -135,12 +200,16 @@ function AssignmentsTableBase({
   onEditScore,
   hypotheticalMode = false,
   onToggleHypothetical,
-  onEditType,
-  onEditName,
-  onCreateHypothetical,
-  onDeleteHypothetical,
-  availableTypes,
+  onEditCategory,
+  onCreateAssignment,
 }: AssignmentsTableProps) {
+  const availableCategories = React.useMemo(
+    () =>
+      Array.from(
+        new Set(assignments.map((a) => a._Type).filter(Boolean)),
+      ).sort(),
+    [assignments],
+  );
   const isRubric = React.useCallback(
     (a: Pick<Assignment, "_ScoreType"> | Assignment | undefined | null) =>
       !!a && /rubric/i.test(a._ScoreType || ""),
@@ -176,17 +245,6 @@ function AssignmentsTableBase({
     [],
   );
 
-  const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
-  const toggleExpanded = React.useCallback((id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-  const SHOULD_TRUNCATE_THRESHOLD = 120;
-
   const [draftScores, setDraftScores] = React.useState<
     Record<string, { score: string; max: string }>
   >({});
@@ -196,7 +254,16 @@ function AssignmentsTableBase({
   const debounceTimers = React.useRef<
     Record<string, ReturnType<typeof setTimeout>>
   >({});
-  const DEBOUNCE_MS = 500;
+  const onEditScoreRef = React.useRef(onEditScore);
+  const onEditCategoryRef = React.useRef(onEditCategory);
+
+  React.useEffect(() => {
+    onEditScoreRef.current = onEditScore;
+  }, [onEditScore]);
+
+  React.useEffect(() => {
+    onEditCategoryRef.current = onEditCategory;
+  }, [onEditCategory]);
   React.useEffect(() => {
     setDraftScores((prev) => {
       const next = { ...prev };
@@ -227,32 +294,6 @@ function AssignmentsTableBase({
     });
   }, [assignments, isRubric]);
 
-  const flushUpdate = React.useCallback(
-    (id: string) => {
-      const data = draftScoresRef.current[id];
-      if (!data) return;
-      const assignment = assignments.find((a) => a._GradebookID === id);
-      const forceMax = assignment && isRubric(assignment) ? "4" : data.max;
-      onEditScore?.(id, data.score, forceMax);
-    },
-    [onEditScore, assignments, isRubric],
-  );
-
-  const handleDraftChange = React.useCallback(
-    (id: string, field: "score" | "max", value: string) => {
-      setDraftScores((prev) => {
-        const cur = prev[id] || { score: "", max: "" };
-        const next = { ...prev, [id]: { ...cur, [field]: value } };
-        return next;
-      });
-      if (debounceTimers.current[id]) clearTimeout(debounceTimers.current[id]);
-      debounceTimers.current[id] = setTimeout(() => {
-        flushUpdate(id);
-      }, DEBOUNCE_MS);
-    },
-    [flushUpdate],
-  );
-
   const draftScoresRef = React.useRef(draftScores);
   React.useEffect(() => {
     draftScoresRef.current = draftScores;
@@ -273,148 +314,90 @@ function AssignmentsTableBase({
     };
   }, [onEditScore]);
 
+  const [expandedDesc, setExpandedDesc] = React.useState<
+    Record<string, boolean>
+  >({});
+
+  const getScoreAndMax = React.useCallback(
+    (a: Assignment): { score: number; max: number } | null => {
+      const parseFraction = (
+        s: string | undefined,
+      ): { s: number; p: number } | null => {
+        if (!s) return null;
+        const cleaned = s.replace(/of/gi, "/").trim();
+        const m = cleaned.match(/([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/);
+        return m ? { s: parseFloat(m[1]), p: parseFloat(m[2]) } : null;
+      };
+      let score = a._Score ? parseFloat(a._Score) : NaN;
+      let max = a._ScoreMaxValue
+        ? parseFloat(a._ScoreMaxValue)
+        : a._PointPossible
+          ? parseFloat(a._PointPossible)
+          : NaN;
+      if (
+        (!Number.isFinite(score) || !Number.isFinite(max)) &&
+        a._DisplayScore
+      ) {
+        const frac = parseFraction(a._DisplayScore);
+        if (frac) {
+          score = frac.s;
+          max = frac.p;
+        }
+      }
+      if ((!Number.isFinite(score) || !Number.isFinite(max)) && a._Points) {
+        const frac = parseFraction(a._Points);
+        if (frac) {
+          score = frac.s;
+          max = frac.p;
+        }
+      }
+      if (!Number.isFinite(score) || !Number.isFinite(max) || max <= 0)
+        return null;
+      return { score, max };
+    },
+    [],
+  );
+
+  const deltas = React.useMemo(() => {
+    const chronological = [...assignments].sort(
+      (a, b) => new Date(a._Date).getTime() - new Date(b._Date).getTime(),
+    );
+    let earned = 0;
+    let possible = 0;
+    let prevAvg = 0;
+    const map: Record<string, number> = {};
+    chronological.forEach((a) => {
+      const parts = getScoreAndMax(a);
+      if (!parts) {
+        map[a._GradebookID] = NaN;
+        return;
+      }
+      earned += parts.score;
+      possible += parts.max;
+      const newAvg = possible > 0 ? (earned / possible) * 100 : prevAvg;
+      const delta = newAvg - prevAvg;
+      map[a._GradebookID] = delta;
+      prevAvg = newAvg;
+    });
+    return map;
+  }, [assignments, getScoreAndMax]);
+
+  const assignmentPercents = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    assignments.forEach((a) => {
+      const parts = getScoreAndMax(a);
+      if (!parts) {
+        map[a._GradebookID] = NaN;
+      } else {
+        map[a._GradebookID] =
+          parts.max > 0 ? (parts.score / parts.max) * 100 : NaN;
+      }
+    });
+    return map;
+  }, [assignments, getScoreAndMax]);
+
   const columns: ColumnDef<Assignment>[] = React.useMemo(
     () => [
-      {
-        id: "measure",
-        accessorFn: (row) => row._Measure,
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Assignment <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => {
-          const a = row.original;
-          const originalMeasure = decodeEntities(a._Measure);
-          const globalDraft = draftNames[a._GradebookID];
-          const renamed = globalDraft ?? originalMeasure;
-          const desc = a._MeasureDescription
-            ? decodeEntities(a._MeasureDescription)
-            : "";
-          const id = String(a._GradebookID ?? row.id);
-          const isExpanded = expanded.has(id);
-          const shouldTruncate =
-            !isExpanded && desc && desc.length > SHOULD_TRUNCATE_THRESHOLD;
-          return (
-            <div className="max-w-[16rem] md:max-w-[21rem] xl:max-w-[26rem] space-y-1 pl-5">
-              {hypotheticalMode ? (
-                <NameEditor
-                  initial={renamed}
-                  assignmentId={a._GradebookID}
-                  draftNamesRef={draftNamesRef}
-                  setDraftNames={setDraftNames}
-                  onEditName={onEditName}
-                  originalMeasure={originalMeasure}
-                />
-              ) : (
-                <div className="font-medium text-black dark:text-white break-words whitespace-pre-line leading-snug">
-                  {originalMeasure}
-                </div>
-              )}
-              {desc && (
-                <div className="relative group">
-                  <div
-                    className={
-                      `text-sm text-gray-500 break-words whitespace-pre-line leading-snug transition-all` +
-                      (shouldTruncate ? " line-clamp-2 overflow-hidden" : "")
-                    }
-                    style={
-                      shouldTruncate
-                        ? ({
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                          } as React.CSSProperties)
-                        : undefined
-                    }
-                  >
-                    {desc}
-                  </div>
-                  {shouldTruncate && (
-                    <div className="absolute bottom-0 right-0 flex items-end justify-end pl-4 text-xs bg-gradient-to-l from-white via-white/80 to-transparent dark:from-neutral-900 dark:via-neutral-900 dark:to-transparent h-6">
-                      <button
-                        type="button"
-                        onClick={() => toggleExpanded(id)}
-                        className="hover:cursor-pointer px-1 py-0.5 rounded text-gray-500 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300"
-                        aria-label="Expand full description"
-                      >
-                        …
-                      </button>
-                    </div>
-                  )}
-                  {desc &&
-                    !shouldTruncate &&
-                    desc.length > SHOULD_TRUNCATE_THRESHOLD && (
-                      <button
-                        type="button"
-                        onClick={() => toggleExpanded(id)}
-                        className="mt-1 text-xs text-blue-600 hover:underline focus:outline-none"
-                        aria-label="Collapse description"
-                      >
-                        Collapse
-                      </button>
-                    )}
-                </div>
-              )}
-            </div>
-          );
-        },
-      },
-      {
-        id: "type",
-        accessorFn: (row) => row._Type,
-        header: "Type",
-        cell: ({ row }) => {
-          const assignmentTypes = Array.from(
-            new Set(
-              assignments
-                .map((a) => (a._Type || "").trim())
-                .filter((t) => t.length > 0),
-            ),
-          );
-
-          const allTypes =
-            availableTypes && availableTypes.length > 0
-              ? availableTypes
-              : assignmentTypes;
-
-          const curType =
-            row.original._Type && row.original._Type.trim().length > 0
-              ? row.original._Type
-              : allTypes[0] || "";
-
-          if (!hypotheticalMode || allTypes.length < 2) {
-            return (
-              <Badge className={`${getTypeColor(curType || "Uncategorized")}`}>
-                {curType || "Uncategorized"}
-              </Badge>
-            );
-          }
-
-          return (
-            <Select
-              value={curType}
-              onValueChange={(val) =>
-                onEditType?.(row.original._GradebookID, val)
-              }
-            >
-              <SelectTrigger size="sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {allTypes.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          );
-        },
-      },
       {
         id: "date",
         accessorFn: (row) => row._Date,
@@ -438,204 +421,215 @@ function AssignmentsTableBase({
         ),
       },
       {
-        id: "score",
-        header: "Score",
-        enableSorting: false,
+        id: "measure",
+        accessorFn: (row) => row._Measure,
+        header: "Assignment",
         cell: ({ row }) => {
           const a = row.original;
+          const originalMeasure = decodeEntities(a._Measure);
+          const desc = decodeEntities(a._MeasureDescription);
+          const DESCRIPTION_TRUNCATE_LENGTH = 160; // character threshold for truncation
+          const shouldTruncate =
+            desc && desc.length > DESCRIPTION_TRUNCATE_LENGTH;
           const id = a._GradebookID;
-          const ds = draftScoresRef.current[id];
-          const draft = ds || {
-            score: a._Score ?? "",
-            max: a._ScoreMaxValue ?? a._PointPossible ?? "",
-          };
-          const rubric = isRubric(a);
-          if (!hypotheticalMode) {
-            return (
-              <div className="text-sm">
-                <Link
-                  href={`/gradebook/${a._GradebookID}`}
-                  className="font-medium text-black dark:text-white hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-sm"
-                >
-                  {rubric
-                    ? a._Score || a._ScoreCalValue || "View"
-                    : a._DisplayScore || "View"}
-                </Link>
-              </div>
-            );
-          }
+          const isExpanded = expandedDesc[id];
           return (
-            <div className="flex items-center gap-1 text-sm w-[130px] text-black dark:text-white">
-              <Input
-                type="number"
-                className="w-16 p-1"
-                defaultValue={draft.score}
-                onChange={(e) => handleDraftChange(id, "score", e.target.value)}
-                onBlur={() => flushUpdate(id)}
-                aria-label="Score"
-                min={0}
-                step={rubric ? 1 : 0.01}
-              />
-              <span className="text-gray-500">/</span>
-              <Input
-                type="number"
-                className="w-16 p-1"
-                defaultValue={rubric ? "4" : draft.max}
-                disabled={rubric}
-                onChange={(e) =>
-                  !rubric && handleDraftChange(id, "max", e.target.value)
-                }
-                onBlur={() => flushUpdate(id)}
-                aria-label="Maximum points"
-                min={1}
-                step={rubric ? 1 : 0.01}
-              />
+            <div className="space-y-1">
+              <div className="font-medium text-black dark:text-white break-words whitespace-pre-line leading-snug">
+                {originalMeasure}
+              </div>
+              {desc && desc.trim().length > 0 ? (
+                <div
+                  className="hidden md:block text-xs text-gray-600 dark:text-gray-400 break-words whitespace-pre-line"
+                  title={shouldTruncate && !isExpanded ? desc : undefined}
+                  style={
+                    shouldTruncate && !isExpanded
+                      ? {
+                          display: "-webkit-box",
+                          WebkitLineClamp: 4,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }
+                      : undefined
+                  }
+                >
+                  {desc}
+                </div>
+              ) : null}
+              {shouldTruncate ? (
+                !isExpanded ? (
+                  <button
+                    type="button"
+                    aria-label="Expand full description"
+                    onClick={() =>
+                      setExpandedDesc((prev) => ({ ...prev, [id]: true }))
+                    }
+                    className="hidden md:inline text-[11px] text-black cursor-pointer hover:underline focus:outline-none"
+                  >
+                    … Show more
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    aria-label="Collapse description"
+                    onClick={() =>
+                      setExpandedDesc((prev) => ({ ...prev, [id]: false }))
+                    }
+                    className="hidden md:inline text-[11px] text-black cursor-pointer hover:underline focus:outline-none"
+                  >
+                    Show less
+                  </button>
+                )
+              ) : null}
             </div>
           );
         },
       },
       {
-        id: "percentage",
-        header: "Percentage",
-        sortingFn: (a, b) => {
-          const pctFrom = (
-            row: import("@tanstack/react-table").Row<Assignment>,
-          ) => {
-            const ra = row.original;
-            const rubric = isRubric(ra);
-            const usePoints =
-              (hypotheticalMode &&
-                typeof ra._Points === "string" &&
-                ra._Points.includes("/")) ||
-              rubric;
-            let score: number | undefined = undefined;
-            let max: number | undefined = undefined;
-            if (usePoints) {
-              const src = ra._Points && ra._Points.replace(/of/i, "/");
-              if (src) {
-                const m = src.match(
-                  /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
-                );
-                if (m) {
-                  score = parseFloat(m[1]);
-                  max = parseFloat(m[2]);
-                }
-              }
-            }
-            if (
-              score == null ||
-              max == null ||
-              !Number.isFinite(score) ||
-              !Number.isFinite(max)
-            ) {
-              score = Number(ra._Score);
-              max = rubric ? 4 : Number(ra._ScoreMaxValue);
-            }
-            return calculatePercentage(score, max);
-          };
-          const pctA = pctFrom(a);
-          const pctB = pctFrom(b);
-          return pctA === pctB ? 0 : pctA < pctB ? -1 : 1;
-        },
+        id: "type",
+        accessorFn: (row) => row._Type,
+        header: "Type",
         cell: ({ row }) => {
           const a = row.original;
-          const rubric = isRubric(a);
-          const usePoints =
-            (hypotheticalMode &&
-              typeof a._Points === "string" &&
-              a._Points.includes("/")) ||
-            rubric;
-          let rawScore: number | undefined = undefined;
-          let rawMax: number | undefined = undefined;
-          if (usePoints) {
-            const cleaned = a._Points && a._Points.replace(/of/i, "/");
-            if (cleaned) {
-              const m = cleaned.match(
-                /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
-              );
-              if (m) {
-                rawScore = parseFloat(m[1]);
-                rawMax = parseFloat(m[2]);
-              }
-            }
-          }
-          if (
-            rawScore == null ||
-            rawMax == null ||
-            !Number.isFinite(rawScore) ||
-            !Number.isFinite(rawMax)
-          ) {
-            rawScore = Number(a._Score);
-            rawMax = rubric ? 4 : Number(a._ScoreMaxValue);
-          }
-          const pct = calculatePercentage(rawScore, rawMax);
-          const invalid =
-            !Number.isFinite(rawScore) ||
-            !Number.isFinite(rawMax) ||
-            rawMax === 0 ||
-            Number.isNaN(pct);
-          if (invalid) {
+          const curType = (a._Type || "").trim();
+
+          if (hypotheticalMode && availableCategories.length > 0) {
             return (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500" title="Not graded yet">
-                  Not graded
-                </span>
-              </div>
+              <CategoryEditor
+                assignmentId={a._GradebookID}
+                currentCategory={curType}
+                availableCategories={availableCategories}
+                onEditCategoryRef={onEditCategoryRef}
+                getTypeColor={getTypeColor}
+              />
             );
           }
+
           return (
-            <div className="flex items-center space-x-2">
-              <div
-                className="flex-1 bg-gray-200 rounded-full h-2"
-                aria-hidden="true"
+            <Badge className={`${getTypeColor(curType || "Uncategorized")}`}>
+              {curType || "Uncategorized"}
+            </Badge>
+          );
+        },
+      },
+      {
+        id: "score",
+        header: "Score",
+        cell: ({ row }) => {
+          const a = row.original;
+          const assignmentId = a._GradebookID;
+          const display = a._DisplayScore || a._Score || "—";
+
+          if (!hypotheticalMode) {
+            return assignmentId ? (
+              <Link
+                href={`/gradebook/${assignmentId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open grade details for assignment ${assignmentId} in a new tab`}
+                className="text-sm text-black dark:text-white hover:underline focus:outline-none"
               >
+                {display}
+              </Link>
+            ) : (
+              <span className="text-sm text-black dark:text-white">
+                {display}
+              </span>
+            );
+          }
+
+          return (
+            <ScoreEditor
+              assignmentId={assignmentId}
+              draftScoresRef={draftScoresRef}
+              setDraftScores={setDraftScores}
+              onEditScoreRef={onEditScoreRef}
+              debounceTimers={debounceTimers}
+            />
+          );
+        },
+      },
+      {
+        id: "progress",
+        header: "Percentage",
+        accessorFn: (row) => assignmentPercents[row._GradebookID],
+        sortingFn: (
+          a: Row<Assignment>,
+          b: Row<Assignment>,
+          columnId: string,
+        ) => {
+          const av = Number(a.getValue(columnId));
+          const bv = Number(b.getValue(columnId));
+          if (isNaN(av) && isNaN(bv)) return 0;
+          if (isNaN(av)) return 1;
+          if (isNaN(bv)) return -1;
+          return av === bv ? 0 : av < bv ? -1 : 1;
+        },
+        cell: ({ row }) => {
+          const pct = assignmentPercents[row.original._GradebookID];
+          if (pct == null || isNaN(pct)) {
+            return <span className="text-sm text-gray-400">—</span>;
+          }
+          const letter = numericToLetterGrade(Math.round(pct));
+          getGradeColor(letter);
+          const letterBarMap: Record<string, string> = {
+            A: "bg-green-600 dark:bg-green-700",
+            "A-": "bg-green-600 dark:bg-green-700",
+            P: "bg-green-600 dark:bg-green-700",
+            "A+": "bg-green-600 dark:bg-green-700",
+            B: "bg-blue-600 dark:bg-blue-700",
+            "B-": "bg-blue-600 dark:bg-blue-700",
+            "B+": "bg-blue-600 dark:bg-blue-700",
+            C: "bg-yellow-500 dark:bg-yellow-600",
+            "C-": "bg-yellow-500 dark:bg-yellow-600",
+            "C+": "bg-yellow-500 dark:bg-yellow-600",
+            D: "bg-orange-500 dark:bg-orange-600",
+            "D-": "bg-orange-500 dark:bg-orange-600",
+            "D+": "bg-orange-500 dark:bg-orange-600",
+            F: "bg-red-600 dark:bg-red-700",
+            E: "bg-red-600 dark:bg-red-700",
+          };
+          const barFill =
+            letterBarMap[letter] || "bg-gray-500 dark:bg-gray-600";
+          const width = Math.max(0, Math.min(100, pct));
+          return (
+            <div
+              className="flex items-center gap-2"
+              aria-label={`Assignment scored ${pct.toFixed(
+                1,
+              )} percent (${letter})`}
+            >
+              <div className="h-2 w-16 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
                 <div
-                  className={`h-2 rounded-full ${
-                    pct >= 90
-                      ? "bg-green-500"
-                      : pct >= 80
-                        ? "bg-blue-500"
-                        : pct >= 70
-                          ? "bg-yellow-500"
-                          : pct >= 60
-                            ? "bg-orange-500"
-                            : "bg-red-500"
-                  }`}
-                  style={{ width: `${Math.min(pct, 100)}%` }}
+                  className={`h-2 transition-all duration-300 ${barFill}`}
+                  style={{ width: `${width}%` }}
                 />
               </div>
-              <span className="text-black dark:text-white text-sm font-medium min-w-[3rem]">
-                {pct}%
+              <span className="text-xs text-gray-600 dark:text-gray-400 tabular-nums">
+                {Math.round(pct)}%
               </span>
             </div>
           );
         },
       },
       {
-        id: "dueDate",
-        accessorFn: (row) => row._DueDate,
-        header: "Due Date",
+        id: "scoreType",
+        header: "Score Type",
+        cell: ({ row }) => (
+          <span className="text-sm text-black dark:text-white">
+            {row.original._ScoreType || "—"}
+          </span>
+        ),
+      },
+      {
+        id: "points",
+        header: "Points",
         cell: ({ row }) => {
-          const rawDue = row.original._DueDate;
-          let label = formatDate(rawDue);
-          try {
-            const endStr = localStorage.getItem("Student.reportingPeriodEnd") || "";
-            if (endStr) {
-              const due = new Date(rawDue);
-              const end = new Date(endStr);
-              const now = new Date();
-              const sameDay =
-                due.getFullYear() === end.getFullYear() &&
-                due.getMonth() === end.getMonth() &&
-                due.getDate() === end.getDate();
-              if (sameDay && due >= new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
-                label = "Not due";
-              }
-            }
-          } catch {}
+          const raw = (row.original._Points || "").trim();
+          const display = raw || "—";
           return (
-            <span className="text-sm text-black dark:text-white">
-              {label}
+            <span className="text-sm text-black dark:text-white ">
+              {display}
             </span>
           );
         },
@@ -646,112 +640,72 @@ function AssignmentsTableBase({
         header: "Notes",
         cell: ({ row }) => {
           const decoded = decodeEntities(row.original._Notes);
-          const lower = decoded.trim().toLowerCase();
-          const isMissing = lower === "missing";
           return (
             <span className="text-sm text-black dark:text-white break-words whitespace-pre-line">
               {decoded}
-              {isMissing && (
-                <div
-                  className={`text-sm ${
-                    isMissing ? "text-red-600" : "text-blue-600"
-                  } italic break-words whitespace-pre-line leading-snug`}
-                >
-                  Note: {decoded}
-                </div>
-              )}
             </span>
           );
         },
       },
       {
-        id: "points",
-        header: "Points",
+        id: "delta",
+        header: "Delta",
+        sortingFn: (
+          a: Row<Assignment>,
+          b: Row<Assignment>,
+          columnId: string,
+        ) => {
+          const av = Number(a.getValue(columnId));
+          const bv = Number(b.getValue(columnId));
+          if (isNaN(av) && isNaN(bv)) return 0;
+          if (isNaN(av)) return 1;
+          if (isNaN(bv)) return -1;
+          return av === bv ? 0 : av < bv ? -1 : 1;
+        },
+        accessorFn: (row) => deltas[row._GradebookID],
         cell: ({ row }) => {
-          const a = row.original;
-          const rubric = isRubric(a);
-          let display: string | null = null;
-          const rawPts = typeof a._Points === "string" ? a._Points.trim() : "";
-          if (rawPts) {
-            const normalized = rawPts
-              .replace(/\s*\/\s*/g, " / ")
-              .replace(/\s{2,}/g, " ")
-              .trim();
-            if (rubric) {
-              const m = normalized.match(/([0-9]+(?:\.[0-9]+)?)/);
-              display = m ? m[1] : normalized;
-            } else {
-              display = /\bpts?\b|\bpoints?\b/i.test(normalized)
-                ? normalized
-                : `${normalized}`;
-            }
-          } else {
-            const s = a._Score?.toString().trim();
-            const m = (a._ScoreMaxValue || a._PointPossible || "")
-              .toString()
-              .trim();
-            if (rubric) {
-              if (s) display = `${parseFloat(s).toFixed(2)}`;
-            } else {
-              if (s && m)
-                display = `${parseFloat(s).toFixed(2)} / ${parseFloat(m).toFixed(2)}`;
-              else if (s) display = `${parseFloat(s).toFixed(2)}`;
-            }
+          const delta = deltas[row.original._GradebookID];
+          if (delta == null || isNaN(delta)) {
+            return (
+              <span
+                className="text-sm text-gray-400"
+                title="No score change data"
+              >
+                —
+              </span>
+            );
           }
-          if (!display) display = "—";
+          const EPS = 0.05; // treat very small magnitudes as zero to avoid -0.0%
+          const adj = Math.abs(delta) < EPS ? 0 : delta;
+          const signPrefixed =
+            adj === 0
+              ? `${adj.toFixed(1)}%`
+              : (adj > 0 ? "+" : "") + adj.toFixed(1) + "%";
+          const colorClass =
+            adj > 0
+              ? "text-green-600"
+              : adj < 0
+                ? "text-red-600"
+                : "text-gray-600";
           return (
-            <span className="text-sm text-black dark:text-white ">
-              {display}
+            <span
+              className={`text-sm font-medium ${colorClass}`}
+              title="Impact on overall % after this assignment"
+            >
+              {signPrefixed}
             </span>
-          );
-        },
-      },
-      {
-        id: "actions",
-        header: "",
-        enableSorting: false,
-        cell: ({ row }) => {
-          const a = row.original;
-          const isHypo =
-            typeof a._GradebookID === "string" &&
-            a._GradebookID.startsWith("hypo-");
-          if (!hypotheticalMode || !isHypo) return null;
-          return (
-            <div className="flex justify-end pr-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-gray-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={() => onDeleteHypothetical?.(a._GradebookID)}
-                    aria-label="Delete hypothetical assignment"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Delete</TooltipContent>
-              </Tooltip>
-            </div>
           );
         },
       },
     ],
     [
       decodeEntities,
-      expanded,
-      hypotheticalMode,
       getTypeColor,
-      toggleExpanded,
-      handleDraftChange,
-      flushUpdate,
-      draftNames,
-      assignments,
-      onEditType,
-      onEditName,
-      onDeleteHypothetical,
-      isRubric,
-      availableTypes,
+      expandedDesc,
+      deltas,
+      assignmentPercents,
+      hypotheticalMode,
+      availableCategories,
     ],
   );
 
@@ -781,37 +735,30 @@ function AssignmentsTableBase({
         <CardTitle>Assignments ({assignments.length})</CardTitle>
         <CardDescription>List of all assignments</CardDescription>
         <CardAction>
-          <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="flex items-center gap-2 whitespace-nowrap">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {hypotheticalMode && onCreateAssignment && (
+                <Button
+                  onClick={onCreateAssignment}
+                  size="sm"
+                  variant="outline"
+                  className="h-8"
+                >
+                  + New Assignment
+                </Button>
+              )}
+              {onToggleHypothetical && (
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <Checkbox
-                    defaultChecked={hypotheticalMode}
-                    onCheckedChange={(val) => {
-                      const next =
-                        val === "indeterminate" ? false : Boolean(val);
-                      onToggleHypothetical?.(next);
-                    }}
+                    checked={hypotheticalMode}
+                    onCheckedChange={(checked) =>
+                      onToggleHypothetical(checked === true)
+                    }
                   />
-                  <p className="text-sm pr-2">Hypothetical Mode</p>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="w-96">
-                <p>
-                  Hypothetical Mode is a powerful mode allowing you to see how
-                  certain grades on assignments will affect your grade.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-            {hypotheticalMode && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onCreateHypothetical?.()}
-              >
-                Create Assignment
-              </Button>
-            )}
+                  <span>Hypothetical Mode</span>
+                </label>
+              )}
+            </div>
             <Input
               placeholder="Filter assignments..."
               value={
@@ -820,7 +767,7 @@ function AssignmentsTableBase({
               onChange={(e) =>
                 table.getColumn("measure")?.setFilterValue(e.target.value)
               }
-              className="h-8"
+              className="h-8 w-48"
             />
           </div>
         </CardAction>
@@ -878,29 +825,75 @@ function AssignmentsTableBase({
       </CardContent>
       {table.getPageCount() > 1 && (
         <CardFooter>
-          <div className="flex items-center justify-between w-full">
-            <div className="text-xs text-gray-500">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
-            </div>
+          <div className="w-full flex items-center justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (table.getCanPreviousPage()) table.previousPage();
+                    }}
+                    className={
+                      !table.getCanPreviousPage()
+                        ? "pointer-events-none opacity-50"
+                        : undefined
+                    }
+                  />
+                </PaginationItem>
+                {(() => {
+                  const pages: Array<number | string> = [];
+                  const total = table.getPageCount();
+                  const current = table.getState().pagination.pageIndex;
+                  const first = 0;
+                  const last = total - 1;
+                  if (total <= 7) {
+                    for (let i = 0; i < total; i++) pages.push(i);
+                  } else {
+                    pages.push(first);
+                    if (current > 2) pages.push("ellipsis-start");
+                    const start = Math.max(first + 1, current - 1);
+                    const end = Math.min(last - 1, current + 1);
+                    for (let i = start; i <= end; i++) pages.push(i);
+                    if (current < last - 2) pages.push("ellipsis-end");
+                    pages.push(last);
+                  }
+                  return pages.map((p, idx) => (
+                    <PaginationItem key={`${p}-${idx}`}>
+                      {typeof p === "string" ? (
+                        <PaginationEllipsis />
+                      ) : (
+                        <PaginationLink
+                          href="#"
+                          isActive={p === current}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            table.setPageIndex(p);
+                          }}
+                        >
+                          {p + 1}
+                        </PaginationLink>
+                      )}
+                    </PaginationItem>
+                  ));
+                })()}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (table.getCanNextPage()) table.nextPage();
+                    }}
+                    className={
+                      !table.getCanNextPage()
+                        ? "pointer-events-none opacity-50"
+                        : undefined
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         </CardFooter>
       )}
