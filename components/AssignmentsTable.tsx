@@ -58,6 +58,7 @@ interface AssignmentsTableProps {
   availableTypes?: string[];
   hypotheticalMode?: boolean;
   onToggleHypothetical?: (enabled: boolean) => void;
+  onEditCategory?: (id: string, category: string) => void;
 }
 
 function ScoreEditor({
@@ -136,13 +137,52 @@ function ScoreEditor({
   );
 }
 
+function CategoryEditor({
+  assignmentId,
+  currentCategory,
+  availableCategories,
+  onEditCategoryRef,
+  getTypeColor,
+}: {
+  assignmentId: string;
+  currentCategory: string;
+  availableCategories: string[];
+  onEditCategoryRef: React.MutableRefObject<((id: string, category: string) => void) | undefined>;
+  getTypeColor: (type: string) => string;
+}) {
+  const [value, setValue] = React.useState(currentCategory);
+  
+  return (
+    <select
+      value={value}
+      onChange={(e) => {
+        const newCat = e.target.value;
+        setValue(newCat);
+        onEditCategoryRef.current?.(assignmentId, newCat);
+      }}
+      className={`text-xs px-2 py-1 rounded-md border ${getTypeColor(value)}`}
+    >
+      {availableCategories.map((cat) => (
+        <option key={cat} value={cat}>
+          {cat}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 function AssignmentsTableBase({
   assignments,
   getTypeColor,
   onEditScore,
   hypotheticalMode = false,
   onToggleHypothetical,
+  onEditCategory,
 }: AssignmentsTableProps) {
+  const availableCategories = React.useMemo(
+    () => Array.from(new Set(assignments.map((a) => a._Type).filter(Boolean))).sort(),
+    [assignments]
+  );
   const isRubric = React.useCallback(
     (a: Pick<Assignment, "_ScoreType"> | Assignment | undefined | null) =>
       !!a && /rubric/i.test(a._ScoreType || ""),
@@ -189,10 +229,15 @@ function AssignmentsTableBase({
     Record<string, ReturnType<typeof setTimeout>>
   >({});
   const onEditScoreRef = React.useRef(onEditScore);
+  const onEditCategoryRef = React.useRef(onEditCategory);
   
   React.useEffect(() => {
     onEditScoreRef.current = onEditScore;
   }, [onEditScore]);
+  
+  React.useEffect(() => {
+    onEditCategoryRef.current = onEditCategory;
+  }, [onEditCategory]);
   React.useEffect(() => {
     setDraftScores((prev) => {
       const next = { ...prev };
@@ -413,6 +458,19 @@ function AssignmentsTableBase({
         cell: ({ row }) => {
           const a = row.original;
           const curType = (a._Type || "").trim();
+          
+          if (hypotheticalMode && availableCategories.length > 0) {
+            return (
+              <CategoryEditor
+                assignmentId={a._GradebookID}
+                currentCategory={curType}
+                availableCategories={availableCategories}
+                onEditCategoryRef={onEditCategoryRef}
+                getTypeColor={getTypeColor}
+              />
+            );
+          }
+          
           return (
             <Badge className={`${getTypeColor(curType || "Uncategorized")}`}>
               {curType || "Uncategorized"}
@@ -574,7 +632,7 @@ function AssignmentsTableBase({
         },
       },
     ],
-    [decodeEntities, getTypeColor, expandedDesc, deltas, assignmentPercents, hypotheticalMode]
+    [decodeEntities, getTypeColor, expandedDesc, deltas, assignmentPercents, hypotheticalMode, availableCategories]
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([

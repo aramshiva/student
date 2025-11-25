@@ -54,31 +54,54 @@ export default function CourseDetail({
   const [hypotheticalScores, setHypotheticalScores] = React.useState<
     Record<string, { score: string; max: string }>
   >({});
+  const [hypotheticalCategories, setHypotheticalCategories] = React.useState<
+    Record<string, string>
+  >({});
 
   const effectiveAssignments = React.useMemo(() => {
-    if (!hypotheticalMode || Object.keys(hypotheticalScores).length === 0) {
+    if (!hypotheticalMode || (Object.keys(hypotheticalScores).length === 0 && Object.keys(hypotheticalCategories).length === 0)) {
       return originalAssignments;
     }
     return originalAssignments.map((a) => {
-      const hypo = hypotheticalScores[a._GradebookID];
-      if (!hypo) return a;
-      return {
-        ...a,
-        _Score: hypo.score,
-        _Point: hypo.score,
-        _ScoreMaxValue: hypo.max,
-        _PointPossible: hypo.max,
-        _DisplayScore: `${hypo.score} out of ${hypo.max}`,
-        _Points: `${hypo.score} / ${hypo.max}`,
-      };
+      const hypoScore = hypotheticalScores[a._GradebookID];
+      const hypoCategory = hypotheticalCategories[a._GradebookID];
+      
+      if (!hypoScore && !hypoCategory) return a;
+      
+      const result = { ...a };
+      
+      if (hypoScore) {
+        result._Score = hypoScore.score;
+        result._Point = hypoScore.score;
+        result._ScoreMaxValue = hypoScore.max;
+        result._PointPossible = hypoScore.max;
+        result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
+        result._Points = `${hypoScore.score} / ${hypoScore.max}`;
+      }
+      
+      if (hypoCategory) {
+        result._Type = hypoCategory;
+      }
+      
+      return result;
     });
-  }, [originalAssignments, hypotheticalMode, hypotheticalScores]);
+  }, [originalAssignments, hypotheticalMode, hypotheticalScores, hypotheticalCategories]);
 
   const handleHypotheticalScoreChange = React.useCallback(
     (id: string, score: string, max: string) => {
       setHypotheticalScores((prev) => ({
         ...prev,
         [id]: { score, max },
+      }));
+    },
+    []
+  );
+
+  const handleHypotheticalCategoryChange = React.useCallback(
+    (id: string, category: string) => {
+      setHypotheticalCategories((prev) => ({
+        ...prev,
+        [id]: category,
       }));
     },
     []
@@ -289,6 +312,7 @@ export default function CourseDetail({
           hypotheticalMode={hypotheticalMode}
           onToggleHypothetical={setHypotheticalMode}
           onEditScore={handleHypotheticalScoreChange}
+          onEditCategory={handleHypotheticalCategoryChange}
         />
       </div>
     </div>
