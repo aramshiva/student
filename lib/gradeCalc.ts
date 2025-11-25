@@ -325,12 +325,12 @@ export function getCalculableAssignments<T extends AssignmentBase>(assignments: 
 export function parseSynergyAssignment(synergyAssignment: SynergyAssignment): RealAssignment {
   const { _Date, _Measure, _Notes, _Point, _PointPossible, _Points, _ScoreCalValue, _ScoreMaxValue, _Type } = synergyAssignment;
 
-  const pointsEarned = _Point !== undefined ? (_Point === "" ? 0 : parseFloat(_Point)) : undefined;
+  const pointsEarned = _Point !== undefined && _Point !== "" ? parseFloat(_Point) : undefined;
 
   const pointsPossible =
     _PointPossible !== undefined && _PointPossible !== ""
       ? parseFloat(_PointPossible)
-      : _ScoreMaxValue !== undefined
+      : _ScoreMaxValue !== undefined && _ScoreMaxValue !== ""
       ? parseFloat(_ScoreMaxValue)
       : _Points === "Points Possible"
       ? undefined

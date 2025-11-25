@@ -58,6 +58,7 @@ interface AssignmentsTableProps {
   availableTypes?: string[];
   hypotheticalMode?: boolean;
   onToggleHypothetical?: (enabled: boolean) => void;
+  onCreateAssignment?: () => void;
   onEditCategory?: (id: string, category: string) => void;
 }
 
@@ -69,32 +70,46 @@ function ScoreEditor({
   debounceTimers,
 }: {
   assignmentId: string;
-  draftScoresRef: React.MutableRefObject<Record<string, { score: string; max: string }>>;
-  setDraftScores: React.Dispatch<React.SetStateAction<Record<string, { score: string; max: string }>>>;
-  onEditScoreRef: React.MutableRefObject<((id: string, score: string, max: string) => void) | undefined>;
-  debounceTimers: React.MutableRefObject<Record<string, ReturnType<typeof setTimeout>>>;
+  draftScoresRef: React.MutableRefObject<
+    Record<string, { score: string; max: string }>
+  >;
+  setDraftScores: React.Dispatch<
+    React.SetStateAction<Record<string, { score: string; max: string }>>
+  >;
+  onEditScoreRef: React.MutableRefObject<
+    ((id: string, score: string, max: string) => void) | undefined
+  >;
+  debounceTimers: React.MutableRefObject<
+    Record<string, ReturnType<typeof setTimeout>>
+  >;
 }) {
   const draft = draftScoresRef.current[assignmentId];
-  
+
   if (!draft) return null;
-  
+
   return (
     <div className="flex gap-1 items-center">
       <Input
         type="text"
+        inputMode="decimal"
+        pattern="[0-9]*\.?[0-9]*"
         defaultValue={draft.score}
         onChange={(e) => {
           const val = e.target.value;
-          const currentMax = draftScoresRef.current[assignmentId]?.max || draft.max;
+          if (val !== "" && !/^[0-9]*\.?[0-9]*$/.test(val)) {
+            return;
+          }
+          const currentMax =
+            draftScoresRef.current[assignmentId]?.max || draft.max;
           setDraftScores((prev) => ({
             ...prev,
             [assignmentId]: { ...prev[assignmentId], score: val },
           }));
-          
+
           if (debounceTimers.current[assignmentId]) {
             clearTimeout(debounceTimers.current[assignmentId]);
           }
-          
+
           debounceTimers.current[assignmentId] = setTimeout(() => {
             onEditScoreRef.current?.(assignmentId, val, currentMax);
           }, 500);
@@ -109,19 +124,25 @@ function ScoreEditor({
       <span className="text-xs text-gray-500">/</span>
       <Input
         type="text"
+        inputMode="decimal"
+        pattern="[0-9]*\.?[0-9]*"
         defaultValue={draft.max}
         onChange={(e) => {
           const val = e.target.value;
-          const currentScore = draftScoresRef.current[assignmentId]?.score || draft.score;
+          if (val !== "" && !/^[0-9]*\.?[0-9]*$/.test(val)) {
+            return;
+          }
+          const currentScore =
+            draftScoresRef.current[assignmentId]?.score || draft.score;
           setDraftScores((prev) => ({
             ...prev,
             [assignmentId]: { ...prev[assignmentId], max: val },
           }));
-          
+
           if (debounceTimers.current[assignmentId]) {
             clearTimeout(debounceTimers.current[assignmentId]);
           }
-          
+
           debounceTimers.current[assignmentId] = setTimeout(() => {
             onEditScoreRef.current?.(assignmentId, currentScore, val);
           }, 500);
@@ -147,11 +168,13 @@ function CategoryEditor({
   assignmentId: string;
   currentCategory: string;
   availableCategories: string[];
-  onEditCategoryRef: React.MutableRefObject<((id: string, category: string) => void) | undefined>;
+  onEditCategoryRef: React.MutableRefObject<
+    ((id: string, category: string) => void) | undefined
+  >;
   getTypeColor: (type: string) => string;
 }) {
   const [value, setValue] = React.useState(currentCategory);
-  
+
   return (
     <select
       value={value}
@@ -178,9 +201,13 @@ function AssignmentsTableBase({
   hypotheticalMode = false,
   onToggleHypothetical,
   onEditCategory,
+  onCreateAssignment,
 }: AssignmentsTableProps) {
   const availableCategories = React.useMemo(
-    () => Array.from(new Set(assignments.map((a) => a._Type).filter(Boolean))).sort(),
+    () =>
+      Array.from(
+        new Set(assignments.map((a) => a._Type).filter(Boolean))
+      ).sort(),
     [assignments]
   );
   const isRubric = React.useCallback(
@@ -218,7 +245,6 @@ function AssignmentsTableBase({
     []
   );
 
-
   const [draftScores, setDraftScores] = React.useState<
     Record<string, { score: string; max: string }>
   >({});
@@ -230,11 +256,11 @@ function AssignmentsTableBase({
   >({});
   const onEditScoreRef = React.useRef(onEditScore);
   const onEditCategoryRef = React.useRef(onEditCategory);
-  
+
   React.useEffect(() => {
     onEditScoreRef.current = onEditScore;
   }, [onEditScore]);
-  
+
   React.useEffect(() => {
     onEditCategoryRef.current = onEditCategory;
   }, [onEditCategory]);
@@ -268,8 +294,6 @@ function AssignmentsTableBase({
     });
   }, [assignments, isRubric]);
 
-
-
   const draftScoresRef = React.useRef(draftScores);
   React.useEffect(() => {
     draftScoresRef.current = draftScores;
@@ -290,13 +314,17 @@ function AssignmentsTableBase({
     };
   }, [onEditScore]);
 
-  const [expandedDesc, setExpandedDesc] = React.useState<Record<string, boolean>>({});
+  const [expandedDesc, setExpandedDesc] = React.useState<
+    Record<string, boolean>
+  >({});
 
   const getScoreAndMax = React.useCallback(
     (a: Assignment): { score: number; max: number } | null => {
-      const parseFraction = (s: string | undefined): { s: number; p: number } | null => {
+      const parseFraction = (
+        s: string | undefined
+      ): { s: number; p: number } | null => {
         if (!s) return null;
-        const cleaned = s.replace(/of/gi, '/').trim();
+        const cleaned = s.replace(/of/gi, "/").trim();
         const m = cleaned.match(/([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/);
         return m ? { s: parseFloat(m[1]), p: parseFloat(m[2]) } : null;
       };
@@ -306,7 +334,10 @@ function AssignmentsTableBase({
         : a._PointPossible
         ? parseFloat(a._PointPossible)
         : NaN;
-      if ((!Number.isFinite(score) || !Number.isFinite(max)) && a._DisplayScore) {
+      if (
+        (!Number.isFinite(score) || !Number.isFinite(max)) &&
+        a._DisplayScore
+      ) {
         const frac = parseFraction(a._DisplayScore);
         if (frac) {
           score = frac.s;
@@ -320,7 +351,8 @@ function AssignmentsTableBase({
           max = frac.p;
         }
       }
-      if (!Number.isFinite(score) || !Number.isFinite(max) || max <= 0) return null;
+      if (!Number.isFinite(score) || !Number.isFinite(max) || max <= 0)
+        return null;
       return { score, max };
     },
     []
@@ -357,7 +389,8 @@ function AssignmentsTableBase({
       if (!parts) {
         map[a._GradebookID] = NaN;
       } else {
-        map[a._GradebookID] = parts.max > 0 ? (parts.score / parts.max) * 100 : NaN;
+        map[a._GradebookID] =
+          parts.max > 0 ? (parts.score / parts.max) * 100 : NaN;
       }
     });
     return map;
@@ -396,7 +429,8 @@ function AssignmentsTableBase({
           const originalMeasure = decodeEntities(a._Measure);
           const desc = decodeEntities(a._MeasureDescription);
           const DESCRIPTION_TRUNCATE_LENGTH = 160; // character threshold for truncation
-          const shouldTruncate = desc && desc.length > DESCRIPTION_TRUNCATE_LENGTH;
+          const shouldTruncate =
+            desc && desc.length > DESCRIPTION_TRUNCATE_LENGTH;
           const id = a._GradebookID;
           const isExpanded = expandedDesc[id];
           return (
@@ -458,7 +492,7 @@ function AssignmentsTableBase({
         cell: ({ row }) => {
           const a = row.original;
           const curType = (a._Type || "").trim();
-          
+
           if (hypotheticalMode && availableCategories.length > 0) {
             return (
               <CategoryEditor
@@ -470,7 +504,7 @@ function AssignmentsTableBase({
               />
             );
           }
-          
+
           return (
             <Badge className={`${getTypeColor(curType || "Uncategorized")}`}>
               {curType || "Uncategorized"}
@@ -485,7 +519,7 @@ function AssignmentsTableBase({
           const a = row.original;
           const assignmentId = a._GradebookID;
           const display = a._DisplayScore || a._Score || "—";
-          
+
           if (!hypotheticalMode) {
             return assignmentId ? (
               <Link
@@ -498,18 +532,32 @@ function AssignmentsTableBase({
                 {display}
               </Link>
             ) : (
-              <span className="text-sm text-black dark:text-white">{display}</span>
+              <span className="text-sm text-black dark:text-white">
+                {display}
+              </span>
             );
           }
-          
-          return <ScoreEditor assignmentId={assignmentId} draftScoresRef={draftScoresRef} setDraftScores={setDraftScores} onEditScoreRef={onEditScoreRef} debounceTimers={debounceTimers} />;
+
+          return (
+            <ScoreEditor
+              assignmentId={assignmentId}
+              draftScoresRef={draftScoresRef}
+              setDraftScores={setDraftScores}
+              onEditScoreRef={onEditScoreRef}
+              debounceTimers={debounceTimers}
+            />
+          );
         },
       },
       {
         id: "progress",
         header: "Percentage",
         accessorFn: (row) => assignmentPercents[row._GradebookID],
-        sortingFn: (a: Row<Assignment>, b: Row<Assignment>, columnId: string) => {
+        sortingFn: (
+          a: Row<Assignment>,
+          b: Row<Assignment>,
+          columnId: string
+        ) => {
           const av = Number(a.getValue(columnId));
           const bv = Number(b.getValue(columnId));
           if (isNaN(av) && isNaN(bv)) return 0;
@@ -541,17 +589,25 @@ function AssignmentsTableBase({
             F: "bg-red-600 dark:bg-red-700",
             E: "bg-red-600 dark:bg-red-700",
           };
-          const barFill = letterBarMap[letter] || "bg-gray-500 dark:bg-gray-600";
+          const barFill =
+            letterBarMap[letter] || "bg-gray-500 dark:bg-gray-600";
           const width = Math.max(0, Math.min(100, pct));
           return (
-            <div className="flex items-center gap-2" aria-label={`Assignment scored ${pct.toFixed(1)} percent (${letter})`}>
+            <div
+              className="flex items-center gap-2"
+              aria-label={`Assignment scored ${pct.toFixed(
+                1
+              )} percent (${letter})`}
+            >
               <div className="h-2 w-16 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
                 <div
                   className={`h-2 transition-all duration-300 ${barFill}`}
                   style={{ width: `${width}%` }}
                 />
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400 tabular-nums">{Math.round(pct)}%</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400 tabular-nums">
+                {Math.round(pct)}%
+              </span>
             </div>
           );
         },
@@ -594,7 +650,11 @@ function AssignmentsTableBase({
       {
         id: "delta",
         header: "Delta",
-        sortingFn: (a: Row<Assignment>, b: Row<Assignment>, columnId: string) => {
+        sortingFn: (
+          a: Row<Assignment>,
+          b: Row<Assignment>,
+          columnId: string
+        ) => {
           const av = Number(a.getValue(columnId));
           const bv = Number(b.getValue(columnId));
           if (isNaN(av) && isNaN(bv)) return 0;
@@ -607,7 +667,10 @@ function AssignmentsTableBase({
           const delta = deltas[row.original._GradebookID];
           if (delta == null || isNaN(delta)) {
             return (
-              <span className="text-sm text-gray-400" title="No score change data">
+              <span
+                className="text-sm text-gray-400"
+                title="No score change data"
+              >
                 —
               </span>
             );
@@ -625,14 +688,25 @@ function AssignmentsTableBase({
               ? "text-red-600"
               : "text-gray-600";
           return (
-            <span className={`text-sm font-medium ${colorClass}`} title="Impact on overall % after this assignment">
+            <span
+              className={`text-sm font-medium ${colorClass}`}
+              title="Impact on overall % after this assignment"
+            >
               {signPrefixed}
             </span>
           );
         },
       },
     ],
-    [decodeEntities, getTypeColor, expandedDesc, deltas, assignmentPercents, hypotheticalMode, availableCategories]
+    [
+      decodeEntities,
+      getTypeColor,
+      expandedDesc,
+      deltas,
+      assignmentPercents,
+      hypotheticalMode,
+      availableCategories,
+    ]
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([
@@ -662,15 +736,29 @@ function AssignmentsTableBase({
         <CardDescription>List of all assignments</CardDescription>
         <CardAction>
           <div className="flex items-center justify-between gap-4">
-                        {onToggleHypothetical && (
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <Checkbox
-                  checked={hypotheticalMode}
-                  onCheckedChange={(checked) => onToggleHypothetical(checked === true)}
-                />
-                <span>Hypothetical Mode</span>
-              </label>
-            )}
+            <div className="flex items-center gap-3">
+              {hypotheticalMode && onCreateAssignment && (
+                <Button
+                  onClick={onCreateAssignment}
+                  size="sm"
+                  variant="outline"
+                  className="h-8"
+                >
+                  + New Assignment
+                </Button>
+              )}
+              {onToggleHypothetical && (
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox
+                    checked={hypotheticalMode}
+                    onCheckedChange={(checked) =>
+                      onToggleHypothetical(checked === true)
+                    }
+                  />
+                  <span>Hypothetical Mode</span>
+                </label>
+              )}
+            </div>
             <Input
               placeholder="Filter assignments..."
               value={
@@ -747,7 +835,11 @@ function AssignmentsTableBase({
                       e.preventDefault();
                       if (table.getCanPreviousPage()) table.previousPage();
                     }}
-                    className={!table.getCanPreviousPage() ? "pointer-events-none opacity-50" : undefined}
+                    className={
+                      !table.getCanPreviousPage()
+                        ? "pointer-events-none opacity-50"
+                        : undefined
+                    }
                   />
                 </PaginationItem>
                 {(() => {
@@ -793,7 +885,11 @@ function AssignmentsTableBase({
                       e.preventDefault();
                       if (table.getCanNextPage()) table.nextPage();
                     }}
-                    className={!table.getCanNextPage() ? "pointer-events-none opacity-50" : undefined}
+                    className={
+                      !table.getCanNextPage()
+                        ? "pointer-events-none opacity-50"
+                        : undefined
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>

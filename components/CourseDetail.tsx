@@ -57,35 +57,66 @@ export default function CourseDetail({
   const [hypotheticalCategories, setHypotheticalCategories] = React.useState<
     Record<string, string>
   >({});
+  const [hypotheticalNewAssignments, setHypotheticalNewAssignments] = React.useState<Assignment[]>([]);
 
   const effectiveAssignments = React.useMemo(() => {
-    if (!hypotheticalMode || (Object.keys(hypotheticalScores).length === 0 && Object.keys(hypotheticalCategories).length === 0)) {
-      return originalAssignments;
+    let modifiedAssignments = originalAssignments;
+    
+    if (hypotheticalMode && (Object.keys(hypotheticalScores).length > 0 || Object.keys(hypotheticalCategories).length > 0)) {
+      modifiedAssignments = originalAssignments.map((a) => {
+        const hypoScore = hypotheticalScores[a._GradebookID];
+        const hypoCategory = hypotheticalCategories[a._GradebookID];
+        
+        if (!hypoScore && !hypoCategory) return a;
+        
+        const result = { ...a };
+        
+        if (hypoScore) {
+          result._Score = hypoScore.score;
+          result._Point = hypoScore.score;
+          result._ScoreMaxValue = hypoScore.max;
+          result._PointPossible = hypoScore.max;
+          result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
+          result._Points = `${hypoScore.score} / ${hypoScore.max}`;
+        }
+        
+        if (hypoCategory) {
+          result._Type = hypoCategory;
+        }
+        
+        return result;
+      });
     }
-    return originalAssignments.map((a) => {
-      const hypoScore = hypotheticalScores[a._GradebookID];
-      const hypoCategory = hypotheticalCategories[a._GradebookID];
-      
-      if (!hypoScore && !hypoCategory) return a;
-      
-      const result = { ...a };
-      
-      if (hypoScore) {
-        result._Score = hypoScore.score;
-        result._Point = hypoScore.score;
-        result._ScoreMaxValue = hypoScore.max;
-        result._PointPossible = hypoScore.max;
-        result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
-        result._Points = `${hypoScore.score} / ${hypoScore.max}`;
-      }
-      
-      if (hypoCategory) {
-        result._Type = hypoCategory;
-      }
-      
-      return result;
-    });
-  }, [originalAssignments, hypotheticalMode, hypotheticalScores, hypotheticalCategories]);
+    
+    if (hypotheticalMode && hypotheticalNewAssignments.length > 0) {
+      const modifiedNewAssignments = hypotheticalNewAssignments.map((a) => {
+        const hypoScore = hypotheticalScores[a._GradebookID];
+        const hypoCategory = hypotheticalCategories[a._GradebookID];
+        
+        if (!hypoScore && !hypoCategory) return a;
+        
+        const result = { ...a };
+        
+        if (hypoScore) {
+          result._Score = hypoScore.score;
+          result._Point = hypoScore.score;
+          result._ScoreMaxValue = hypoScore.max;
+          result._PointPossible = hypoScore.max;
+          result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
+          result._Points = `${hypoScore.score} / ${hypoScore.max}`;
+        }
+        
+        if (hypoCategory) {
+          result._Type = hypoCategory;
+        }
+        
+        return result;
+      });
+      return [...modifiedAssignments, ...modifiedNewAssignments];
+    }
+    
+    return modifiedAssignments;
+  }, [originalAssignments, hypotheticalMode, hypotheticalScores, hypotheticalCategories, hypotheticalNewAssignments]);
 
   const handleHypotheticalScoreChange = React.useCallback(
     (id: string, score: string, max: string) => {
@@ -160,6 +191,46 @@ export default function CourseDetail({
     () => getSynergyCourseAssignmentCategories(course) || [],
     [course],
   );
+
+  const handleCreateHypotheticalAssignment = React.useCallback(() => {
+    const gradeCalcs = currentMark?.GradeCalculationSummary?.AssignmentGradeCalc || [];
+    const availableCategories = gradeCalcs.length > 0
+      ? gradeCalcs.map(c => c._Type)
+      : Array.from(new Set(originalAssignments.map(a => a._Type)));
+    
+    const defaultCategory = availableCategories[0] || "Assignment";
+    const newId = `hypo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const today = new Date().toISOString().split('T')[0];
+    
+    const newAssignment: Assignment = {
+      _Date: today,
+      _DisplayScore: " / 100",
+      _DropEndDate: "",
+      _DropStartDate: "",
+      _DueDate: today,
+      _GradebookID: newId,
+      _HasDropBox: "false",
+      _Measure: "Hypothetical Assignment",
+      _MeasureDescription: "",
+      _Notes: "",
+      _Point: "",
+      _PointPossible: "100",
+      _Points: " / 100",
+      _Score: "",
+      _ScoreCalValue: "",
+      _ScoreMaxValue: "100",
+      _ScoreType: "Raw Score",
+      _StudentID: "",
+      _TeacherID: "",
+      _TimeSincePost: "Just now",
+      _TotalSecondsSincePost: "0",
+      _Type: defaultCategory,
+      Resources: {},
+      Standards: {},
+    };
+    
+    setHypotheticalNewAssignments(prev => [...prev, newAssignment]);
+  }, [currentMark, originalAssignments]);
 
   const calcGrades = loadCalculateGradesEnabled();
   let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
@@ -313,6 +384,7 @@ export default function CourseDetail({
           onToggleHypothetical={setHypotheticalMode}
           onEditScore={handleHypotheticalScoreChange}
           onEditCategory={handleHypotheticalCategoryChange}
+          onCreateAssignment={handleCreateHypotheticalAssignment}
         />
       </div>
     </div>
