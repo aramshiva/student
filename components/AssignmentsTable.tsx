@@ -206,14 +206,14 @@ function AssignmentsTableBase({
   const availableCategories = React.useMemo(
     () =>
       Array.from(
-        new Set(assignments.map((a) => a._Type).filter(Boolean))
+        new Set(assignments.map((a) => a._Type).filter(Boolean)),
       ).sort(),
-    [assignments]
+    [assignments],
   );
   const isRubric = React.useCallback(
     (a: Pick<Assignment, "_ScoreType"> | Assignment | undefined | null) =>
       !!a && /rubric/i.test(a._ScoreType || ""),
-    []
+    [],
   );
   const decodeEntities = React.useCallback(
     (input: string | undefined | null): string => {
@@ -242,14 +242,14 @@ function AssignmentsTableBase({
         return map[ent] ?? full;
       });
     },
-    []
+    [],
   );
 
   const [draftScores, setDraftScores] = React.useState<
     Record<string, { score: string; max: string }>
   >({});
   const [draftNames, setDraftNames] = React.useState<Record<string, string>>(
-    {}
+    {},
   );
   const debounceTimers = React.useRef<
     Record<string, ReturnType<typeof setTimeout>>
@@ -272,7 +272,7 @@ function AssignmentsTableBase({
         if (!next[id]) {
           const derivedMax = isRubric(a)
             ? "4"
-            : a._ScoreMaxValue ?? a._PointPossible ?? "";
+            : (a._ScoreMaxValue ?? a._PointPossible ?? "");
           next[id] = {
             score: a._Score ?? "",
             max: derivedMax,
@@ -321,7 +321,7 @@ function AssignmentsTableBase({
   const getScoreAndMax = React.useCallback(
     (a: Assignment): { score: number; max: number } | null => {
       const parseFraction = (
-        s: string | undefined
+        s: string | undefined,
       ): { s: number; p: number } | null => {
         if (!s) return null;
         const cleaned = s.replace(/of/gi, "/").trim();
@@ -332,8 +332,8 @@ function AssignmentsTableBase({
       let max = a._ScoreMaxValue
         ? parseFloat(a._ScoreMaxValue)
         : a._PointPossible
-        ? parseFloat(a._PointPossible)
-        : NaN;
+          ? parseFloat(a._PointPossible)
+          : NaN;
       if (
         (!Number.isFinite(score) || !Number.isFinite(max)) &&
         a._DisplayScore
@@ -355,12 +355,12 @@ function AssignmentsTableBase({
         return null;
       return { score, max };
     },
-    []
+    [],
   );
 
   const deltas = React.useMemo(() => {
     const chronological = [...assignments].sort(
-      (a, b) => new Date(a._Date).getTime() - new Date(b._Date).getTime()
+      (a, b) => new Date(a._Date).getTime() - new Date(b._Date).getTime(),
     );
     let earned = 0;
     let possible = 0;
@@ -556,7 +556,7 @@ function AssignmentsTableBase({
         sortingFn: (
           a: Row<Assignment>,
           b: Row<Assignment>,
-          columnId: string
+          columnId: string,
         ) => {
           const av = Number(a.getValue(columnId));
           const bv = Number(b.getValue(columnId));
@@ -596,7 +596,7 @@ function AssignmentsTableBase({
             <div
               className="flex items-center gap-2"
               aria-label={`Assignment scored ${pct.toFixed(
-                1
+                1,
               )} percent (${letter})`}
             >
               <div className="h-2 w-16 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
@@ -653,7 +653,7 @@ function AssignmentsTableBase({
         sortingFn: (
           a: Row<Assignment>,
           b: Row<Assignment>,
-          columnId: string
+          columnId: string,
         ) => {
           const av = Number(a.getValue(columnId));
           const bv = Number(b.getValue(columnId));
@@ -685,8 +685,8 @@ function AssignmentsTableBase({
             adj > 0
               ? "text-green-600"
               : adj < 0
-              ? "text-red-600"
-              : "text-gray-600";
+                ? "text-red-600"
+                : "text-gray-600";
           return (
             <span
               className={`text-sm font-medium ${colorClass}`}
@@ -706,14 +706,14 @@ function AssignmentsTableBase({
       assignmentPercents,
       hypotheticalMode,
       availableCategories,
-    ]
+    ],
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "date", desc: true },
   ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
 
   const table = useReactTable({
@@ -784,7 +784,7 @@ function AssignmentsTableBase({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   ))}
@@ -803,7 +803,7 @@ function AssignmentsTableBase({
                       <TableCell key={cell.id} className="py-3">
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}

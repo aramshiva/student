@@ -60,7 +60,6 @@ function GradebookPageContent() {
         }
       }
 
-
       const queryString = current.toString();
       const newURL = queryString ? `/gradebook?${queryString}` : "/gradebook";
       router.push(newURL, { scroll: false });

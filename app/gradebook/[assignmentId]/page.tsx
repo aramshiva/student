@@ -160,9 +160,7 @@ export default function AssignmentDetailPage() {
   const pointsRaw = assignment._Points?.replace(/of/i, "/");
   let pointsDisplay = assignment._Points || "—";
   if (pointsRaw) {
-    const m = pointsRaw.match(
-      /([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/,
-    );
+    const m = pointsRaw.match(/([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/);
     if (m) {
       const s = parseFloat(m[1]);
       const p = parseFloat(m[2]);
@@ -177,7 +175,9 @@ export default function AssignmentDetailPage() {
     ? Number(assignment._PointPossible)
     : NaN;
   const derivedRatio =
-    Number.isFinite(derivedPoint) && Number.isFinite(derivedPossible) && derivedPossible > 0
+    Number.isFinite(derivedPoint) &&
+    Number.isFinite(derivedPossible) &&
+    derivedPossible > 0
       ? derivedPoint / derivedPossible
       : NaN;
   if (Number.isFinite(derivedRatio)) {
@@ -189,18 +189,18 @@ export default function AssignmentDetailPage() {
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
       <div className="border-b">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                const id = course?._CourseID;
-                const target = id
-                  ? `/gradebook?course=${encodeURIComponent(String(id))}`
-                  : "/gradebook";
-                router.push(target);
-              }}
-            >
-              &larr; Back
-            </Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              const id = course?._CourseID;
+              const target = id
+                ? `/gradebook?course=${encodeURIComponent(String(id))}`
+                : "/gradebook";
+              router.push(target);
+            }}
+          >
+            &larr; Back
+          </Button>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg md:text-xl font-semibold text-black dark:text-white truncate">
               {assignment._Measure || "Assignment"}
@@ -238,7 +238,8 @@ export default function AssignmentDetailPage() {
                   const rawDue = assignment._DueDate;
                   let label = formatDate(rawDue);
                   try {
-                    const endStr = localStorage.getItem("Student.reportingPeriodEnd") || "";
+                    const endStr =
+                      localStorage.getItem("Student.reportingPeriodEnd") || "";
                     if (endStr) {
                       const due = new Date(rawDue);
                       const end = new Date(endStr);
@@ -247,7 +248,15 @@ export default function AssignmentDetailPage() {
                         due.getFullYear() === end.getFullYear() &&
                         due.getMonth() === end.getMonth() &&
                         due.getDate() === end.getDate();
-                      if (sameDay && due >= new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+                      if (
+                        sameDay &&
+                        due >=
+                          new Date(
+                            now.getFullYear(),
+                            now.getMonth(),
+                            now.getDate(),
+                          )
+                      ) {
                         label = "Not due";
                       }
                     }

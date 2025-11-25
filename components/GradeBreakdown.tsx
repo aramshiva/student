@@ -1,6 +1,9 @@
 "use client";
 import { AssignmentGradeCalc, Assignment } from "@/types/gradebook";
-import { parseSynergyAssignment, calculateGradePercentage } from "@/lib/gradeCalc";
+import {
+  parseSynergyAssignment,
+  calculateGradePercentage,
+} from "@/lib/gradeCalc";
 import {
   Card,
   CardHeader,
@@ -23,15 +26,25 @@ interface GradeBreakdownProps {
 }
 
 export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
-  const hasWeightedData = calcs?.length > 0 && calcs.some(c => {
-    const w = parseFloat(c._Weight);
-    return Number.isFinite(w) && w > 0;
-  });
+  const hasWeightedData =
+    calcs?.length > 0 &&
+    calcs.some((c) => {
+      const w = parseFloat(c._Weight);
+      return Number.isFinite(w) && w > 0;
+    });
 
   if (hasWeightedData) {
-    const parsed = (assignments || []).map(a => parseSynergyAssignment(a));
-    const usable = parsed.filter(p => !p.notForGrade && p.pointsEarned !== undefined && p.pointsPossible !== undefined);
-    const byType: Record<string, { earned: number; possible: number; count: number }> = {};
+    const parsed = (assignments || []).map((a) => parseSynergyAssignment(a));
+    const usable = parsed.filter(
+      (p) =>
+        !p.notForGrade &&
+        p.pointsEarned !== undefined &&
+        p.pointsPossible !== undefined,
+    );
+    const byType: Record<
+      string,
+      { earned: number; possible: number; count: number }
+    > = {};
     for (const a of usable) {
       const key = a.category || "Other";
       const entry = byType[key] || { earned: 0, possible: 0, count: 0 };
@@ -69,7 +82,9 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
                   const grade = hasAssignments ? `${Math.round(pct)}%` : "N/A";
                   return (
                     <TableRow key={idx}>
-                      <TableCell className="font-medium text-black dark:text-white">{calc._Type}</TableCell>
+                      <TableCell className="font-medium text-black dark:text-white">
+                        {calc._Type}
+                      </TableCell>
                       <TableCell>{grade}</TableCell>
                       <TableCell>{calc._Weight}</TableCell>
                       <TableCell>{hasAssignments ? fraction : "N/A"}</TableCell>
@@ -84,9 +99,17 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
     );
   }
 
-  const parsed = (assignments || []).map(a => parseSynergyAssignment(a));
-  const usable = parsed.filter(p => !p.notForGrade && p.pointsEarned !== undefined && p.pointsPossible !== undefined);
-  const byType: Record<string, { earned: number; possible: number; count: number }> = {};
+  const parsed = (assignments || []).map((a) => parseSynergyAssignment(a));
+  const usable = parsed.filter(
+    (p) =>
+      !p.notForGrade &&
+      p.pointsEarned !== undefined &&
+      p.pointsPossible !== undefined,
+  );
+  const byType: Record<
+    string,
+    { earned: number; possible: number; count: number }
+  > = {};
   for (const a of usable) {
     const key = a.category || "Other";
     const entry = byType[key] || { earned: 0, possible: 0, count: 0 };
@@ -95,7 +118,7 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
     entry.count += 1;
     byType[key] = entry;
   }
-  const typeKeys = Object.keys(byType).filter(k => byType[k].possible > 0);
+  const typeKeys = Object.keys(byType).filter((k) => byType[k].possible > 0);
 
   if (typeKeys.length > 1) {
     return (
@@ -115,13 +138,20 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {typeKeys.map(type => {
+                {typeKeys.map((type) => {
                   const data = byType[type];
-                  const pct = calculateGradePercentage(data.earned, data.possible);
+                  const pct = calculateGradePercentage(
+                    data.earned,
+                    data.possible,
+                  );
                   return (
                     <TableRow key={type}>
-                      <TableCell className="font-medium text-black dark:text-white">{type}</TableCell>
-                      <TableCell>{Number.isFinite(pct) ? `${Math.round(pct)}%` : "N/A"}</TableCell>
+                      <TableCell className="font-medium text-black dark:text-white">
+                        {type}
+                      </TableCell>
+                      <TableCell>
+                        {Number.isFinite(pct) ? `${Math.round(pct)}%` : "N/A"}
+                      </TableCell>
                       <TableCell>{`${data.earned}/${data.possible}`}</TableCell>
                     </TableRow>
                   );
@@ -134,7 +164,16 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
     );
   }
 
-  const totals = typeKeys.length === 1 ? byType[typeKeys[0]] : { earned: usable.reduce((a,b)=>a + (b.pointsEarned||0),0), possible: usable.reduce((a,b)=> a + (b.extraCredit ? 0 : (b.pointsPossible||0)),0) };
+  const totals =
+    typeKeys.length === 1
+      ? byType[typeKeys[0]]
+      : {
+          earned: usable.reduce((a, b) => a + (b.pointsEarned || 0), 0),
+          possible: usable.reduce(
+            (a, b) => a + (b.extraCredit ? 0 : b.pointsPossible || 0),
+            0,
+          ),
+        };
   const pct = calculateGradePercentage(totals.earned, totals.possible);
   return (
     <Card className="mb-8 pt-0">
@@ -144,8 +183,12 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-start sm:items-center gap-2 py-4">
-          <div className="text-3xl font-semibold tracking-tight">{totals.earned}/{totals.possible}</div>
-          <div className="text-sm text-gray-500">{Number.isFinite(pct) ? `${Math.round(pct)}%` : "N/A"} overall</div>
+          <div className="text-3xl font-semibold tracking-tight">
+            {totals.earned}/{totals.possible}
+          </div>
+          <div className="text-sm text-gray-500">
+            {Number.isFinite(pct) ? `${Math.round(pct)}%` : "N/A"} overall
+          </div>
         </div>
       </CardContent>
     </Card>

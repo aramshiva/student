@@ -62,16 +62,16 @@ export function GradeChart({
     () =>
       [...assignments].sort(
         (a, b) =>
-          new Date(a["_Date"]).getTime() - new Date(b["_Date"]).getTime()
+          new Date(a["_Date"]).getTime() - new Date(b["_Date"]).getTime(),
       ),
-    [assignments]
+    [assignments],
   );
   const assignmentDates = React.useMemo(
     () =>
       Array.from(new Set(sortedAssignments.map((a) => a["_Date"]))).sort(
-        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+        (a, b) => new Date(a).getTime() - new Date(b).getTime(),
       ),
-    [sortedAssignments]
+    [sortedAssignments],
   );
 
   const parsedAssignments = React.useMemo(
@@ -121,7 +121,7 @@ export function GradeChart({
       if (!isControlled) setUncontrolledSticky(v);
       onStickyChange?.(v);
     },
-    [isControlled, onStickyChange]
+    [isControlled, onStickyChange],
   );
 
   if (!assignments.length) return null;
@@ -140,7 +140,10 @@ export function GradeChart({
             config={chartConfig}
             className="aspect-auto h-[150px] w-full"
           >
-            <AreaChart data={filteredData} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+            <AreaChart
+              data={filteredData}
+              margin={{ top: 2, right: 0, bottom: 0, left: 0 }}
+            >
               <defs>
                 <linearGradient id="fillGrade" x1="0" y1="0" x2="0" y2="1">
                   <stop
@@ -156,7 +159,7 @@ export function GradeChart({
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} />
-              <YAxis hide domain={[0, 'dataMax + 1']} allowDecimals={false} />
+              <YAxis hide domain={[0, "dataMax + 1"]} allowDecimals={false} />
               <XAxis
                 dataKey="date"
                 tickLine={false}
@@ -249,7 +252,10 @@ export function GradeChart({
           config={chartConfig}
           className="aspect-auto h-[240px] w-full"
         >
-          <AreaChart data={filteredData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+          <AreaChart
+            data={filteredData}
+            margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+          >
             <defs>
               <linearGradient id="fillGrade" x1="0" y1="0" x2="0" y2="1">
                 <stop
@@ -265,7 +271,7 @@ export function GradeChart({
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
-            <YAxis hide domain={[0, 'dataMax + 1']} allowDecimals={false} />
+            <YAxis hide domain={[0, "dataMax + 1"]} allowDecimals={false} />
             <XAxis
               dataKey="date"
               tickLine={false}
