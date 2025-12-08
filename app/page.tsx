@@ -9,10 +9,9 @@ export default function Home() {
   return (
     <>
       <div>
-        <div className="p-20">
-          <div className="grid grid-col-2">
-            {/* header */}
-            <div className="w-96">
+        <div className="p-20 relative">
+          <div className="grid grid-cols-[minmax(18rem,28rem)_1fr] gap-10 items-start">
+            <div className="max-w-lg">
               <p className="text-4xl font-medium pb-1">
                 Empower your academia. <Badge variant="outline">BETA</Badge>
               </p>
@@ -39,12 +38,20 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-            <div></div>
+            <div className="relative -mb-10 w-full flex justify-end">
+              <img
+                src="/screenshots/gradebook.png"
+                alt="Gradebook screenshot"
+                width={2500}
+                height={2500}
+                className="relative z-10 h-auto"
+              />
+            </div>
           </div>
         </div>
-        <div className="bg-black text-white w-screen">
+        <div className="bg-black text-white w-screen relative">
           {/* design */}
-          <div className="p-20 w-[30rem]">
+          <div className="p-20 w-[30rem] relative z-20">
             <p className="text-2xl">Clean, minimalistic UI</p>
             <p>
               Student features an ultra slick, clean interface. It{"'"}s miles
@@ -94,7 +101,7 @@ export default function Home() {
             <div className="pr-10">
               <p className="text-xl pb-1">Students</p>
               <p className="pb-5">
-                Log in today to experience a better StudentVUE experience.
+                Log in today to experience a better StudentVUE experience. Fast, Clean and more powerful than ever.
               </p>
               <Link href="/login">
                 <Button className="cursor-pointer">
