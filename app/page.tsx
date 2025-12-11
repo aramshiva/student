@@ -1,11 +1,20 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { SiGithub } from "react-icons/si";
 import Image from "next/image";
 import Link from "next/link";
 import { Lock, EyeOff, Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "next-themes";
+import { useEffect } from "react";
 
 export default function Home() {
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    setTheme("light");
+  }, [setTheme]);
   return (
     <>
       <div>
@@ -39,7 +48,7 @@ export default function Home() {
               </div>
             </div>
             <div className="relative -mb-10 w-full flex justify-end">
-              <img
+              <Image
                 src="/screenshots/gradebook.png"
                 alt="Gradebook screenshot"
                 width={2500}
@@ -51,12 +60,24 @@ export default function Home() {
         </div>
         <div className="bg-black text-white w-screen relative">
           {/* design */}
-          <div className="p-20 w-[30rem] relative z-20">
-            <p className="text-2xl">Clean, minimalistic UI</p>
-            <p>
-              Student features an ultra slick, clean interface. It{"'"}s miles
-              ahead of StudentVUE{"'"}s clunky old interface.
-            </p>
+          <div className="grid grid-cols-2 gap-10 items-start">
+            <div className="relative p-10 w-full flex justify-start">
+              <Image
+          src="/screenshots/class.png"
+          alt="Class screenshot"
+          width={1600}
+          height={1600}
+          className="relative z-10 w-full h-auto max-w-5xl"
+          priority
+              />
+            </div>
+            <div className="p-20 w-full min-w-[50%] relative z-20">
+              <p className="text-2xl">Clean, minimalistic UI</p>
+              <p>
+          Student features an ultra slick, clean interface. It{"'"}s miles
+          ahead of StudentVUE{"'"}s clunky old interface.
+              </p>
+            </div>
           </div>
         </div>
 
