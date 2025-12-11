@@ -434,13 +434,22 @@ export function parseSynergyAssignment(
     _Point,
     _PointPossible,
     _Points,
+    _Score,
     _ScoreCalValue,
     _ScoreMaxValue,
     _Type,
   } = synergyAssignment;
 
-  const pointsEarned =
+  let pointsEarned =
     _Point !== undefined && _Point !== "" ? parseFloat(_Point) : undefined;
+
+  if (
+    pointsEarned === undefined &&
+    _Score !== undefined &&
+    parseFloat(_Score) === 0
+  ) {
+    pointsEarned = 0;
+  }
 
   const pointsPossible =
     _PointPossible !== undefined && _PointPossible !== ""
