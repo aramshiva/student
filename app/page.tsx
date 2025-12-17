@@ -30,7 +30,7 @@ export default function Home() {
               </p>
               <div className="flex gap-2">
                 <Link href="/login">
-                  <Button className="cursor-pointer">
+                  <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">
                     <Image
                       src="/studentvue.png"
                       alt="StudentVUE logo"
@@ -41,7 +41,7 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link href="https://github.com/aramshiva/student">
-                  <Button className="cursor-pointer" variant="outline">
+                  <Button className="cursor-pointer p-[18px]" variant="outline">
                     <SiGithub /> View Source Code
                   </Button>
                 </Link>
@@ -125,7 +125,7 @@ export default function Home() {
                 Log in today to experience a better StudentVUE experience. Fast, Clean and more powerful than ever.
               </p>
               <Link href="/login">
-                <Button className="cursor-pointer">
+                <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">
                   <Image
                     src="/studentvue.png"
                     alt="StudentVUE logo"
