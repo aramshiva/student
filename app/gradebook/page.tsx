@@ -271,7 +271,7 @@ function GradebookPageContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
+      <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6">
           <div className="flex-1 space-y-3">
             <Skeleton
@@ -318,7 +318,7 @@ function GradebookPageContent() {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-neutral-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900 divide-y divide-gray-200 dark:divide-gray-900">
+        <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-800">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="p-4 space-y-4">
               <div className="flex items-center justify-between">

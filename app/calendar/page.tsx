@@ -170,7 +170,7 @@ export default function CalendarPage() {
                 href={`/gradebook/${event.assignment._GradebookID}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block text-xs p-2 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg transition-all group relative cursor-pointer"
+                className="block text-xs p-2 bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-800 rounded-lg transition-all group relative cursor-pointer"
               >
                 <div className="font-medium truncate text-black dark:text-white group-hover:invisible">
                   {event.courseTitle}
@@ -178,7 +178,7 @@ export default function CalendarPage() {
                 <div className="truncate text-neutral-500 dark:text-neutral-400 mt-0.5 group-hover:invisible">
                   {event.assignment._Measure}
                 </div>
-                <div className="hidden group-hover:block absolute z-10 left-0 top-0 w-max max-w-xs p-2 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
+                <div className="hidden group-hover:block absolute z-10 left-0 top-0 w-max max-w-xs p-2 bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
                   <div className="font-medium text-black dark:text-white">
                     {event.courseTitle}
                   </div>
@@ -198,7 +198,7 @@ export default function CalendarPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
+      <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
             <Skeleton
@@ -297,14 +297,14 @@ export default function CalendarPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
+      <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
         <p className="text-red-600">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
+    <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-6">
           <button

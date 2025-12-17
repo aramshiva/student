@@ -151,7 +151,7 @@ export default function DeletedMailPage() {
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-8 space-y-6 min-h-screen dark:bg-zinc-900">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button

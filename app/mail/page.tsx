@@ -170,7 +170,7 @@ export default function MailPage() {
     theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {};
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-8 space-y-6 min-h-screen dark:bg-zinc-900">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">
           {loading ? <Skeleton width={60} {...themeProps} /> : "Mail"}

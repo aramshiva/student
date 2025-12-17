@@ -211,7 +211,7 @@ export function GradeChart({
           : "mb-8 pt-0"
       } ${
         !forceStickyInHeader && effectiveSticky
-          ? "sticky z-30 shadow-md border-b border-gray-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70"
+          ? "sticky z-30 shadow-md border-b border-zinc-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70"
           : ""
       }`}
     >

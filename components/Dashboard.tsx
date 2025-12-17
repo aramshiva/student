@@ -106,7 +106,7 @@ export default function Dashboard({
 
   return (
     <>
-      <div className="min-h-screen bg-white dark:bg-neutral-950 p-9">
+      <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 py-6">
           <div className="flex-1">
             <p className="text-xl font-medium pb-3">Gradebook</p>
@@ -124,7 +124,7 @@ export default function Dashboard({
                     onSelectReportingPeriod?.(Number(val))
                   }
                 >
-                  <SelectTrigger className="w-[260px]">
+                  <SelectTrigger className="w-60">
                     <SelectValue
                       className="text-xs"
                       placeholder="Select period"
@@ -133,7 +133,7 @@ export default function Dashboard({
                   <SelectContent className="p-1">
                     {reportingPeriods.map((rp) => (
                       <SelectItem key={rp.index} value={rp.index.toString()}>
-                        {rp.label} ({rp.start} – {rp.end})
+                        {rp.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -150,7 +150,7 @@ export default function Dashboard({
         </div>
 
         <div>
-          <div className="bg-white dark:bg-neutral-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900">
+          <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800">
             {computationBasis.map(
               ({ course, effectivePct, letter }, index: number) => {
                 const currentMark = getCurrentMark(course.Marks.Mark);
@@ -164,7 +164,7 @@ export default function Dashboard({
                     key={course._CourseID}
                     className={`p-4 cursor-pointer transition-colors ${
                       index !== computationBasis.length - 1
-                        ? "border-b border-gray-200 dark:border-zinc-900"
+                        ? "border-b border-zinc-200 dark:border-zinc-800"
                         : ""
                     }`}
                     onClick={() => onCourseSelect(course)}

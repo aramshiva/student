@@ -73,7 +73,7 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
         </div>
 
         {currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4 border-t border-zinc-100">
             <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
               Grade Breakdown
             </h4>

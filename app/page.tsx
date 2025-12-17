@@ -30,7 +30,7 @@ export default function Home() {
               </p>
               <div className="flex gap-2">
                 <Link href="/login">
-                  <Button className="cursor-pointer">
+                  <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">
                     <Image
                       src="/studentvue.png"
                       alt="StudentVUE logo"
@@ -41,7 +41,7 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link href="https://github.com/aramshiva/student">
-                  <Button className="cursor-pointer" variant="outline">
+                  <Button className="cursor-pointer p-[18px]" variant="outline">
                     <SiGithub /> View Source Code
                   </Button>
                 </Link>
@@ -63,19 +63,19 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-10 items-start">
             <div className="relative p-10 w-full flex justify-start">
               <Image
-          src="/screenshots/class.png"
-          alt="Class screenshot"
-          width={1600}
-          height={1600}
-          className="relative z-10 w-full h-auto max-w-5xl"
-          priority
+                src="/screenshots/class.png"
+                alt="Class screenshot"
+                width={1600}
+                height={1600}
+                className="relative z-10 w-full h-auto max-w-5xl"
+                priority
               />
             </div>
             <div className="p-20 w-full min-w-[50%] relative z-20">
               <p className="text-2xl">Clean, minimalistic UI</p>
               <p>
-          Student features an ultra slick, clean interface. It{"'"}s miles
-          ahead of StudentVUE{"'"}s clunky old interface.
+                Student features an ultra slick, clean interface. It{"'"}s miles
+                ahead of StudentVUE{"'"}s clunky old interface.
               </p>
             </div>
           </div>
@@ -122,10 +122,11 @@ export default function Home() {
             <div className="pr-10">
               <p className="text-xl pb-1">Students</p>
               <p className="pb-5">
-                Log in today to experience a better StudentVUE experience. Fast, Clean and more powerful than ever.
+                Log in today to experience a better StudentVUE experience. Fast,
+                Clean and more powerful than ever.
               </p>
               <Link href="/login">
-                <Button className="cursor-pointer">
+                <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">
                   <Image
                     src="/studentvue.png"
                     alt="StudentVUE logo"
