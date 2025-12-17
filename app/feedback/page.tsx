@@ -6,7 +6,7 @@ import { SiGithub } from "react-icons/si";
 export default function Feedback() {
   return (
     <>
-      <div className="p-9">
+      <div className="p-9 min-h-screen bg-zinc-900">
         <div className="grid grid-cols-2 gap-4">
           <Link
             href="https://github.com/aramshiva/student/issues/new"

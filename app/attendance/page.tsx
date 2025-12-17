@@ -349,7 +349,7 @@ export default function AttendancePage() {
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
-    <div className="p-8">
+    <div className="p-8 min-h-screen bg-zinc-900">
       <p className="text-xl font-medium pb-3">
         {isLoading ? (
           <Skeleton
@@ -579,7 +579,7 @@ export default function AttendancePage() {
                             type="button"
                             aria-label={isOpen ? "Collapse" : "Expand"}
                             onClick={() => toggleExpand(a.date)}
-                            className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:hover:bg-gray-950 transition"
+                            className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:hover:bg-zinc-950 transition"
                           >
                             {isOpen ? "−" : "+"}
                           </button>

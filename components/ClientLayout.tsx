@@ -82,7 +82,7 @@ export default function ClientLayout({
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="p-2 border-b flex items-center gap-2 bg-white/60 dark:bg-neutral-950/60 backdrop-blur dark:supports-[backdrop-filter]:bg-neutral-950/50 supports-[backdrop-filter]:bg-white/50 sticky top-0 z-10">
+          <header className="p-2 border-b flex items-center gap-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur dark:supports-[backdrop-filter]:bg-zinc-900/50 supports-[backdrop-filter]:bg-white/50 sticky top-0 z-10">
             <SidebarTrigger />
             {pageTitle && (
               <div className="font-semibold md:text-base tracking-tight text-neutral-700 dark:text-neutral-200">
@@ -151,7 +151,7 @@ function ThemeToggle() {
         <Button
           variant="outline"
           aria-label="Toggle theme"
-          className="dark:bg-neutral-950"
+          className="dark:bg-zinc-900"
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

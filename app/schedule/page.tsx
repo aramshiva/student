@@ -176,7 +176,7 @@ export default function SchedulePage() {
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
-    <div className="p-8">
+    <div className="p-8 min-h-screen bg-zinc-900">
       {(isLoading || terms.length > 0) && (
         <div className="mb-4">
           {isLoading ? (

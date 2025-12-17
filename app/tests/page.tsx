@@ -232,5 +232,5 @@ export default function TestsPage() {
     );
   }, [data, error, loading, theme.theme]);
 
-  return <div className="p-6 space-y-6">{content}</div>;
+  return <div className="p-6 space-y-6 min-h-screen bg-zinc-900">{content}</div>;
 }
