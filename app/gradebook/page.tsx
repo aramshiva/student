@@ -318,7 +318,7 @@ function GradebookPageContent() {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-900 divide-y divide-gray-200 dark:divide-gray-900">
+        <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-800">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="p-4 space-y-4">
               <div className="flex items-center justify-between">

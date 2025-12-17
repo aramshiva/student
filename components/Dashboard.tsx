@@ -150,7 +150,7 @@ export default function Dashboard({
         </div>
 
         <div>
-          <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-800">
+          <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-sm border border-zinc-200 dark:border-zinc-800">
             {computationBasis.map(
               ({ course, effectivePct, letter }, index: number) => {
                 const currentMark = getCurrentMark(course.Marks.Mark);
@@ -164,7 +164,7 @@ export default function Dashboard({
                     key={course._CourseID}
                     className={`p-4 cursor-pointer transition-colors ${
                       index !== computationBasis.length - 1
-                        ? "border-b border-gray-200 dark:border-zinc-800"
+                        ? "border-b border-zinc-200 dark:border-zinc-800"
                         : ""
                     }`}
                     onClick={() => onCourseSelect(course)}
