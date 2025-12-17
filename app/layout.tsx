@@ -21,9 +21,10 @@ export const metadata: Metadata = {
 import ClientLayout from "@/components/ClientLayout";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
-
-
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
 export default function RootLayout({
   children,
 }: Readonly<{
