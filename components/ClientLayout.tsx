@@ -38,7 +38,7 @@ export default function ClientLayout({
       "/student_info": "Student Info",
       "/tests": "Test History",
       "/schedule": "Class Schedule",
-      "/calendar": "Assignment Calendar",
+      "/calendar": "Calendar",
       "/login": "Log In",
     };
     if (Object.prototype.hasOwnProperty.call(map, p)) return map[p];

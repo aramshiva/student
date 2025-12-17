@@ -4,7 +4,8 @@ import { SiAndroid, SiIos } from "react-icons/si";
 
 export default function InstallPage() {
   return (
-    <div className="max-w-4xl mx-auto p-6 min-h-screen dark:bg-zinc-900">
+    <div className="max-w-screen dark:bg-zinc-900">
+    <div className="max-w-4xl mx-auto p-6 min-h-screen">
       <div>
         <p className="text-xl font-medium pb-2">Mobile App</p>
         <p>
@@ -66,6 +67,7 @@ export default function InstallPage() {
         iOS, iPhone and iPad are registered trademarks of Apple Inc. Android is
         a trademark of Google LLC.
       </p>
+    </div>
     </div>
   );
 }
