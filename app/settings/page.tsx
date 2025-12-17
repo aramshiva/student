@@ -153,7 +153,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-8 space-y-6 min-h-screen bg-zinc-900">
+    <div className="p-8 space-y-6 min-h-screen dark:bg-zinc-900">
       <div>
         <p className="text-xl font-medium pb-3">Settings</p>
         <p className="text-sm text-gray-500">

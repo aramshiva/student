@@ -4,7 +4,7 @@ import { SiAndroid, SiIos } from "react-icons/si";
 
 export default function InstallPage() {
   return (
-    <div className="max-w-4xl mx-auto p-6 min-h-screen bg-zinc-900">
+    <div className="max-w-4xl mx-auto p-6 min-h-screen dark:bg-zinc-900">
       <div>
         <p className="text-xl font-medium pb-2">Mobile App</p>
         <p>

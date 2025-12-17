@@ -349,7 +349,7 @@ export default function AttendancePage() {
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
   return (
-    <div className="p-8 min-h-screen bg-zinc-900">
+    <div className="p-8 min-h-screen dark:bg-zinc-900">
       <p className="text-xl font-medium pb-3">
         {isLoading ? (
           <Skeleton
