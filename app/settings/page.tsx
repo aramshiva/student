@@ -217,7 +217,7 @@ export default function SettingsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium block">Radius</label>
+              <label className="text-sm font-medium block">UI Radius</label>
               <Select
                 value={radius.toString()}
                 onValueChange={(val) => setRadius(parseFloat(val))}
