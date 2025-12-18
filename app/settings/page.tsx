@@ -54,7 +54,7 @@ export default function SettingsPage() {
   const { color, setColor, radius, setRadius } = useThemeCustomizer();
   const [entries, setEntries] = useState<GPAScaleEntry[]>([]);
   const [bounds, setBounds] = useState<GradeBound[]>([]);
-  const [dirty, setDirty] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [calcGrades, setCalcGrades] = useState(false);
@@ -70,6 +70,7 @@ export default function SettingsPage() {
       !!localStorage.getItem("Student.dontShowGradeCalcWarning"),
     );
     setDontTrackMe(localStorage.getItem("umami.disabled") === "1");
+    setIsLoaded(true);
   }, []);
 
   const updateValue = (letter: string, val: string) => {
@@ -78,8 +79,7 @@ export default function SettingsPage() {
         e.letter === letter ? { ...e, value: Number(val) || 0 } : e,
       ),
     );
-    setDirty(true);
-    setSavedMsg(null);
+    setSavedMsg("Saving...");
   };
 
   const updateBound = (letter: string, val: string) => {
@@ -89,8 +89,7 @@ export default function SettingsPage() {
         b.letter === letter ? { ...b, min: isNaN(num) ? b.min : num } : b,
       ),
     );
-    setDirty(true);
-    setSavedMsg(null);
+    setSavedMsg("Saving...");
   };
 
   const validationErrors = useMemo(() => {
@@ -128,28 +127,27 @@ export default function SettingsPage() {
     return errs;
   }, [entries, bounds]);
 
-  const handleSaveAll = () => {
-    if (validationErrors.length) {
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (validationErrors.length > 0) {
       setShowErrors(true);
+      setSavedMsg("Fix errors to save");
       return;
     }
-    saveCustomGPAScale(entries);
-    const sanitized = bounds
-      .filter((b) => b.letter)
-      .map((b) => ({ ...b, min: Math.max(0, Math.min(100, b.min)) }))
-      .sort((a, b) => b.min - a.min);
-    saveCustomGradeBounds(sanitized);
-    setBounds(sanitized);
-    saveCalculateGradesEnabled(calcGrades);
-    if (hideGradeCalcWarning) {
-      localStorage.setItem("Student.dontShowGradeCalcWarning", "true");
-    } else {
-      localStorage.removeItem("Student.dontShowGradeCalcWarning");
-    }
-    setDirty(false);
-    setSavedMsg("Saved");
-    setTimeout(() => setSavedMsg(null), 1500);
-  };
+
+    const timer = setTimeout(() => {
+      saveCustomGPAScale(entries);
+      const sanitized = bounds
+        .filter((b) => b.letter)
+        .map((b) => ({ ...b, min: Math.max(0, Math.min(100, b.min)) }))
+        .sort((a, b) => b.min - a.min);
+      saveCustomGradeBounds(sanitized);
+      setSavedMsg("Saved");
+      setTimeout(() => setSavedMsg(null), 2000);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [entries, bounds, isLoaded, validationErrors]);
 
   const handleResetAll = () => {
     resetCustomGPAScale();
@@ -163,7 +161,6 @@ export default function SettingsPage() {
     setCalcGrades(loadCalculateGradesEnabled());
     setHideGradeCalcWarning(false);
     setDontTrackMe(false);
-    setDirty(false);
     setSavedMsg("Reset to default");
     setTimeout(() => setSavedMsg(null), 1500);
   };
@@ -248,18 +245,16 @@ export default function SettingsPage() {
           </p>
         </header>
         <div className="pl-5 pt-1">
-          <div className="flex items-start rounded">
+          <div className="flex items-start gap-3 rounded">
             <Checkbox
               id="calc-grades"
               checked={calcGrades}
               onCheckedChange={(checked) => {
                 const isChecked = checked === true;
                 setCalcGrades(isChecked);
-                setDirty(true);
-                setSavedMsg(null);
+                saveCalculateGradesEnabled(isChecked);
               }}
             />
-            <div className="w-5" />
             <label
               htmlFor="calc-grades"
               className="text-sm leading-tight cursor-pointer select-none"
@@ -276,18 +271,23 @@ export default function SettingsPage() {
             </label>
           </div>
           <div className="h-3" />
-          <div className="flex items-start rounded">
+          <div className="flex items-start gap-3 rounded">
             <Checkbox
               id="hide-calc-warning"
               checked={hideGradeCalcWarning}
               onCheckedChange={(checked) => {
                 const isChecked = checked === true;
                 setHideGradeCalcWarning(isChecked);
-                setDirty(true);
-                setSavedMsg(null);
+                if (isChecked) {
+                  localStorage.setItem(
+                    "Student.dontShowGradeCalcWarning",
+                    "true",
+                  );
+                } else {
+                  localStorage.removeItem("Student.dontShowGradeCalcWarning");
+                }
               }}
             />
-            <div className="w-5" />
             <label
               htmlFor="hide-calc-warning"
               className="text-sm leading-tight cursor-pointer select-none"
@@ -373,18 +373,13 @@ export default function SettingsPage() {
           )}
         </div>
         <div className="flex gap-3 items-center">
-          <Button
-            disabled={!dirty || validationErrors.length > 0}
-            onClick={handleSaveAll}
-            variant={dirty && !validationErrors.length ? "default" : "outline"}
-          >
-            Save All
-          </Button>
           <Button type="button" variant="outline" onClick={handleResetAll}>
             Reset to Default
           </Button>
           {savedMsg && (
-            <span className="text-xs text-gray-500">{savedMsg}</span>
+            <span className="text-xs text-gray-500 transition-opacity duration-500">
+              {savedMsg}
+            </span>
           )}
         </div>
       </section>
@@ -396,7 +391,7 @@ export default function SettingsPage() {
           </p>
         </header>
         <div className="pl-5 pt-1">
-          <div className="flex items-start rounded">
+          <div className="flex items-start gap-3 rounded">
             <Checkbox
               id="dont-track-me"
               checked={dontTrackMe}
@@ -410,7 +405,6 @@ export default function SettingsPage() {
                 }
               }}
             />
-            <div className="w-5" />
             <label
               htmlFor="dont-track-me"
               className="text-sm leading-tight cursor-pointer select-none"
@@ -428,9 +422,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
-      {savedMsg && !dirty && (
-        <div className="text-xs text-gray-500 pt-2">{savedMsg}</div>
-      )}
     </div>
   );
 }
