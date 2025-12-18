@@ -306,7 +306,7 @@ export function useThemeCustomizer() {
 
 function ThemeCustomizerProvider({ children }: { children: React.ReactNode }) {
   const { resolvedTheme } = useTheme();
-  const [color, setColor] = React.useState<ThemeColor>("Violet");
+  const [color, setColor] = React.useState<ThemeColor>("Zinc");
   const [radius, setRadius] = React.useState<number>(0.875);
   const [mounted, setMounted] = React.useState(false);
 
