@@ -20,7 +20,6 @@ export type ThemeColor =
   | "Amber"
   | "Orange"
   | "Red"
-  | "Slate"
   | "Zinc"
 
 interface ThemeColors {
