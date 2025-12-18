@@ -71,11 +71,6 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           icon: <Table className="text-sm" />,
         },
         {
-          label: "Calendar",
-          action: () => navigate("/calendar"),
-          icon: <CalendarDays className="text-sm" />,
-        },
-        {
           label: "Attendance",
           action: () => navigate("/attendance"),
           icon: <Table2 className="text-sm" />,

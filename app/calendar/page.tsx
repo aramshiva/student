@@ -154,12 +154,12 @@ export default function CalendarPage() {
       days.push(
         <div
           key={day}
-          className={`min-h-28 p-3 border border-neutral-200 dark:border-neutral-900 ${
-            isToday ? "bg-neutral-100 dark:bg-neutral-900" : ""
+          className={`min-h-28 p-3 border border-zinc-200 dark:border-zinc-900 ${
+            isToday ? "bg-zinc-100 dark:bg-zinc-900" : ""
           }`}
         >
           <div
-            className={`text-sm font-medium mb-2 ${isToday ? "font-bold" : "text-neutral-600 dark:text-neutral-400"}`}
+            className={`text-sm font-medium mb-2 ${isToday ? "font-bold" : "text-zinc-600 dark:text-zinc-400"}`}
           >
             {day}
           </div>
@@ -170,19 +170,19 @@ export default function CalendarPage() {
                 href={`/gradebook/${event.assignment._GradebookID}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block text-xs p-2 bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-800 rounded-lg transition-all group relative cursor-pointer"
+                className="block text-xs p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg transition-all group relative cursor-pointer"
               >
                 <div className="font-medium truncate text-black dark:text-white group-hover:invisible">
                   {event.courseTitle}
                 </div>
-                <div className="truncate text-neutral-500 dark:text-neutral-400 mt-0.5 group-hover:invisible">
+                <div className="truncate text-zinc-500 dark:text-zinc-400 mt-0.5 group-hover:invisible">
                   {event.assignment._Measure}
                 </div>
-                <div className="hidden group-hover:block absolute z-10 left-0 top-0 w-max max-w-xs p-2 bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg">
+                <div className="hidden group-hover:block absolute z-10 left-0 top-0 w-max max-w-xs p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg">
                   <div className="font-medium text-black dark:text-white">
                     {event.courseTitle}
                   </div>
-                  <div className="text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  <div className="text-zinc-500 dark:text-zinc-400 mt-0.5">
                     {event.assignment._Measure}
                   </div>
                 </div>
@@ -227,12 +227,12 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="rounded-lg overflow-hidden shadow-sm border border-neutral-200 dark:border-neutral-900">
+        <div className="rounded-lg overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-900">
           <div className="grid grid-cols-7 gap-0">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div
                 key={day}
-                className="p-3 text-center text-sm font-semibold bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800"
+                className="p-3 text-center text-sm font-semibold bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800"
               >
                 {day}
               </div>
@@ -242,7 +242,7 @@ export default function CalendarPage() {
             {Array.from({ length: 35 }).map((_, i) => (
               <div
                 key={i}
-                className="min-h-28 p-3 border border-neutral-200 dark:border-neutral-900"
+                className="min-h-28 p-3 border border-zinc-200 dark:border-zinc-900"
               >
                 <Skeleton
                   {...(theme === "dark"
@@ -270,7 +270,7 @@ export default function CalendarPage() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="p-4 border border-neutral-200 dark:border-neutral-900 rounded-lg"
+                className="p-4 border border-zinc-200 dark:border-zinc-900 rounded-lg"
               >
                 <Skeleton
                   {...(theme === "dark"
@@ -309,7 +309,7 @@ export default function CalendarPage() {
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={previousMonth}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-lg transition-colors"
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors"
           >
             <ChevronLeft size={20} />
           </button>
@@ -321,19 +321,19 @@ export default function CalendarPage() {
           </h2>
           <button
             onClick={nextMonth}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-lg transition-colors"
+            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors"
           >
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      <div className="rounded-lg overflow-hidden shadow-sm border border-neutral-200 dark:border-neutral-900">
+      <div className="rounded-lg overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-900">
         <div className="grid grid-cols-7 gap-0">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div
               key={day}
-              className="p-3 text-center text-sm font-semibold bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800"
+              className="p-3 text-center text-sm font-semibold bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800"
             >
               {day}
             </div>
@@ -354,16 +354,16 @@ export default function CalendarPage() {
                 onClick={() =>
                   router.push(`/gradebook/${event.assignment._GradebookID}`)
                 }
-                className="w-full p-4 border hover:cursor-pointer border-neutral-200 dark:border-neutral-900 rounded-lg hover:shadow-sm transition-shadow text-left"
+                className="w-full p-4 border hover:cursor-pointer border-zinc-200 dark:border-zinc-900 rounded-lg hover:shadow-sm transition-shadow text-left"
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-semibold">{event.courseTitle}</div>
-                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                    <div className="text-sm text-zinc-600 dark:text-zinc-400">
                       {event.assignment._Measure}
                     </div>
                   </div>
-                  <div className="text-sm text-neutral-500">
+                  <div className="text-sm text-zinc-500">
                     {event.dueDate.toLocaleDateString()}
                   </div>
                 </div>

@@ -186,7 +186,7 @@ export default function AssignmentDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <div className="border-b">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
           <Button

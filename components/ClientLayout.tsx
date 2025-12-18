@@ -85,7 +85,7 @@ export default function ClientLayout({
           <header className="p-2 border-b flex items-center gap-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur dark:supports-[backdrop-filter]:bg-zinc-900/50 supports-[backdrop-filter]:bg-white/50 sticky top-0 z-10">
             <SidebarTrigger />
             {pageTitle && (
-              <div className="font-semibold md:text-base tracking-tight text-neutral-700 dark:text-neutral-200">
+              <div className="font-semibold md:text-base tracking-tight text-zinc-700 dark:text-zinc-200">
                 <p>{pageTitle}</p>
               </div>
             )}
