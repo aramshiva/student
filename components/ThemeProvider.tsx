@@ -21,10 +21,7 @@ export type ThemeColor =
   | "Orange"
   | "Red"
   | "Slate"
-  | "Gray"
   | "Zinc"
-  | "Neutral"
-  | "Stone";
 
 interface ThemeColors {
   primary: string;
