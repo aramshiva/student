@@ -6,7 +6,7 @@ export type ThemeColor =
   | "Violet"
   | "Zinc"
   | "Red"
-  | "Blue"
+  | "Sky"
   | "Green"
   | "Orange";
 
@@ -61,6 +61,20 @@ export const THEMES: Record<
       primaryForeground: "oklch(0.985 0 0)",
       ring: "oklch(0.552 0.016 285.938)",
     },
+  },
+  Sky: {
+    label: "Sky",
+    color: "oklch(39.1% 0.09 240.876)",
+    light: {
+      primary: "oklch(39.1% 0.09 240.876)",
+      primaryForeground: "oklch(98.5% 0 0)",
+      ring: "oklch(70.5% 0.015 286.067)",
+    },
+    dark: {
+      primary: "oklch(59% 0.2 240.876)",
+      primaryForeground: "oklch(98.5% 0 0)",
+      ring: "oklch(55.2% 0.016 285.938)",
+    }
   },
   Blue: {
     label: "Blue",
