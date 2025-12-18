@@ -25,10 +25,33 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  useThemeCustomizer,
+  THEMES,
+  ThemeColor,
+} from "@/components/ThemeProvider";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const ORDER = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"];
 
+const RADIUS_OPTIONS = [
+  { label: "None", value: 0 },
+  { label: "Extra Small", value: 0.3 },
+  { label: "Small", value: 0.5 },
+  { label: "Regular", value: 0.75 },
+  { label: "Large", value: 1.0 },
+];
+
 export default function SettingsPage() {
+  const { color, setColor, radius, setRadius } = useThemeCustomizer();
   const [entries, setEntries] = useState<GPAScaleEntry[]>([]);
   const [bounds, setBounds] = useState<GradeBound[]>([]);
   const [dirty, setDirty] = useState(false);
@@ -160,6 +183,63 @@ export default function SettingsPage() {
           Customize your student experience.
         </p>
       </div>
+      <section className="space-y-4">
+        <header>
+          <h2 className="text-lg font-medium">Appearance</h2>
+          <p className="text-xs text-gray-500">
+            Customize the look of Student to match your preferred theme.
+          </p>
+        </header>
+        <div className="pl-5 pt-1 space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
+            <div className="space-y-2">
+              <label className="text-sm font-medium block">Theme</label>
+              <Select
+                value={color}
+                onValueChange={(val) => setColor(val as ThemeColor)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(THEMES) as ThemeColor[]).map((themeColor) => (
+                    <SelectItem key={themeColor} value={themeColor}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: THEMES[themeColor].color }}
+                        />
+                        <span>{THEMES[themeColor].label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium block">Radius</label>
+              <Select
+                value={radius.toString()}
+                onValueChange={(val) => setRadius(parseFloat(val))}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select a radius" />
+                </SelectTrigger>
+                <SelectContent>
+                  {RADIUS_OPTIONS.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value.toString()}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="space-y-4">
         <header>
           <h2 className="text-lg font-medium">Grades & GPA Configuration</h2>

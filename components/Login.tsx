@@ -302,7 +302,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                                 className={`h-full w-full text-center hover:bg-gray-100 ${
                                   selected
                                     ? "border-blue-500 bg-blue-150"
-                                    : "border-gray-200"
+                                    : "border-zinc-200"
                                 }`}
                               >
                                 <div>
