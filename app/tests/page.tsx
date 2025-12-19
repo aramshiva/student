@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableHeader,
@@ -21,7 +20,6 @@ import {
 } from "@/components/ui/empty";
 import { BadgeQuestionMark } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 
 interface AnalysisTest {
   GU?: string;
@@ -47,7 +45,6 @@ export default function TestsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const theme = useTheme();
 
   const fetchTests = React.useCallback(async () => {
     try {
@@ -131,23 +128,12 @@ export default function TestsPage() {
             <Card key={i} className="p-4">
               <CardHeader className="py-2 px-0">
                 <CardTitle className="text-sm font-medium">
-                  <Skeleton
-                    {...(theme.theme === "dark"
-                      ? { baseColor: "#202020", highlightColor: "#444" }
-                      : {})}
-                    className="h-4 w-48"
-                  />
+                  <Skeleton className="h-4 w-48" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 px-0">
                 {Array.from({ length: 4 }).map((__, r) => (
-                  <Skeleton
-                    key={r}
-                    {...(theme.theme === "dark"
-                      ? { baseColor: "#202020", highlightColor: "#444" }
-                      : {})}
-                    className="h-3 w-full"
-                  />
+                  <Skeleton key={r} className="h-3 w-full" />
                 ))}
               </CardContent>
             </Card>
@@ -230,7 +216,7 @@ export default function TestsPage() {
         })}
       </div>
     );
-  }, [data, error, loading, theme.theme]);
+  }, [data, error, loading]);
 
   return (
     <div className="p-6 space-y-6 min-h-screen dark:bg-zinc-900">{content}</div>

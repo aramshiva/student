@@ -37,8 +37,6 @@ import {
   THEMES,
   ThemeColor,
 } from "@/components/ThemeProvider";
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const ORDER = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"];
 

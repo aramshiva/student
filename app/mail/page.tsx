@@ -3,9 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import { useTheme } from "next-themes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MailRecipient {
   _RecipientType?: string;
@@ -32,7 +30,6 @@ interface MailMessage {
 }
 
 export default function MailPage() {
-  const { theme } = useTheme();
   const [messages, setMessages] = useState<MailMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -166,20 +163,17 @@ export default function MailPage() {
 
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
-  const themeProps =
-    theme === "dark" ? { baseColor: "#202020", highlightColor: "#444" } : {};
-
   return (
     <div className="p-8 space-y-6 min-h-screen dark:bg-zinc-900">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">
-          {loading ? <Skeleton width={60} {...themeProps} /> : "Mail"}
+          {loading ? <Skeleton className="h-7 w-[60px]" /> : "Mail"}
         </h1>
         <div className="flex items-center gap-2">
           {loading ? (
             <>
-              <Skeleton width={150} height={32} {...themeProps} />
-              <Skeleton width={140} height={32} {...themeProps} />
+              <Skeleton className="h-8 w-[150px]" />
+              <Skeleton className="h-8 w-[140px]" />
             </>
           ) : (
             <>
@@ -212,7 +206,7 @@ export default function MailPage() {
         <Card className="p-4 md:col-span-1 max-h-[70vh] overflow-auto">
           <h2 className="font-medium mb-3 text-sm text-muted-foreground">
             {loading ? (
-              <Skeleton width={100} {...themeProps} />
+              <Skeleton className="h-4 w-[100px]" />
             ) : (
               `Inbox (${messages.filter((m) => !deletedMessages.has(m._SMMessageGU || "")).length})`
             )}
@@ -222,10 +216,10 @@ export default function MailPage() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <li key={i} className="rounded px-2 py-2 border">
                   <div className="font-medium mb-1">
-                    <Skeleton {...themeProps} />
+                    <Skeleton className="h-4 w-full" />
                   </div>
                   <div className="text-xs">
-                    <Skeleton width="60%" {...themeProps} />
+                    <Skeleton className="h-3 w-[60%]" />
                   </div>
                 </li>
               ))}
@@ -281,14 +275,16 @@ export default function MailPage() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-semibold mb-2">
-                  <Skeleton {...themeProps} />
+                  <Skeleton className="h-7 w-full" />
                 </h2>
                 <p className="text-xs">
-                  <Skeleton width="40%" {...themeProps} />
+                  <Skeleton className="h-3 w-[40%]" />
                 </p>
               </div>
               <div className="space-y-2">
-                <Skeleton count={3} {...themeProps} />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
               </div>
             </div>
           ) : !selected ? (

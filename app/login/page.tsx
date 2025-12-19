@@ -1,18 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Login from "@/components/Login";
 import { LoginCredentials } from "@/types/gradebook";
-import { useTheme } from "next-themes";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { setTheme } = useTheme();
-
-  useEffect(() => {
-    setTheme("light");
-  }, [setTheme]);
 
   const handleLogin = async (credentials: LoginCredentials) => {
     setIsLoading(true);
@@ -62,7 +56,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-white min-h-screen text-black px-9">
+    <div className="min-h-screen px-9">
       <Login onLogin={handleLogin} isLoading={isLoading} error={error} />
     </div>
   );

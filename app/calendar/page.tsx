@@ -4,9 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Course, Mark, Assignment } from "@/types/gradebook";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import { useTheme } from "next-themes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AssignmentEvent {
   assignment: Assignment;
@@ -23,7 +21,6 @@ function getCurrentMark(m: Mark | Mark[] | undefined): Mark | null {
 }
 
 export default function CalendarPage() {
-  const { theme } = useTheme();
   const router = useRouter();
   const [assignments, setAssignments] = useState<AssignmentEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -201,29 +198,9 @@ export default function CalendarPage() {
       <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
-            <Skeleton
-              {...(theme === "dark"
-                ? { baseColor: "#202020", highlightColor: "#444" }
-                : {})}
-              width={40}
-              height={40}
-              circle
-            />
-            <Skeleton
-              {...(theme === "dark"
-                ? { baseColor: "#202020", highlightColor: "#444" }
-                : {})}
-              width={200}
-              height={28}
-            />
-            <Skeleton
-              {...(theme === "dark"
-                ? { baseColor: "#202020", highlightColor: "#444" }
-                : {})}
-              width={40}
-              height={40}
-              circle
-            />
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-7 w-[200px]" />
+            <Skeleton className="h-10 w-10 rounded-full" />
           </div>
         </div>
 
@@ -244,49 +221,22 @@ export default function CalendarPage() {
                 key={i}
                 className="min-h-28 p-3 border border-zinc-200 dark:border-zinc-900"
               >
-                <Skeleton
-                  {...(theme === "dark"
-                    ? { baseColor: "#202020", highlightColor: "#444" }
-                    : {})}
-                  width={20}
-                  height={16}
-                  className="mb-2"
-                />
+                <Skeleton className="h-4 w-5 mb-2" />
               </div>
             ))}
           </div>
         </div>
 
         <div className="mt-8">
-          <Skeleton
-            {...(theme === "dark"
-              ? { baseColor: "#202020", highlightColor: "#444" }
-              : {})}
-            width={200}
-            height={24}
-            className="mb-4"
-          />
+          <Skeleton className="h-6 w-[200px] mb-4" />
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
                 className="p-4 border border-zinc-200 dark:border-zinc-900 rounded-lg"
               >
-                <Skeleton
-                  {...(theme === "dark"
-                    ? { baseColor: "#202020", highlightColor: "#444" }
-                    : {})}
-                  width="60%"
-                  height={20}
-                  className="mb-2"
-                />
-                <Skeleton
-                  {...(theme === "dark"
-                    ? { baseColor: "#202020", highlightColor: "#444" }
-                    : {})}
-                  width="40%"
-                  height={16}
-                />
+                <Skeleton className="h-5 w-[60%] mb-2" />
+                <Skeleton className="h-4 w-[40%]" />
               </div>
             ))}
           </div>

@@ -10,9 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import { useTheme } from "next-themes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface APIAbsencePeriod {
   _Number: string;
@@ -104,7 +102,6 @@ interface ScheduleClassListing {
 }
 
 export default function AttendancePage() {
-  const { theme } = useTheme();
   const [dataShape, setDataShape] = useState<AttendanceDataShape | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -352,12 +349,7 @@ export default function AttendancePage() {
     <div className="p-8 min-h-screen dark:bg-zinc-900">
       <p className="text-xl font-medium pb-3">
         {isLoading ? (
-          <Skeleton
-            {...(theme === "dark"
-              ? { baseColor: "#202020", highlightColor: "#444" }
-              : {})}
-            width={120}
-          />
+          <Skeleton className="h-7 w-[120px]" />
         ) : (
           "Attendance"
         )}
@@ -373,66 +365,42 @@ export default function AttendancePage() {
                   <TableRow>
                     <TableHead>
                       {isLoading ? (
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-16" />
                       ) : (
                         "Period"
                       )}
                     </TableHead>
                     <TableHead>
                       {isLoading ? (
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-20" />
                       ) : (
                         "Activities"
                       )}
                     </TableHead>
                     <TableHead>
                       {isLoading ? (
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-16" />
                       ) : (
                         "Excused"
                       )}
                     </TableHead>
                     <TableHead>
                       {isLoading ? (
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-16" />
                       ) : (
                         "Tardies"
                       )}
                     </TableHead>
                     <TableHead>
                       {isLoading ? (
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-20" />
                       ) : (
                         "Unexcused"
                       )}
                     </TableHead>
                     <TableHead>
                       {isLoading ? (
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-32" />
                       ) : (
                         "Unexcused Tardies"
                       )}
@@ -444,64 +412,22 @@ export default function AttendancePage() {
                     ? Array.from({ length: 7 }).map((_, i) => (
                         <TableRow key={i}>
                           <TableCell>
-                            <Skeleton
-                              {...(theme === "dark"
-                                ? {
-                                    baseColor: "#202020",
-                                    highlightColor: "#444",
-                                  }
-                                : {})}
-                            />
+                            <Skeleton className="h-4 w-32" />
                           </TableCell>
                           <TableCell>
-                            <Skeleton
-                              {...(theme === "dark"
-                                ? {
-                                    baseColor: "#202020",
-                                    highlightColor: "#444",
-                                  }
-                                : {})}
-                            />
+                            <Skeleton className="h-4 w-8" />
                           </TableCell>
                           <TableCell>
-                            <Skeleton
-                              {...(theme === "dark"
-                                ? {
-                                    baseColor: "#202020",
-                                    highlightColor: "#444",
-                                  }
-                                : {})}
-                            />
+                            <Skeleton className="h-4 w-8" />
                           </TableCell>
                           <TableCell>
-                            <Skeleton
-                              {...(theme === "dark"
-                                ? {
-                                    baseColor: "#202020",
-                                    highlightColor: "#444",
-                                  }
-                                : {})}
-                            />
+                            <Skeleton className="h-4 w-8" />
                           </TableCell>
                           <TableCell>
-                            <Skeleton
-                              {...(theme === "dark"
-                                ? {
-                                    baseColor: "#202020",
-                                    highlightColor: "#444",
-                                  }
-                                : {})}
-                            />
+                            <Skeleton className="h-4 w-8" />
                           </TableCell>
                           <TableCell>
-                            <Skeleton
-                              {...(theme === "dark"
-                                ? {
-                                    baseColor: "#202020",
-                                    highlightColor: "#444",
-                                  }
-                                : {})}
-                            />
+                            <Skeleton className="h-4 w-8" />
                           </TableCell>
                         </TableRow>
                       ))
@@ -629,20 +555,10 @@ export default function AttendancePage() {
                   <div className="flex items-start justify-between">
                     <div className="pr-4 flex-1">
                       <h2 className="font-semibold text-lg mb-2">
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                          width={120}
-                        />
+                        <Skeleton className="h-6 w-[120px]" />
                       </h2>
                       <p className="text-sm pt-2">
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                          width={200}
-                        />
+                        <Skeleton className="h-4 w-[200px]" />
                       </p>
                     </div>
                   </div>
@@ -653,12 +569,7 @@ export default function AttendancePage() {
       )}
       <p className="text-xs text-gray-500 mt-4">
         {isLoading ? (
-          <Skeleton
-            {...(theme === "dark"
-              ? { baseColor: "#202020", highlightColor: "#444" }
-              : {})}
-            width={200}
-          />
+          <Skeleton className="h-4 w-[200px]" />
         ) : (
           `Rendered ${dataShape?.absenceDays.length || 0} attendance anomalies.`
         )}

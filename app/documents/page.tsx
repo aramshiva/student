@@ -26,9 +26,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import Link from "next/link";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import { useTheme } from "next-themes";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StudentDocument {
   comment: string;
@@ -39,7 +37,6 @@ interface StudentDocument {
 }
 
 export default function DocumentsPage() {
-  const { theme } = useTheme();
   const [docs, setDocs] = useState<StudentDocument[]>([]);
   const [dateSort, setDateSort] = useState<"desc" | "asc">("desc");
   const [isLoading, setIsLoading] = useState(true);
@@ -284,13 +281,7 @@ export default function DocumentsPage() {
           <div className="flex flex-wrap items-center gap-4 mb-4">
             <div className="flex items-center gap-2 text-sm">
               {isLoading ? (
-                <Skeleton
-                  {...(theme === "dark"
-                    ? { baseColor: "#202020", highlightColor: "#444" }
-                    : {})}
-                  height={32}
-                  width={190}
-                />
+                <Skeleton className="h-8 w-[190px]" />
               ) : (
                 <Select
                   value={selectedType}
@@ -331,33 +322,21 @@ export default function DocumentsPage() {
                   title="Click to sort by date"
                 >
                   {isLoading ? (
-                    <Skeleton
-                      {...(theme === "dark"
-                        ? { baseColor: "#202020", highlightColor: "#444" }
-                        : {})}
-                    />
+                    <Skeleton className="h-4 w-20" />
                   ) : (
                     `Date ${dateSort === "desc" ? "↓" : "↑"}`
                   )}
                 </TableHead>
                 <TableHead>
                   {isLoading ? (
-                    <Skeleton
-                      {...(theme === "dark"
-                        ? { baseColor: "#202020", highlightColor: "#444" }
-                        : {})}
-                    />
+                    <Skeleton className="h-4 w-16" />
                   ) : (
                     "Type"
                   )}
                 </TableHead>
                 <TableHead>
                   {isLoading ? (
-                    <Skeleton
-                      {...(theme === "dark"
-                        ? { baseColor: "#202020", highlightColor: "#444" }
-                        : {})}
-                    />
+                    <Skeleton className="h-4 w-24" />
                   ) : (
                     "Name"
                   )}
@@ -369,33 +348,16 @@ export default function DocumentsPage() {
                 ? Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell>
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-24" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-16" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                        />
+                        <Skeleton className="h-4 w-64" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton
-                          {...(theme === "dark"
-                            ? { baseColor: "#202020", highlightColor: "#444" }
-                            : {})}
-                          width={40}
-                        />
+                        <Skeleton className="h-8 w-10" />
                       </TableCell>
                     </TableRow>
                   ))
@@ -454,12 +416,7 @@ export default function DocumentsPage() {
       {!isLoading && docs.length > 0 && (
         <p className="text-xs text-gray-500">
           {isLoading ? (
-            <Skeleton
-              {...(theme === "dark"
-                ? { baseColor: "#202020", highlightColor: "#444" }
-                : {})}
-              width={150}
-            />
+            <Skeleton className="h-4 w-[150px]" />
           ) : (
             `Showing ${docs.length} document(s).`
           )}

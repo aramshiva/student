@@ -10,12 +10,9 @@ import {
   numericToLetterGrade,
   loadCalculateGradesEnabled,
 } from "@/utils/gradebook";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import { useTheme } from "next-themes";
+import { Skeleton } from "@/components/ui/skeleton"
 
 function GradebookPageContent() {
-  const { theme } = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [gradebookData, setGradebookData] = useState<GradebookData | null>(
@@ -274,47 +271,16 @@ function GradebookPageContent() {
       <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 py-6">
           <div className="flex-1 space-y-3">
-            <Skeleton
-              {...(theme === "dark"
-                ? { baseColor: "#202020", highlightColor: "#444" }
-                : {})}
-              height={24}
-              width={160}
-            />
+            <Skeleton className="h-6 w-40" />
             <div className="flex items-center gap-3">
-              <Skeleton
-                {...(theme === "dark"
-                  ? { baseColor: "#202020", highlightColor: "#444" }
-                  : {})}
-                height={20}
-                width={110}
-              />
-              <Skeleton
-                {...(theme === "dark"
-                  ? { baseColor: "#202020", highlightColor: "#444" }
-                  : {})}
-                height={36}
-                width={260}
-              />
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-9 w-64" />
             </div>
           </div>
           <div className="flex items-center space-x-10 md:self-start">
             <div className="text-right space-y-2">
-              <Skeleton
-                {...(theme === "dark"
-                  ? { baseColor: "#202020", highlightColor: "#444" }
-                  : {})}
-                height={16}
-                width={34}
-                className="ml-auto"
-              />
-              <Skeleton
-                {...(theme === "dark"
-                  ? { baseColor: "#202020", highlightColor: "#444" }
-                  : {})}
-                height={28}
-                width={70}
-              />
+              <Skeleton className="h-4 w-8 ml-auto" />
+              <Skeleton className="h-7 w-16" />
             </div>
           </div>
         </div>
@@ -323,44 +289,14 @@ function GradebookPageContent() {
             <div key={i} className="p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex flex-row space-x-6 items-center">
-                  <Skeleton
-                    {...(theme === "dark"
-                      ? { baseColor: "#202020", highlightColor: "#444" }
-                      : {})}
-                    height={20}
-                    width={180}
-                  />
-                  <Skeleton
-                    {...(theme === "dark"
-                      ? { baseColor: "#202020", highlightColor: "#444" }
-                      : {})}
-                    height={16}
-                    width={220}
-                  />
+                  <Skeleton className="h-5 w-44" />
+                  <Skeleton className="h-4 w-56" />
                 </div>
-                <Skeleton
-                  {...(theme === "dark"
-                    ? { baseColor: "#202020", highlightColor: "#444" }
-                    : {})}
-                  height={20}
-                  width={56}
-                />
+                <Skeleton className="h-5 w-14" />
               </div>
               <div className="ml-4 pt-1 space-y-2">
-                <Skeleton
-                  {...(theme === "dark"
-                    ? { baseColor: "#202020", highlightColor: "#444" }
-                    : {})}
-                  height={32}
-                  width={90}
-                />
-                <Skeleton
-                  {...(theme === "dark"
-                    ? { baseColor: "#202020", highlightColor: "#444" }
-                    : {})}
-                  height={16}
-                  width={80}
-                />
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-4 w-20" />
               </div>
             </div>
           ))}
