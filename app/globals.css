@@ -4,6 +4,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+body {
+  background-color: oklch(1 0 0);
+}
+
+.dark body {
+  background-color: oklch(21% 0.006 285.885);
+}
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

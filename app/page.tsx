@@ -17,8 +17,8 @@ export default function Home() {
   }, [setTheme]);
   return (
     <>
-      <div>
-        <div className="p-20 relative">
+      <div className="bg-white">
+        <div className="p-20 relative bg-white">
           <div className="grid grid-cols-[minmax(18rem,28rem)_1fr] gap-10 items-start">
             <div className="max-w-lg">
               <p className="text-4xl font-medium pb-1">
