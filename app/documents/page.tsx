@@ -414,7 +414,7 @@ export default function DocumentsPage() {
         </Card>
       )}
       {!isLoading && docs.length > 0 && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-zinc-500">
           {isLoading ? (
             <Skeleton className="h-4 w-[150px]" />
           ) : (

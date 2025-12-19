@@ -221,12 +221,12 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
               <DrawerTrigger asChild>
                 <button
                   type="button"
-                  className="w-full text-left px-3 py-2 border rounded-md bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition flex flex-col"
+                  className="w-full text-left px-3 py-2 border rounded-md bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition flex flex-col"
                 >
                   <span className="font-medium text-sm truncate">
                     {selectedDistrict.name}
                   </span>
-                  <span className="text-xs text-gray-500 truncate">
+                  <span className="text-xs text-zinc-500 truncate">
                     {selectedDistrict.address}
                   </span>
                 </button>
@@ -270,7 +270,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                         !districtSearchLoading &&
                         districts.length === 0 &&
                         !districtSearchError && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-zinc-500">
                             No districts found. Try another ZIP or use a custom
                             URL.
                           </p>
@@ -306,7 +306,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                               >
                                 <div>
                                   <p className="font-medium">{d.name}</p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-zinc-500">
                                     {d.address}
                                   </p>
                                 </div>
@@ -316,7 +316,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                         </div>
                       )}
                       <div className="flex justify-between items-center pt-1">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-zinc-500">
                           {districts.length > 0 &&
                             `${districts.length} result${
                               districts.length === 1 ? "" : "s"
@@ -325,7 +325,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                         <button
                           type="button"
                           onClick={() => setShowCustomUrl(true)}
-                          className="text-xs underline text-zinc-500 hover:text-black dark:hover:text-gray-600"
+                          className="text-xs underline text-zinc-500 hover:text-black dark:hover:text-zinc-600"
                         >
                           Use custom URL
                         </button>
@@ -399,7 +399,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           )}
           <LoginButton />
         </form>
-        <p className="text-gray-500 text-xs pt-5 w-full max-w-md mb-4">
+        <p className="text-zinc-500 text-xs pt-5 w-full max-w-md mb-4">
           StudentVUE is a registered trademark of Edupoint Educational Systems,
           LLC. This project is not affiliated with Edupoint, or Synergy.
         </p>

@@ -36,7 +36,7 @@ export function getGradeColor(grade: string): string {
     case "P":
       return "text-green-700 bg-green-200 dark:text-green-300 dark:bg-green-800";
     default:
-      return "text-gray-700 bg-gray-200 dark:text-gray-300 dark:bg-gray-700";
+      return "text-zinc-700 bg-zinc-200 dark:text-zinc-300 dark:bg-zinc-700";
   }
 }
 

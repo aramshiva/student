@@ -205,7 +205,7 @@ export default function AssignmentDetailPage() {
             <h1 className="text-lg md:text-xl font-semibold text-black dark:text-white truncate">
               {assignment._Measure || "Assignment"}
             </h1>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-zinc-500 mt-0.5">
               ID: {assignmentId}
               {course ? ` • ${course._CourseName}` : ""}
             </p>
@@ -216,7 +216,7 @@ export default function AssignmentDetailPage() {
                 {percent}
               </div>
               {scoreDisplay !== "—" && (
-                <p className="text-xs text-gray-500">{scoreDisplay}</p>
+                <p className="text-xs text-zinc-500">{scoreDisplay}</p>
               )}
             </div>
           )}
@@ -271,7 +271,7 @@ export default function AssignmentDetailPage() {
             {assignment._MeasureDescription && (
               <div>
                 <h3 className="text-sm font-medium mb-1">Description</h3>
-                <p className="whitespace-pre-line leading-snug text-gray-700">
+                <p className="whitespace-pre-line leading-snug text-zinc-700">
                   {assignment._MeasureDescription}
                 </p>
               </div>
@@ -286,7 +286,7 @@ export default function AssignmentDetailPage() {
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium">
+      <p className="text-[11px] uppercase tracking-wide text-zinc-500 font-medium">
         {label}
       </p>
       <div className="text-sm dark:text-white text-black break-words">

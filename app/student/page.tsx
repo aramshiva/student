@@ -397,7 +397,7 @@ export default function StudentDashboard() {
             <ul className="divide-y text-sm">
               {todaySchedule.map((c) => (
                 <li key={c.period} className="py-2 flex items-center gap-4">
-                  <span className="w-8 text-xs text-gray-500">
+                  <span className="w-8 text-xs text-zinc-500">
                     {c.period.toString().padStart(2, "0")}
                   </span>
                   <div className="flex-1 min-w-0">

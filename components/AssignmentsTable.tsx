@@ -121,7 +121,7 @@ function ScoreEditor({
         }}
         className="h-7 w-16 text-xs"
       />
-      <span className="text-xs text-gray-500">/</span>
+      <span className="text-xs text-zinc-500">/</span>
       <Input
         type="text"
         inputMode="decimal"
@@ -440,7 +440,7 @@ function AssignmentsTableBase({
               </div>
               {desc && desc.trim().length > 0 ? (
                 <div
-                  className="hidden md:block text-xs text-gray-600 dark:text-gray-400 break-words whitespace-pre-line"
+                  className="hidden md:block text-xs text-zinc-600 dark:text-zinc-400 break-words whitespace-pre-line"
                   title={shouldTruncate && !isExpanded ? desc : undefined}
                   style={
                     shouldTruncate && !isExpanded
@@ -568,7 +568,7 @@ function AssignmentsTableBase({
         cell: ({ row }) => {
           const pct = assignmentPercents[row.original._GradebookID];
           if (pct == null || isNaN(pct)) {
-            return <span className="text-sm text-gray-400">—</span>;
+            return <span className="text-sm text-zinc-400">—</span>;
           }
           const letter = numericToLetterGrade(Math.round(pct));
           getGradeColor(letter);
@@ -590,7 +590,7 @@ function AssignmentsTableBase({
             E: "bg-red-600 dark:bg-red-700",
           };
           const barFill =
-            letterBarMap[letter] || "bg-gray-500 dark:bg-gray-600";
+            letterBarMap[letter] || "bg-zinc-500 dark:bg-zinc-600";
           const width = Math.max(0, Math.min(100, pct));
           return (
             <div
@@ -599,13 +599,13 @@ function AssignmentsTableBase({
                 1,
               )} percent (${letter})`}
             >
-              <div className="h-2 w-16 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
+              <div className="h-2 w-16 rounded bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
                 <div
                   className={`h-2 transition-all duration-300 ${barFill}`}
                   style={{ width: `${width}%` }}
                 />
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400 tabular-nums">
+              <span className="text-xs text-zinc-600 dark:text-zinc-400 tabular-nums">
                 {Math.round(pct)}%
               </span>
             </div>
@@ -668,7 +668,7 @@ function AssignmentsTableBase({
           if (delta == null || isNaN(delta)) {
             return (
               <span
-                className="text-sm text-gray-400"
+                className="text-sm text-zinc-400"
                 title="No score change data"
               >
                 —
@@ -686,7 +686,7 @@ function AssignmentsTableBase({
               ? "text-green-600"
               : adj < 0
                 ? "text-red-600"
-                : "text-gray-600";
+                : "text-zinc-600";
           return (
             <span
               className={`text-sm font-medium ${colorClass}`}
@@ -797,7 +797,7 @@ function AssignmentsTableBase({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-950"
+                    className="hover:bg-zinc-50 dark:hover:bg-zinc-950"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3">
@@ -813,7 +813,7 @@ function AssignmentsTableBase({
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center text-sm text-gray-500"
+                    className="h-24 text-center text-sm text-zinc-500"
                   >
                     No results.
                   </TableCell>

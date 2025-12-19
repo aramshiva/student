@@ -186,7 +186,7 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
           <div className="text-3xl font-semibold tracking-tight">
             {totals.earned}/{totals.possible}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-zinc-500">
             {Number.isFinite(pct) ? `${Math.round(pct)}%` : "N/A"} overall
           </div>
         </div>

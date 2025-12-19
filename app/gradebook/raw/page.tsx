@@ -51,7 +51,7 @@ export default function GradebookApiTestPage() {
       {loading && <div>Loading gradebook...</div>}
       {error && <div className="text-red-600">{error}</div>}
       {!loading && !error && (
-        <pre className="whitespace-pre-wrap bg-gray-50 dark:bg-zinc-900 p-4 rounded border">
+        <pre className="whitespace-pre-wrap bg-zinc-50 dark:bg-zinc-900 p-4 rounded border">
           {data ? JSON.stringify(data, null, 2) : "No data returned"}
         </pre>
       )}

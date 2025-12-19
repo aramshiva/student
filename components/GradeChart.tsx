@@ -189,7 +189,7 @@ export function GradeChart({
             </AreaChart>
           </ChartContainer>
           <div className="flex items-center justify-end gap-1 mt-1 pr-0">
-            <label className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-gray-500 select-none">
+            <label className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-zinc-500 select-none">
               <Checkbox
                 checked={effectiveSticky}
                 onCheckedChange={(val) => handleSetSticky(val === true)}
@@ -314,7 +314,7 @@ export function GradeChart({
           </AreaChart>
         </ChartContainer>
         <div className="flex items-center justify-end gap-2 mt-2 pr-1">
-          <label className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 select-none">
+          <label className="flex items-center gap-2 text-xs uppercase tracking-wide text-zinc-500 select-none">
             <Checkbox
               checked={effectiveSticky}
               onCheckedChange={(val) => handleSetSticky(val === true)}

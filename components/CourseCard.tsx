@@ -59,13 +59,13 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
       <CardContent>
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500">Teacher:</span>
+            <span className="text-sm text-zinc-500">Teacher:</span>
             <span className="text-sm font-medium text-black">
               {course._Staff}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-500">Current Score:</span>
+            <span className="text-sm text-zinc-500">Current Score:</span>
             <span className="text-sm font-bold text-black">
               {currentMark?._CalculatedScoreRaw || "N/A"}%
             </span>
@@ -74,7 +74,7 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
 
         {currentMark?.GradeCalculationSummary?.AssignmentGradeCalc && (
           <div className="mt-4 pt-4 border-t border-zinc-100">
-            <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+            <h4 className="text-xs font-semibold text-zinc-700 uppercase tracking-wide mb-2">
               Grade Breakdown
             </h4>
             <div className="space-y-1">
@@ -84,7 +84,7 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
                     key={index}
                     className="flex justify-between items-center text-xs"
                   >
-                    <span className="text-gray-500">
+                    <span className="text-zinc-500">
                       {calc._Type} ({calc._Weight})
                     </span>
                     <span className="font-medium">

@@ -174,14 +174,14 @@ export default function SettingsPage() {
     <div className="p-8 space-y-6 min-h-screen dark:bg-zinc-900">
       <div>
         <p className="text-xl font-medium pb-3">Settings</p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-zinc-500">
           Customize your student experience.
         </p>
       </div>
       <section className="space-y-4">
         <header>
           <h2 className="text-lg font-medium">Appearance</h2>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-zinc-500">
             Customize the look of Student to match your preferred theme.
           </p>
         </header>
@@ -238,7 +238,7 @@ export default function SettingsPage() {
       <section className="space-y-4">
         <header>
           <h2 className="text-lg font-medium">Grades & GPA Configuration</h2>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-zinc-500">
             Edit thresholds based on your schools grading policy
           </p>
         </header>
@@ -259,7 +259,7 @@ export default function SettingsPage() {
             >
               <span className="font-medium">Calculate Grades</span>
               <br />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 When enabled, grades are recomputed locally using assignments
                 and your custom bounds instead of accepting the portal&apos;s
                 reported mark. This may be less accurate if your school uses
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                 Hide Grade Calculation Warnings
               </span>
               <br />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 When enabled, warnings about grade calculation accuracy will be
                 hidden.
               </span>
@@ -375,7 +375,7 @@ export default function SettingsPage() {
             Reset to Default
           </Button>
           {savedMsg && (
-            <span className="text-xs text-gray-500 transition-opacity duration-500">
+            <span className="text-xs text-zinc-500 transition-opacity duration-500">
               {savedMsg}
             </span>
           )}
@@ -384,7 +384,7 @@ export default function SettingsPage() {
       <section className="space-y-4">
         <header>
           <h2 className="text-lg font-medium">Privacy & data</h2>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-zinc-500">
             Manage your privacy and data preferences
           </p>
         </header>
@@ -409,7 +409,7 @@ export default function SettingsPage() {
             >
               <span className="font-medium">Disable Umami Analytics</span>
               <br />
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 We use <Link href="https://umami.is">Umami</Link>, a privacy
                 focused analytics tool, to gather anonymous statistics. All data
                 is anonymous and there is no identifable information or

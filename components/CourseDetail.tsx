@@ -280,7 +280,7 @@ export default function CourseDetail({
     } else if (type.toLowerCase().includes("fitness")) {
       return "bg-purple-100 text-purple-800";
     }
-    return "bg-gray-100 text-gray-800";
+    return "bg-zinc-100 text-zinc-800";
   };
 
   const [chartSticky, setChartSticky] = React.useState(initialSticky);
@@ -296,13 +296,13 @@ export default function CourseDetail({
   }, [chartSticky, onStateChange]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <div className="bg-white dark:bg-zinc-900 shadow-sm border-b sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <button
               onClick={onBack}
-              className="mb-4 flex items-center text-sm text-gray-500 hover:text-black dark:hover:text-white transition-colors"
+              className="mb-4 flex items-center text-sm text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
             >
               ← Back to Dashboard
             </button>
@@ -319,11 +319,11 @@ export default function CourseDetail({
                   </h1>
                   {!chartSticky && (
                     <>
-                      <p className="text-gray-500 text-sm">
+                      <p className="text-zinc-500 text-sm">
                         {course._CourseID} • Period {course._Period} • Room{" "}
                         {course._Room}
                       </p>
-                      <p className="text-gray-500 text-sm">
+                      <p className="text-zinc-500 text-sm">
                         {course._Staff} • {course._StaffEMail}
                       </p>
                     </>
@@ -336,7 +336,7 @@ export default function CourseDetail({
                 >
                   {effectiveLetter || "N/A"}
                 </div>
-                <p className="text-xs md:text-sm text-gray-500 mt-1">
+                <p className="text-xs md:text-sm text-zinc-500 mt-1">
                   {effectivePct != null && Number.isFinite(effectivePct)
                     ? `${Math.round(effectivePct)}%`
                     : "N/A"}

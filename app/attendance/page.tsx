@@ -505,13 +505,13 @@ export default function AttendancePage() {
                             type="button"
                             aria-label={isOpen ? "Collapse" : "Expand"}
                             onClick={() => toggleExpand(a.date)}
-                            className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-gray-100 dark:hover:bg-zinc-950 transition"
+                            className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-zinc-100 dark:hover:bg-zinc-950 transition"
                           >
                             {isOpen ? "−" : "+"}
                           </button>
                           {a.displayDate}
                         </h2>
-                        <p className="text-sm pt-2 text-gray-500">
+                        <p className="text-sm pt-2 text-zinc-500">
                           {a.reason || "(No reason)"} -{" "}
                           {a.note && <span>{a.note}</span>}
                         </p>
@@ -567,7 +567,7 @@ export default function AttendancePage() {
           </div>
         </>
       )}
-      <p className="text-xs text-gray-500 mt-4">
+      <p className="text-xs text-zinc-500 mt-4">
         {isLoading ? (
           <Skeleton className="h-4 w-[200px]" />
         ) : (

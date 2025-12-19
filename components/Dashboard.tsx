@@ -143,7 +143,7 @@ export default function Dashboard({
           </div>
           <div className="flex items-center space-x-4 md:self-start">
             <div className="text-right">
-              <div className="text-sm text-gray-500">GPA</div>
+              <div className="text-sm text-zinc-500">GPA</div>
               <div className="text-2xl font-bold">{gpa}</div>
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function Dashboard({
                         <span className="font-semibold text-black dark:text-white text-lg">
                           {course._Period}: {course._Title}
                         </span>
-                        <span className="text-gray-500 text-sm mt-1">
+                        <span className="text-zinc-500 text-sm mt-1">
                           {course._Staff} • Room {course._Room}
                         </span>
                       </div>
@@ -184,7 +184,7 @@ export default function Dashboard({
                         <div className="text-3xl font-bold text-left">
                           {displayScore}
                         </div>
-                        <div className="text-sm text-gray-500 text-left">
+                        <div className="text-sm text-zinc-500 text-left">
                           {calcGrades
                             ? Number.isFinite(effectivePct)
                               ? `${(effectivePct as number).toFixed(1)}%`
@@ -205,7 +205,7 @@ export default function Dashboard({
 
                         return (
                           <div
-                            className={`text-xs ${missingCount > 0 ? "text-red-500" : "text-gray-500"} text-right`}
+                            className={`text-xs ${missingCount > 0 ? "text-red-500" : "text-zinc-500"} text-right`}
                           >
                             {missingCount} missing assignment
                             {missingCount === 1 ? "" : "s"}
@@ -221,7 +221,7 @@ export default function Dashboard({
         </div>
 
         <div className="mt-4 text-center">
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-zinc-500">
             {lastRefreshed &&
               `Last refreshed ${lastRefreshed.toLocaleTimeString()} • `}
             <button
