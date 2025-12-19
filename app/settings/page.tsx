@@ -40,16 +40,8 @@ import {
 
 const ORDER = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"];
 
-const RADIUS_OPTIONS = [
-  { label: "None", value: 0 },
-  { label: "Extra Small", value: 0.3 },
-  { label: "Small", value: 0.5 },
-  { label: "Regular", value: 0.75 },
-  { label: "Large", value: 1.0 },
-];
-
 export default function SettingsPage() {
-  const { color, setColor, radius, setRadius } = useThemeCustomizer();
+  const { color, setColor } = useThemeCustomizer();
   const [entries, setEntries] = useState<GPAScaleEntry[]>([]);
   const [bounds, setBounds] = useState<GradeBound[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -206,27 +198,6 @@ export default function SettingsPage() {
                         />
                         <span>{THEMES[themeColor].label}</span>
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium block">UI Radius</label>
-              <Select
-                value={radius.toString()}
-                onValueChange={(val) => setRadius(parseFloat(val))}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a radius" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RADIUS_OPTIONS.map((option) => (
-                    <SelectItem
-                      key={option.value}
-                      value={option.value.toString()}
-                    >
-                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

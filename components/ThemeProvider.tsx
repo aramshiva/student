@@ -289,8 +289,6 @@ export const THEMES: Record<
 interface themecustomizercontext {
   color: ThemeColor;
   setColor: (color: ThemeColor) => void;
-  radius: number;
-  setRadius: (radius: number) => void;
 }
 
 const themecustomizercontext = React.createContext<
@@ -307,21 +305,17 @@ export function useThemeCustomizer() {
 function ThemeCustomizerProvider({ children }: { children: React.ReactNode }) {
   const { resolvedTheme } = useTheme();
   const [color, setColor] = React.useState<ThemeColor>("Zinc");
-  const [radius, setRadius] = React.useState<number>(0.875);
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
     const savedColor = localStorage.getItem("theme-color") as ThemeColor;
-    const savedRadius = parseFloat(localStorage.getItem("theme-radius") || "");
     if (savedColor && THEMES[savedColor]) setColor(savedColor);
-    if (!isNaN(savedRadius)) setRadius(savedRadius);
   }, []);
 
   React.useEffect(() => {
     if (!mounted) return;
     localStorage.setItem("theme-color", color);
-    localStorage.setItem("theme-radius", radius.toString());
 
     const root = document.documentElement;
     const theme = THEMES[color];
@@ -331,12 +325,11 @@ function ThemeCustomizerProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--primary", colors.primary);
     root.style.setProperty("--primary-foreground", colors.primaryForeground);
     root.style.setProperty("--ring", colors.ring);
-    root.style.setProperty("--radius", `${radius}rem`);
-  }, [color, radius, resolvedTheme, mounted]);
+  }, [color, resolvedTheme, mounted]);
 
   return (
     <themecustomizercontext.Provider
-      value={{ color, setColor, radius, setRadius }}
+      value={{ color, setColor }}
     >
       {children}
     </themecustomizercontext.Provider>
