@@ -58,7 +58,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="bg-black text-white w-screen relative">
+        <div className="bg-zinc-900 text-white w-screen relative">
           {/* design */}
           <div className="grid grid-cols-2 gap-10 items-start">
             <div className="relative p-10 w-full flex justify-start">
@@ -99,7 +99,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-black text-white w-screen">
+        <div className="bg-zinc-900 text-white w-screen">
           {/* speed and power */}
           <div className="p-20 w-[30rem]">
             <p className="text-2xl">

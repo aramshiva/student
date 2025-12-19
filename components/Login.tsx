@@ -110,19 +110,18 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                 <TriangleAlert /> Warning
               </AlertDialogTitle>
               <AlertDialogDescription>
+                Student is currently not approved by the Northshore School District information technology department, nor affilated in anyway.
+                Use of the app is at your own risk and you acknowledge the risks. 
                 The Northshore School District is not affilated with Student.
-                Use of the app is at the student{"'"}s own risk.{" "}
                 <strong>
                   Your credentials are never saved, stored, or shared.
                 </strong>{" "}
-                We use them to connect your device with StudentVUE/Synergy{"'"}s
+                We use them <strong>only</strong> to connect your device with StudentVUE/Synergy{"'"}s
                 servers to get you the data.
                 <br />
                 <br />
                 Student is currently in contact with the Northshore IT
-                department for getting approval. At the current time, Student
-                does not officially recommend using the app unless asked to beta
-                test
+                department for getting approval.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -150,12 +149,12 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
 
   return (
     <>
-      <div className="flex flex-col items-center justify-center bg-white min-h-screen text-black">
+      <div className="flex flex-col items-center justify-center min-h-screen dark:bg-zinc-900">
         <div className="text-left w-full max-w-md mb-4">
           <Link href="/">
             <p className="font-bold font-[Gosha]">student</p>
           </Link>
-          <p className="text-gray-500">
+          <p className="text-zinc-500">
             A alternative client for StudentVUE, with a refreshed UI and more
             powerful features to help maintain academics.
           </p>
@@ -196,8 +195,8 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
               }
             />
             <div className="flex items-center mt-2 pt-2">
-              <EyeOff className="w-9 h-3 mr-1 text-gray-700" />
-              <p className="text-xs text-gray-700">
+              <EyeOff className="w-9 h-3 mr-1 text-zinc-500" />
+              <p className="text-xs text-zinc-500">
                 Your device directly, and securely connects to
                 Synergy/StudentVUE. We can{"'"}t see your passwords or your
                 grades.
@@ -222,7 +221,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
               <DrawerTrigger asChild>
                 <button
                   type="button"
-                  className="w-full text-left px-3 py-2 border rounded-md bg-white hover:bg-gray-50 transition flex flex-col"
+                  className="w-full text-left px-3 py-2 border rounded-md bg-white dark:bg-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-700 transition flex flex-col"
                 >
                   <span className="font-medium text-sm truncate">
                     {selectedDistrict.name}
@@ -232,7 +231,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                   </span>
                 </button>
               </DrawerTrigger>
-              <DrawerContent className="flex flex-col">
+              <DrawerContent className="flex flex-col dark:bg-zinc-800">
                 <DrawerHeader>
                   <DrawerTitle>Select District</DrawerTitle>
                   <DrawerDescription>
@@ -299,10 +298,10 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                                   }));
                                   setOpenDrawer(false);
                                 }}
-                                className={`h-full w-full text-center hover:bg-gray-100 ${
+                                className={`py-2 h-full w-full text-center hover:bg-zinc-100 dark:hover:bg-zinc-700 ${
                                   selected
                                     ? "border-blue-500 bg-blue-150"
-                                    : "border-zinc-200"
+                                    : "not-dark:border-zinc-200"
                                 }`}
                               >
                                 <div>
@@ -326,7 +325,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                         <button
                           type="button"
                           onClick={() => setShowCustomUrl(true)}
-                          className="text-xs underline text-gray-500 hover:text-black"
+                          className="text-xs underline text-zinc-500 hover:text-black dark:hover:text-gray-600"
                         >
                           Use custom URL
                         </button>

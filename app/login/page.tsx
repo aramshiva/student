@@ -56,7 +56,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen px-9">
+    <div className="min-h-screen px-9 dark:bg-zinc-900">
       <Login onLogin={handleLogin} isLoading={isLoading} error={error} />
     </div>
   );
