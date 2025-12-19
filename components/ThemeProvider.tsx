@@ -325,6 +325,7 @@ function ThemeCustomizerProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--primary", colors.primary);
     root.style.setProperty("--primary-foreground", colors.primaryForeground);
     root.style.setProperty("--ring", colors.ring);
+    root.style.setProperty("--chart-1", colors.primary);
   }, [color, resolvedTheme, mounted]);
 
   return (
