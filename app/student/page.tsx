@@ -321,7 +321,7 @@ export default function StudentDashboard() {
   const greeting = greetingForNow();
 
   return (
-    <div className="p-8 space-y-5 min-h-screen dark:bg-zinc-900">
+    <div className="p-8 space-y-5 min-h-screen dark:bg-zinc-900 bg-gradient-to-tl from-primary/10 via-transparent backdrop-blur-sm">
       <div className="flex items-center gap-8">
         {photoBase64 && (
           <Image
