@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Student",
-  description: "A modern StudentVUE replacement",
+  description: "A modern StudentVUE® replacement",
 };
 
 import ClientLayout from "@/components/ClientLayout";

@@ -25,7 +25,7 @@ export default function Home() {
                 Empower your academia. <Badge variant="outline">BETA</Badge>
               </p>
               <p className="text-xl pb-5 wrap-normal">
-                Student is a clean, minimalist, powerful, open-source StudentVUE
+                Student is a clean, minimalist, powerful, open-source StudentVUE®
                 client. Built by students, for students.
               </p>
               <div className="flex gap-2">
@@ -33,11 +33,11 @@ export default function Home() {
                   <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">
                     <Image
                       src="/studentvue.png"
-                      alt="StudentVUE logo"
+                      alt="StudentVUE® logo"
                       width="16"
                       height="16"
                     />{" "}
-                    Log in with StudentVUE
+                    Log in with StudentVUE®
                   </Button>
                 </Link>
                 <Link href="https://github.com/aramshiva/student">
@@ -75,7 +75,7 @@ export default function Home() {
               <p className="text-2xl">Clean, minimalistic UI</p>
               <p>
                 Student features an ultra slick, clean interface. It{"'"}s miles
-                ahead of StudentVUE{"'"}s clunky old interface.
+                ahead of StudentVUE®{"'"}s clunky old interface.
               </p>
             </div>
           </div>
@@ -122,18 +122,18 @@ export default function Home() {
             <div className="pr-10">
               <p className="text-xl pb-1">Students</p>
               <p className="pb-5">
-                Log in today to experience a better StudentVUE experience. Fast,
+                Log in today to experience a better StudentVUE® experience. Fast,
                 Clean and more powerful than ever.
               </p>
               <Link href="/login">
                 <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">
                   <Image
                     src="/studentvue.png"
-                    alt="StudentVUE logo"
+                    alt="StudentVUE® logo"
                     width="16"
                     height="16"
                   />{" "}
-                  Log in with StudentVUE
+                  Log in with StudentVUE®
                 </Button>
               </Link>
             </div>

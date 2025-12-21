@@ -8,29 +8,29 @@ export default function Privacy() {
         <h3 className="font-medium">Effective December 20th, 2025</h3>
         <p>
           Student was created by a privacy-minded teenager who wants a better
-          alternative to StudentVUE. We promise to never sell, share or see your
+          alternative to StudentVUE®. We promise to never sell, share or see your
           student information.
         </p>
         <br/>
         <h2 className="font-bold">Who we are</h2>
         <p>
           Student (“we,” “us,” “our”) is a third-party alternative client for
-          StudentVUE. We are not affiliated with Edupoint Educational Systems,
-          LLC, StudentVUE (a product of Edupoint), or any school district.
+          StudentVUE®. We are not affiliated with Edupoint Educational Systems,
+          LLC, StudentVUE® (a product of Edupoint), or any school district.
         </p>
         <p>
           We operate in the state of Washington, in the United States.
-          StudentVUE is a trademark of Edupoint Educational Systems, LLC.
+          StudentVUE® is a trademark of Edupoint Educational Systems, LLC.
         </p>
         <br/>
         <h2 className="font-bold">What information we collect about you.</h2>
         <p>
-          We will never store the user{"'"}s StudentVUE data or log in information
+          We will never store the user{"'"}s StudentVUE® data or log in information
           on our servers. We do not operate any user accounts.
         </p>
         <p>
           <strong>Credentials and student records</strong> including any data
-          returned by StudentVUE (grades, test history, schedule, attendance)
+          returned by StudentVUE® (grades, test history, schedule, attendance)
           are <strong>not stored</strong> by us.
         </p>
         <p>
@@ -53,14 +53,14 @@ export default function Privacy() {
           used to understand user experience statistics. These tools may collect
           device and user information such as pages viewed, approximate location
           (derived from IP), and device/browser characteristics. We do not use
-          analytics to access your StudentVUE credentials or student records.
+          analytics to access your StudentVUE® credentials or student records.
         </p>
         <br/>
-        <h2 className="font-bold">How we interact with StudentVUE</h2>
+        <h2 className="font-bold">How we interact with StudentVUE®</h2>
         <p>
           When the user enters district information and sign in information, the
           Service sends the user{"'"}s credentials to the user{"'"}s school district{"'"}s
-          Synergy (a product of Edupoint, and the server powering StudentVUE)
+          Synergy (a product of Edupoint, and the server powering StudentVUE®)
           server. <strong>The user{"'"}s credentials are used only for this purpose</strong>.
           Data flows from the User to the Service to the Synergy server and back
           to the user to display the user{"'"}s information.
@@ -84,7 +84,7 @@ export default function Privacy() {
         </p>
         <ul className="list-disc pl-5">
           <li>
-            With the user{"'"}s district{"'"}s Edupoint server (operating as StudentVUE)
+            With the user{"'"}s district{"'"}s Edupoint server (operating as StudentVUE®)
             when the user use the service to provide student records to display
             to the user.
           </li>
@@ -114,7 +114,7 @@ export default function Privacy() {
         <br/>
         <h2 className="font-bold">How long we retain your data</h2>
         <p>
-          StudentVUE data is not stored on our servers. Analytics and
+          StudentVUE® data is not stored on our servers. Analytics and
           operational logs are retained <strong>anonymized</strong> for the
           operational lifetime of the service to improve the user{"'"}s experience
         </p>
@@ -138,8 +138,8 @@ export default function Privacy() {
         <h2 className="font-bold">Children{"'"}s privacy</h2>
         <p>
           Student is intended for use by students, including those under 18, who
-          have access to StudentVUE through their school or district. We do not
-          knowingly collect or store StudentVUE credentials or student records
+          have access to StudentVUE® through their school or district. We do not
+          knowingly collect or store StudentVUE® credentials or student records
           on our server. If a parent/guardian believes we have received personal
           information directly (for example, through an email inquiry), please
           contact us at inquiries@aram.sh and we will delete it.

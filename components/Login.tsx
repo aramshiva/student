@@ -116,7 +116,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                 <strong>
                   Your credentials are never saved, stored, or shared.
                 </strong>{" "}
-                We use them <strong>only</strong> to connect your device with StudentVUE/Synergy{"'"}s
+                We use them <strong>only</strong> to connect your device with StudentVUE®/Synergy{"'"}s
                 servers to get you the data.
                 <br />
                 <br />
@@ -155,7 +155,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
             <p className="font-bold font-[Gosha]">student</p>
           </Link>
           <p className="text-zinc-500">
-            A alternative client for StudentVUE, with a refreshed UI and more
+            A alternative client for StudentVUE®, with a refreshed UI and more
             powerful features to help maintain academics.
           </p>
         </div>
@@ -198,7 +198,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
               <EyeOff className="w-9 h-3 mr-1 text-zinc-500" />
               <p className="text-xs text-zinc-500">
                 Your device directly, and securely connects to
-                Synergy/StudentVUE. We can{"'"}t see your passwords or your
+                Synergy/StudentVUE®. We can{"'"}t see your passwords or your
                 grades. <Link href="/privacy" className="underline">Read our privacy policy.</Link>
               </p>
             </div>
@@ -400,7 +400,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           <LoginButton />
         </form>
         <p className="text-zinc-500 text-xs pt-5 w-full max-w-md mb-4">
-          StudentVUE is a registered trademark of Edupoint Educational Systems,
+          StudentVUE® is a registered trademark of Edupoint Educational Systems,
           LLC. This project is not affiliated with Edupoint, or Synergy.
         </p>
       </div>
