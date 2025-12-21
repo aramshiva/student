@@ -93,7 +93,7 @@ export default function Home() {
               <p>
                 Student was made with privacy and security in mind. Your
                 credientials and grades are stored locally and is never seen,
-                stored, or saved by us.
+                stored, or saved by us. <Link href="/privacy" className="underline">Read our privacy policy.</Link>
               </p>
             </div>
           </div>
