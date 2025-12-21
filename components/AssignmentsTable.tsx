@@ -415,7 +415,7 @@ function AssignmentsTableBase({
           return av === bv ? 0 : av < bv ? -1 : 1;
         },
         cell: ({ row }) => (
-          <span className="text-sm text-black dark:text-white ">
+          <span className="text-sm text-zinc-900 dark:text-white ">
             {formatDate(row.original._Date)}
           </span>
         ),
@@ -435,7 +435,7 @@ function AssignmentsTableBase({
           const isExpanded = expandedDesc[id];
           return (
             <div className="space-y-1">
-              <div className="font-medium text-black dark:text-white break-words whitespace-pre-line leading-snug">
+              <div className="font-medium text-zinc-950 dark:text-white break-words whitespace-pre-line leading-snug">
                 {originalMeasure}
               </div>
               {desc && desc.trim().length > 0 ? (
@@ -464,7 +464,7 @@ function AssignmentsTableBase({
                     onClick={() =>
                       setExpandedDesc((prev) => ({ ...prev, [id]: true }))
                     }
-                    className="hidden md:inline text-[11px] text-black cursor-pointer hover:underline focus:outline-none"
+                    className="hidden md:inline text-[11px] text-zinc-500 cursor-pointer hover:underline focus:outline-none"
                   >
                     … Show more
                   </button>
@@ -475,7 +475,7 @@ function AssignmentsTableBase({
                     onClick={() =>
                       setExpandedDesc((prev) => ({ ...prev, [id]: false }))
                     }
-                    className="hidden md:inline text-[11px] text-black cursor-pointer hover:underline focus:outline-none"
+                    className="hidden md:inline text-[11px] text-zinc-950 cursor-pointer hover:underline focus:outline-none"
                   >
                     Show less
                   </button>
@@ -527,12 +527,12 @@ function AssignmentsTableBase({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Open grade details for assignment ${assignmentId} in a new tab`}
-                className="text-sm text-black dark:text-white hover:underline focus:outline-none"
+                className="text-sm text-zinc-950 dark:text-white hover:underline focus:outline-none"
               >
                 {display}
               </Link>
             ) : (
-              <span className="text-sm text-black dark:text-white">
+              <span className="text-sm text-zinc-950 dark:text-white">
                 {display}
               </span>
             );
@@ -616,7 +616,7 @@ function AssignmentsTableBase({
         id: "scoreType",
         header: "Score Type",
         cell: ({ row }) => (
-          <span className="text-sm text-black dark:text-white">
+          <span className="text-sm text-zinc-950 dark:text-white">
             {row.original._ScoreType || "—"}
           </span>
         ),
@@ -628,7 +628,7 @@ function AssignmentsTableBase({
           const raw = (row.original._Points || "").trim();
           const display = raw || "—";
           return (
-            <span className="text-sm text-black dark:text-white ">
+            <span className="text-sm text-zinc-950 dark:text-white ">
               {display}
             </span>
           );
@@ -641,7 +641,7 @@ function AssignmentsTableBase({
         cell: ({ row }) => {
           const decoded = decodeEntities(row.original._Notes);
           return (
-            <span className="text-sm text-black dark:text-white break-words whitespace-pre-line">
+            <span className="text-sm text-zinc-950 dark:text-white break-words whitespace-pre-line">
               {decoded}
             </span>
           );
@@ -797,7 +797,7 @@ function AssignmentsTableBase({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="hover:bg-zinc-50 dark:hover:bg-zinc-950"
+                    className="hover:bg-zinc-50 dark:hover:bg-zinc-800"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3">

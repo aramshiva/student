@@ -113,14 +113,25 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                 This app is not affiliated with Northshore School District or
                 Edupoint Educational Systems. Your credentials are never saved
                 or shared—only used to connect to StudentVUE® servers. Use is at
-                your own risk and subject to Edupoint{"'"}s terms of service.
+                your own risk and subject to{" "}
+                <Link
+                  href="https://www.edupoint.com/terms-of-service"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Edupoint{"'"}s terms of service
+                </Link>
+                .
                 <br />
                 <br />
                 Student is currently pending approval from Northshore for
                 approval for app use. Until, that is complete Student is not
                 recommended for public use unless you understand and accept the
-                risks. <strong>Never share your login information with anyone you do not
-                trust.</strong>
+                risks.{" "}
+                <strong>
+                  Never share your login information with anyone you do not
+                  trust.
+                </strong>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
