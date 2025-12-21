@@ -54,7 +54,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
   >([]);
   const [districtSearchLoading, setDistrictSearchLoading] = useState(false);
   const [districtSearchError, setDistrictSearchError] = useState<string | null>(
-    null,
+    null
   );
   const [showCustomUrl, setShowCustomUrl] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -85,7 +85,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
       setDistricts(data.districts || []);
     } catch (e) {
       setDistrictSearchError(
-        (e as Error).message || "District lookup failed. Try again.",
+        (e as Error).message || "District lookup failed. Try again."
       );
     } finally {
       setDistrictSearchLoading(false);
@@ -110,20 +110,17 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                 <TriangleAlert /> Warning
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Student is currently not approved by the Northshore School
-                District information technology department, nor affilated in
-                anyway. Use of the app is at your own risk and you acknowledge
-                the risks. The Northshore School District is not affilated with
-                Student.
-                <strong>
-                  Your credentials are never saved, stored, or shared.
-                </strong>{" "}
-                We use them <strong>only</strong> to connect your device with
-                StudentVUE®/Synergy{"'"}s servers to get you the data.
+                This app is not affiliated with Northshore School District or
+                Edupoint Educational Systems. Your credentials are never saved
+                or shared—only used to connect to StudentVUE® servers. Use is at
+                your own risk and subject to Edupoint{"'"}s terms of service.
                 <br />
                 <br />
-                Student is currently in contact with the Northshore IT
-                department for getting approval.
+                Student is currently pending approval from Northshore for
+                approval for app use. Until, that is complete Student is not
+                recommended for public use unless you understand and accept the
+                risks. <strong>Never share your login information with anyone you do not
+                trust.</strong>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
