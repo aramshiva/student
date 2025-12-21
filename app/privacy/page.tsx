@@ -67,7 +67,7 @@ export default function Privacy() {
         </p>
         <br/>
         <h2 className="font-bold">What we do not do</h2>
-        <ul>
+        <ul className="list-disc pl-5">
           <li>
             We <strong>do not</strong> sell or share the user{"'"}s information
           </li>
@@ -82,7 +82,7 @@ export default function Privacy() {
           Student may share limited information to select subprocessers to
           deliver the Service and improve the service.
         </p>
-        <ul>
+        <ul className="list-disc pl-5">
           <li>
             With the user{"'"}s district{"'"}s Edupoint server (operating as StudentVUE)
             when the user use the service to provide student records to display
