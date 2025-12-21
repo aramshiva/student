@@ -199,7 +199,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
               <p className="text-xs text-zinc-500">
                 Your device directly, and securely connects to
                 Synergy/StudentVUE. We can{"'"}t see your passwords or your
-                grades.
+                grades. <Link href="/privacy" className="underline">Read our privacy policy.</Link>
               </p>
             </div>
           </div>
