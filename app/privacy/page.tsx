@@ -147,7 +147,7 @@ export default function Privacy() {
         <p>
           We act as a third party tool authorized at student/family discretion,
           and don{"'"}t maintain educational records. Children under 13 should
-          opt-out analytics in the settings page and receive parental consent to
+          opt-out of analytics in the settings page and receive parental consent to
           use the service.
         </p>
         <br/>
