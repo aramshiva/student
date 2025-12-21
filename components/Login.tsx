@@ -96,65 +96,56 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
     credentials.district_url === "https://wa-nor-psv.edupoint.com";
 
   const LoginButton = () => {
-    if (shouldShowAlert) {
-      return (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button type="button" disabled={isLoading} className="w-full">
-              {isLoading ? "Signing In..." : "Sign In"}
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <TriangleAlert /> Warning
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                This app is not affiliated with Northshore School District or
-                Edupoint Educational Systems. Your credentials are never saved
-                or shared—only used to connect to StudentVUE® servers. Use is at
-                your own risk and subject to{" "}
-                <Link
-                  href="https://www.edupoint.com/terms-of-service"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Edupoint{"'"}s terms of service
-                </Link>
-                .
-                <br />
-                <br />
-                Student is currently pending approval from Northshore for
-                approval for app use. Until, that is complete Student is not
-                recommended for public use unless you understand and accept the
-                risks.{" "}
-                <strong>
-                  Never share your login information with anyone you do not
-                  trust. If you suspect the privacy has been violated, please
-                  contact your student{"'"}s school immediately.
-                </strong>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmLogin}>
-                I understand.
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      );
-    }
-
     return (
-      <Button
-        type="submit"
-        disabled={isLoading || !credentials.district_url}
-        className="w-full"
-        onClick={handleSubmit}
-      >
-        {isLoading ? "Signing In..." : "Sign In"}
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button type="button" disabled={isLoading} className="w-full">
+            {isLoading ? "Signing In..." : "Sign In"}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <TriangleAlert /> Warning
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This app is not affiliated with {selectedDistrict.name} or
+              Edupoint Educational Systems LLC. Your credentials are never saved
+              or shared—only used to connect to StudentVUE® servers. Use is at
+              your own risk and subject to{" "}
+              <Link
+                href="https://www.edupoint.com/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Edupoint{"'"}s terms of service
+              </Link>
+              .
+              {shouldShowAlert && (
+                <>
+                  <br />
+                  <br />
+                  Student is currently pending approval from Northshore for
+                  approval for app use. Until, that is complete Student is not
+                  recommended for public use unless you understand and accept the
+                  risks.{" "}
+                  <strong>
+                    Never share your login information with anyone you do not
+                    trust. If you suspect the privacy has been violated, please
+                    contact your student{"'"}s school immediately.
+                  </strong>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmLogin}>
+              I understand.
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   };
 
