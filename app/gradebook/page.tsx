@@ -10,7 +10,7 @@ import {
   numericToLetterGrade,
   loadCalculateGradesEnabled,
 } from "@/utils/gradebook";
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 
 function GradebookPageContent() {
   const router = useRouter();

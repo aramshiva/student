@@ -328,18 +328,10 @@ export default function DocumentsPage() {
                   )}
                 </TableHead>
                 <TableHead>
-                  {isLoading ? (
-                    <Skeleton className="h-4 w-16" />
-                  ) : (
-                    "Type"
-                  )}
+                  {isLoading ? <Skeleton className="h-4 w-16" /> : "Type"}
                 </TableHead>
                 <TableHead>
-                  {isLoading ? (
-                    <Skeleton className="h-4 w-24" />
-                  ) : (
-                    "Name"
-                  )}
+                  {isLoading ? <Skeleton className="h-4 w-24" /> : "Name"}
                 </TableHead>
               </TableRow>
             </TableHeader>

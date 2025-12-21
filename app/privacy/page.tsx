@@ -8,10 +8,10 @@ export default function Privacy() {
         <h3 className="font-medium">Effective December 20th, 2025</h3>
         <p>
           Student was created by a privacy-minded teenager who wants a better
-          alternative to StudentVUE®. We promise to never sell, share or see your
-          student information.
+          alternative to StudentVUE®. We promise to never sell, share or see
+          your student information.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">Who we are</h2>
         <p>
           Student (“we,” “us,” “our”) is a third-party alternative client for
@@ -22,11 +22,11 @@ export default function Privacy() {
           We operate in the state of Washington, in the United States.
           StudentVUE® is a trademark of Edupoint Educational Systems, LLC.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">What information we collect about you.</h2>
         <p>
-          We will never store the user{"'"}s StudentVUE® data or log in information
-          on our servers. We do not operate any user accounts.
+          We will never store the user{"'"}s StudentVUE® data or log in
+          information on our servers. We do not operate any user accounts.
         </p>
         <p>
           <strong>Credentials and student records</strong> including any data
@@ -34,38 +34,59 @@ export default function Privacy() {
           are <strong>not stored</strong> by us.
         </p>
         <p>
-          The user{"'"} data may be saved in browser storage (<strong>local storage or
-          cookies</strong>) to keep the user signed in, remember the user{"'"}s preferences
-          and caching. This data is not stored by us.
+          The user{"'"} data may be saved in browser storage (
+          <strong>local storage or cookies</strong>) to keep the user signed in,
+          remember the user{"'"}s preferences and caching. This data is not
+          stored by us.
         </p>
         <p>
           Our hosting provider (Vercel, their privacy policy can be read{" "}
-          <Link href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">here</Link>) may process{" "}
-          <strong>standard technical data</strong> (anonymized IP address, user agent,
-          timestamps, request metadata) in connection with delivering the
-          Service, performance monitoring, and security. Again, no student
-          records or credentials are included in this.
+          <Link
+            href="https://vercel.com/legal/privacy-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            here
+          </Link>
+          ) may process <strong>standard technical data</strong> (anonymized IP
+          address, user agent, timestamps, request metadata) in connection with
+          delivering the Service, performance monitoring, and security. Again,
+          no student records or credentials are included in this.
         </p>
         <p>
-          We use <Link href="https://umami.is/"><strong>Umami Analytics</strong></Link> (Their privacy policy
-          can be read <Link href="https://umami.is/privacy" target="_blank" rel="noopener noreferrer">here</Link>) to understand anonymized
-          and aggregated usage of the service. Vercel Speed Analytics is also
-          used to understand user experience statistics. These tools may collect
-          device and user information such as pages viewed, approximate location
-          (derived from IP), and device/browser characteristics. We do not use
-          analytics to access your StudentVUE® credentials or student records.
+          We use{" "}
+          <Link href="https://umami.is/">
+            <strong>Umami Analytics</strong>
+          </Link>{" "}
+          (Their privacy policy can be read{" "}
+          <Link
+            href="https://umami.is/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            here
+          </Link>
+          ) to understand anonymized and aggregated usage of the service. Vercel
+          Speed Analytics is also used to understand user experience statistics.
+          These tools may collect device and user information such as pages
+          viewed, approximate location (derived from IP), and device/browser
+          characteristics. We do not use analytics to access your StudentVUE®
+          credentials or student records.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">How we interact with StudentVUE®</h2>
         <p>
           When the user enters district information and sign in information, the
-          Service sends the user{"'"}s credentials to the user{"'"}s school district{"'"}s
-          Synergy (a product of Edupoint, and the server powering StudentVUE®)
-          server. <strong>The user{"'"}s credentials are used only for this purpose</strong>.
-          Data flows from the User to the Service to the Synergy server and back
-          to the user to display the user{"'"}s information.
+          Service sends the user{"'"}s credentials to the user{"'"}s school
+          district{"'"}s Synergy (a product of Edupoint, and the server powering
+          StudentVUE®) server.{" "}
+          <strong>
+            The user{"'"}s credentials are used only for this purpose
+          </strong>
+          . Data flows from the User to the Service to the Synergy server and
+          back to the user to display the user{"'"}s information.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">What we do not do</h2>
         <ul className="list-disc pl-5">
           <li>
@@ -76,7 +97,7 @@ export default function Privacy() {
             our own database.
           </li>
         </ul>
-        <br/>
+        <br />
         <h2 className="font-bold">What Subprocessers touch your data</h2>
         <p>
           Student may share limited information to select subprocessers to
@@ -84,9 +105,9 @@ export default function Privacy() {
         </p>
         <ul className="list-disc pl-5">
           <li>
-            With the user{"'"}s district{"'"}s Edupoint server (operating as StudentVUE®)
-            when the user use the service to provide student records to display
-            to the user.
+            With the user{"'"}s district{"'"}s Edupoint server (operating as
+            StudentVUE®) when the user use the service to provide student
+            records to display to the user.
           </li>
           <li>
             With infrastructure providers (Vercel) to host and deliver the
@@ -102,23 +123,24 @@ export default function Privacy() {
             process.
           </li>
         </ul>
-        <br/>
+        <br />
         <h2 className="font-bold">How we store your data</h2>
         <p>
-          Our server and database do not store the user{"'"}s data. The service may
-          use browser storage and cookies to improve the user{"'"}s experience, this
-          is only visible to the user, not us. The user can clear stored data at
-          any time by clearing site data for the service in the browser
-          settings.
+          Our server and database do not store the user{"'"}s data. The service
+          may use browser storage and cookies to improve the user{"'"}s
+          experience, this is only visible to the user, not us. The user can
+          clear stored data at any time by clearing site data for the service in
+          the browser settings.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">How long we retain your data</h2>
         <p>
           StudentVUE® data is not stored on our servers. Analytics and
           operational logs are retained <strong>anonymized</strong> for the
-          operational lifetime of the service to improve the user{"'"}s experience
+          operational lifetime of the service to improve the user{"'"}s
+          experience
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">Exercising your rights</h2>
         <p>
           As we do not collect user data, we cannot delete data we do not
@@ -126,7 +148,7 @@ export default function Privacy() {
           GDPR or CCPA), so requests (like deletion of email inquiries) can be
           sent to inquiries@aram.sh, and we will try doing our best.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">How we protect your data</h2>
         <p>
           We use Hypertext Transfer Protocol Secure (HTTPS), HTTP Strict
@@ -134,7 +156,7 @@ export default function Privacy() {
           reasonable measures to protect the service. No method of transmission
           or storage is completely secure.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">Children{"'"}s privacy</h2>
         <p>
           Student is intended for use by students, including those under 18, who
@@ -147,16 +169,16 @@ export default function Privacy() {
         <p>
           We act as a third party tool authorized at student/family discretion,
           and don{"'"}t maintain educational records. Children under 13 should
-          opt-out of analytics in the settings page and receive parental consent to
-          use the service.
+          opt-out of analytics in the settings page and receive parental consent
+          to use the service.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">Changes to this policy</h2>
         <p>
           This policy may be changed at any time. We will post a new updated
           version with a new effective date.
         </p>
-        <br/>
+        <br />
         <h2 className="font-bold">How to contact us</h2>
         <p>
           Thanks for reading! If you would like to contact us with inquiries

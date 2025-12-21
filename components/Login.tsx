@@ -110,14 +110,16 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                 <TriangleAlert /> Warning
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Student is currently not approved by the Northshore School District information technology department, nor affilated in anyway.
-                Use of the app is at your own risk and you acknowledge the risks. 
-                The Northshore School District is not affilated with Student.
+                Student is currently not approved by the Northshore School
+                District information technology department, nor affilated in
+                anyway. Use of the app is at your own risk and you acknowledge
+                the risks. The Northshore School District is not affilated with
+                Student.
                 <strong>
                   Your credentials are never saved, stored, or shared.
                 </strong>{" "}
-                We use them <strong>only</strong> to connect your device with StudentVUE®/Synergy{"'"}s
-                servers to get you the data.
+                We use them <strong>only</strong> to connect your device with
+                StudentVUE®/Synergy{"'"}s servers to get you the data.
                 <br />
                 <br />
                 Student is currently in contact with the Northshore IT
@@ -199,7 +201,10 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
               <p className="text-xs text-zinc-500">
                 Your device directly, and securely connects to
                 Synergy/StudentVUE®. We can{"'"}t see your passwords or your
-                grades. <Link href="/privacy" className="underline">Read our privacy policy.</Link>
+                grades.{" "}
+                <Link href="/privacy" className="underline">
+                  Read our privacy policy.
+                </Link>
               </p>
             </div>
           </div>

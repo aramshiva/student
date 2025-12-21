@@ -215,32 +215,16 @@ export default function SchedulePage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">
-                {isLoading ? (
-                  <Skeleton className="h-4 w-12" />
-                ) : (
-                  "Period"
-                )}
+                {isLoading ? <Skeleton className="h-4 w-12" /> : "Period"}
               </TableHead>
               <TableHead>
-                {isLoading ? (
-                  <Skeleton className="h-4 w-20" />
-                ) : (
-                  "Course"
-                )}
+                {isLoading ? <Skeleton className="h-4 w-20" /> : "Course"}
               </TableHead>
               <TableHead>
-                {isLoading ? (
-                  <Skeleton className="h-4 w-16" />
-                ) : (
-                  "Room"
-                )}
+                {isLoading ? <Skeleton className="h-4 w-16" /> : "Room"}
               </TableHead>
               <TableHead>
-                {isLoading ? (
-                  <Skeleton className="h-4 w-24" />
-                ) : (
-                  "Teacher"
-                )}
+                {isLoading ? <Skeleton className="h-4 w-24" /> : "Teacher"}
               </TableHead>
               <TableHead>
                 {isLoading ? (

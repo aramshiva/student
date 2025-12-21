@@ -25,8 +25,8 @@ export default function Home() {
                 Empower your academia. <Badge variant="outline">BETA</Badge>
               </p>
               <p className="text-xl pb-5 wrap-normal">
-                Student is a clean, minimalist, powerful, open-source StudentVUE®
-                client. Built by students, for students.
+                Student is a clean, minimalist, powerful, open-source
+                StudentVUE® client. Built by students, for students.
               </p>
               <div className="flex gap-2">
                 <Link href="/login">
@@ -93,7 +93,10 @@ export default function Home() {
               <p>
                 Student was made with privacy and security in mind. Your
                 credientials and grades are stored locally and is never seen,
-                stored, or saved by us. <Link href="/privacy" className="underline">Read our privacy policy.</Link>
+                stored, or saved by us.{" "}
+                <Link href="/privacy" className="underline">
+                  Read our privacy policy.
+                </Link>
               </p>
             </div>
           </div>
@@ -122,8 +125,8 @@ export default function Home() {
             <div className="pr-10">
               <p className="text-xl pb-1">Students</p>
               <p className="pb-5">
-                Log in today to experience a better StudentVUE® experience. Fast,
-                Clean and more powerful than ever.
+                Log in today to experience a better StudentVUE® experience.
+                Fast, Clean and more powerful than ever.
               </p>
               <Link href="/login">
                 <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">

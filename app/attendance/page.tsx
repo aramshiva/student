@@ -348,11 +348,7 @@ export default function AttendancePage() {
   return (
     <div className="p-8 min-h-screen dark:bg-zinc-900">
       <p className="text-xl font-medium pb-3">
-        {isLoading ? (
-          <Skeleton className="h-7 w-[120px]" />
-        ) : (
-          "Attendance"
-        )}
+        {isLoading ? <Skeleton className="h-7 w-[120px]" /> : "Attendance"}
       </p>
       {!isLoading && !dataShape?.absenceDays?.length ? (
         <div>No attendance anomalies found.</div>
@@ -364,11 +360,7 @@ export default function AttendancePage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>
-                      {isLoading ? (
-                        <Skeleton className="h-4 w-16" />
-                      ) : (
-                        "Period"
-                      )}
+                      {isLoading ? <Skeleton className="h-4 w-16" /> : "Period"}
                     </TableHead>
                     <TableHead>
                       {isLoading ? (

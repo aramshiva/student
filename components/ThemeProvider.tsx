@@ -20,7 +20,7 @@ export type ThemeColor =
   | "Amber"
   | "Orange"
   | "Red"
-  | "Zinc"
+  | "Zinc";
 
 interface ThemeColors {
   primary: string;
@@ -329,9 +329,7 @@ function ThemeCustomizerProvider({ children }: { children: React.ReactNode }) {
   }, [color, resolvedTheme, mounted]);
 
   return (
-    <themecustomizercontext.Provider
-      value={{ color, setColor }}
-    >
+    <themecustomizercontext.Provider value={{ color, setColor }}>
       {children}
     </themecustomizercontext.Provider>
   );
