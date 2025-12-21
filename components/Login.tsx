@@ -130,7 +130,8 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                 risks.{" "}
                 <strong>
                   Never share your login information with anyone you do not
-                  trust.
+                  trust. If you suspect the privacy has been violated, please
+                  contact your student{"'"}s school immediately.
                 </strong>
               </AlertDialogDescription>
             </AlertDialogHeader>
