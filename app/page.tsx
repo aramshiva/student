@@ -15,20 +15,21 @@ export default function Home() {
   useEffect(() => {
     setTheme("light");
   }, [setTheme]);
+
   return (
     <>
       <div className="bg-white">
-        <div className="p-20 relative bg-white">
-          <div className="grid grid-cols-[minmax(18rem,28rem)_1fr] gap-10 items-start">
+        <div className="h-screen w-screen p-20 relative bg-white flex items-center">
+          <div className="grid grid-cols-[minmax(18rem,28rem)_1fr] gap-10 items-center w-full">
             <div className="max-w-lg">
               <p className="text-4xl font-medium pb-1">
-                Empower your academia. <Badge variant="outline">BETA</Badge>
+                Empower your academia. <Badge variant="outline">EARLY ACCESS</Badge>
               </p>
               <p className="text-xl pb-5 wrap-normal">
                 Student is a clean, minimalist, powerful, open-source
                 StudentVUE® client. Built by students, for students.
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 pb-6">
                 <Link href="/login">
                   <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">
                     <Image
@@ -46,8 +47,17 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
+              <p className="text-xs text-gray-600">
+                District or Teacher?{" "}
+                <Link
+                  href="mailto:inquires@aram.sh"
+                  className="underline"
+                >
+                  Email us for more info
+                </Link>
+              </p>
             </div>
-            <div className="relative -mb-10 w-full flex justify-end">
+            <div className="relative w-full flex justify-end">
               <Image
                 src="/screenshots/gradebook.png"
                 alt="Gradebook screenshot"
@@ -58,8 +68,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="bg-zinc-900 text-white w-screen relative">
-          {/* design */}
+        {/* 
+        {/* <div className="bg-zinc-900 text-white w-screen relative">
           <div className="grid grid-cols-2 gap-10 items-start">
             <div className="relative p-10 w-full flex justify-start">
               <Image
@@ -81,11 +91,10 @@ export default function Home() {
           </div>
         </div>
 
-        {/* secure */}
         <div className="p-20">
-          <div className=" grid grid-cols-2 grid-rows-1">
+          <div className="grid grid-cols-2 grid-rows-1">
             <div />
-            <div className=" w-[30rem] text-right wrap-normal">
+            <div className="w-[30rem] text-right wrap-normal">
               <p className="text-2xl inline-flex items-center gap-x-2">
                 <Lock className="w-5" /> Secure, and <EyeOff className="w-5" />{" "}
                 Private
@@ -103,7 +112,6 @@ export default function Home() {
         </div>
 
         <div className="bg-zinc-900 text-white w-screen">
-          {/* speed and power */}
           <div className="p-20 w-[30rem]">
             <p className="text-2xl">
               Powerful features that make you go{" "}
@@ -116,8 +124,8 @@ export default function Home() {
             </p>
           </div>
         </div>
+
         <div className="p-20">
-          {/* start / contact  */}
           <p className="text-2xl pb-5 font-medium inline-flex items-center gap-x-2">
             Ready to power up your academics? <Rocket />{" "}
           </p>
@@ -159,7 +167,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );

@@ -17,23 +17,33 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
+      let responseBody: any;
       if (!response.ok) {
         let serverMessage: string | null = null;
         try {
-          const maybeJson = await response.json();
-          if (
-            maybeJson &&
-            typeof maybeJson === "object" &&
-            typeof maybeJson.error === "string"
-          ) {
-            serverMessage = maybeJson.error;
+          const text = await response.text();
+          
+          if (response.status === 403 && text.includes("Access denied")) {
+            serverMessage = "Forbidden: Your StudentVUE access has been denied by Synergy (HTTP error 403)";
+          } else {
+            try {
+              responseBody = JSON.parse(text);
+              if (
+                responseBody &&
+                typeof responseBody === "object" &&
+                typeof responseBody.error === "string"
+              ) {
+                serverMessage = responseBody.error;
+              }
+            } catch {}
           }
         } catch {}
         throw new Error(
           serverMessage || `HTTP error! status: ${response.status}`,
         );
       }
-      const raw = await response.json();
+      
+      const raw = responseBody || await response.json();
       const gradebookRoot = raw?.Gradebook ?? raw;
       const errorMessage =
         gradebookRoot?.["@ErrorMessage"] || gradebookRoot?._ErrorMessage;
