@@ -31,7 +31,7 @@ export default function Home() {
               </p>
               <div className="flex gap-2 pb-6">
                 <Link href="/login">
-                  <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px]">
+                  <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px] text-white">
                     <Image
                       src="/studentvue.png"
                       alt="StudentVUE® logo"
