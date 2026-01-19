@@ -272,13 +272,7 @@ export function AppSidebar() {
   }, []);
 
   return (
-    <Sidebar 
-      collapsible="icon" 
-      variant="sidebar" 
-      side="left" 
-      className="bg-white dark:bg-slate-950"
-      data-mobile-bg="true"
-    >
+    <Sidebar collapsible="icon" variant="sidebar" side="left" className="bg-white">
       <SidebarHeader className="gap-1">
         <div className="flex items-center justify-between h-8 px-2">
           <Link
@@ -321,84 +315,84 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <div>
-          {quickStats && quickStats.gradedCourses > 0 && (
+            {quickStats && quickStats.gradedCourses > 0 && (
             <>
               <SidebarSeparator />
-              <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-                <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <div className="grid grid-cols-1 gap-2 text-xs pl-1">
-                    <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
-                      <div className="flex items-baseline justify-between">
-                        <p className="font-medium tracking-tight">GPA</p>
-                        <p className="text-sm font-semibold">
-                          {quickStats.gpa}
-                        </p>
-                      </div>
-                      <div className="flex items-baseline justify-between">
-                        <p className="font-medium tracking-tight">Missing</p>
-                        <p
-                          className={`text-sm font-semibold ${
-                            (quickStats.missing || 0) > 0 ? "text-red-600" : ""
-                          }`}
-                        >
-                          {quickStats.missing}
-                        </p>
-                      </div>
-                      <div className="flex items-baseline justify-between text-[10px] pt-1 opacity-70 border-t mt-1">
-                        <span>Courses</span>
-                        <span>
-                          {quickStats.gradedCourses}/{quickStats.totalCourses}
-                        </span>
-                      </div>
-                    </div>
+              <SidebarGroup className="group-data-[collapsible=icon]:hidden hidden lg:block">
+              <SidebarGroupLabel>Quick Stats</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="grid grid-cols-1 gap-2 text-xs pl-1">
+                <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
+                  <div className="flex items-baseline justify-between">
+                  <p className="font-medium tracking-tight">GPA</p>
+                  <p className="text-sm font-semibold">
+                    {quickStats.gpa}
+                  </p>
                   </div>
-                </SidebarGroupContent>
+                  <div className="flex items-baseline justify-between">
+                  <p className="font-medium tracking-tight">Missing</p>
+                  <p
+                    className={`text-sm font-semibold ${
+                    (quickStats.missing || 0) > 0 ? "text-red-600" : ""
+                    }`}
+                  >
+                    {quickStats.missing}
+                  </p>
+                  </div>
+                  <div className="flex items-baseline justify-between text-[10px] pt-1 opacity-70 border-t mt-1">
+                  <span>Courses</span>
+                  <span>
+                    {quickStats.gradedCourses}/{quickStats.totalCourses}
+                  </span>
+                  </div>
+                </div>
+                </div>
+              </SidebarGroupContent>
               </SidebarGroup>
             </>
-          )}
-          {nextPeriod && (
+            )}
+            {nextPeriod && (
             <>
-              <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-                <SidebarGroupLabel>Next Period</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <div className="grid grid-cols-1 gap-2 text-xs pl-1">
-                    <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium tracking-tight truncate">
-                            Period {nextPeriod.period}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground truncate">
-                            {nextPeriod.courseTitle}
-                          </p>
-                          {nextPeriod.room && (
-                            <p className="text-[10px] text-muted-foreground/80 truncate">
-                              Room {nextPeriod.room}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right flex-shrink-0 ml-2">
-                          <p
-                            className={`text-sm font-semibold ${
-                              nextPeriod.isNext
-                                ? "text-blue-600"
-                                : "text-green-600"
-                            }`}
-                          >
-                            {nextPeriod.timeUntil}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {nextPeriod.isNext ? "starts" : "current"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+              <SidebarGroup className="group-data-[collapsible=icon]:hidden hidden lg:block">
+              <SidebarGroupLabel>Next Period</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="grid grid-cols-1 gap-2 text-xs pl-1">
+                <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
+                  <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium tracking-tight truncate">
+                    Period {nextPeriod.period}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground truncate">
+                    {nextPeriod.courseTitle}
+                    </p>
+                    {nextPeriod.room && (
+                    <p className="text-[10px] text-muted-foreground/80 truncate">
+                      Room {nextPeriod.room}
+                    </p>
+                    )}
                   </div>
-                </SidebarGroupContent>
+                  <div className="text-right flex-shrink-0 ml-2">
+                    <p
+                    className={`text-sm font-semibold ${
+                      nextPeriod.isNext
+                      ? "text-blue-600"
+                      : "text-green-600"
+                    }`}
+                    >
+                    {nextPeriod.timeUntil}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                    {nextPeriod.isNext ? "starts" : "current"}
+                    </p>
+                  </div>
+                  </div>
+                </div>
+                </div>
+              </SidebarGroupContent>
               </SidebarGroup>
             </>
-          )}
+            )}
         </div>
       </SidebarContent>
       <SidebarFooter>
