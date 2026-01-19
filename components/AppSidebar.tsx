@@ -272,7 +272,13 @@ export function AppSidebar() {
   }, []);
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar" side="left" className="bg-white">
+    <Sidebar 
+      collapsible="icon" 
+      variant="sidebar" 
+      side="left" 
+      className="bg-white dark:bg-slate-950"
+      data-mobile-bg="true"
+    >
       <SidebarHeader className="gap-1">
         <div className="flex items-center justify-between h-8 px-2">
           <Link
