@@ -99,7 +99,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
     return (
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button type="button" disabled={isLoading} className="w-full">
+          <Button type="button" disabled={isLoading} className="w-full bg-zinc-900 hover:bg-zinc-800 cursor-pointer">
             {isLoading ? "Signing In..." : "Sign In"}
           </Button>
         </AlertDialogTrigger>
@@ -140,7 +140,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmLogin}>
+            <AlertDialogAction onClick={handleConfirmLogin} className="bg-zinc-900 hover:bg-zinc-800">
               I understand.
             </AlertDialogAction>
           </AlertDialogFooter>
