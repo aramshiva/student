@@ -53,7 +53,7 @@ export default function Home() {
                   href="mailto:inquires@aram.sh"
                   className="underline"
                 >
-                  Email us for more info
+                  Email us for info and security details.
                 </Link>
               </p>
             </div>
