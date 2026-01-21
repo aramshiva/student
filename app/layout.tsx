@@ -34,6 +34,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <head>
         <meta name="apple-mobile-web-app-title" content="Student" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script
           defer
           src="https://cloud.umami.is/script.js"

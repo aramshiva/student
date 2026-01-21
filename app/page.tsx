@@ -57,13 +57,13 @@ export default function Home() {
                 </Link>
               </p>
             </div>
-            <div className="relative w-full flex justify-end">
+            <div className="relative w-full flex justify-end hover:scale-102 transition-transform duration-300 ease-out cursor-pointer hover:-skew-x-3">
               <Image
-                src="/screenshots/gradebook.png"
-                alt="Gradebook screenshot"
-                width={2500}
-                height={2500}
-                className="relative z-10 h-auto"
+              src="/screenshots/gradebook.png"
+              alt="Gradebook screenshot"
+              width={2500}
+              height={2500}
+              className="relative z-10 h-auto"
               />
             </div>
           </div>

@@ -335,6 +335,13 @@ function ThemeCustomizerProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+function SelectionWrapper({ children }: { children: React.ReactNode }) {
+  const { color } = useThemeCustomizer();
+  const selectionClasses =
+    color === "Zinc" ? "" : "selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]";
+  return <div className={selectionClasses}>{children}</div>;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <NextThemesProvider
@@ -343,7 +350,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <ThemeCustomizerProvider>{children}</ThemeCustomizerProvider>
+      <ThemeCustomizerProvider>
+        <SelectionWrapper>{children}</SelectionWrapper>
+      </ThemeCustomizerProvider>
     </NextThemesProvider>
   );
 }
