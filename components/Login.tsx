@@ -54,7 +54,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
   >([]);
   const [districtSearchLoading, setDistrictSearchLoading] = useState(false);
   const [districtSearchError, setDistrictSearchError] = useState<string | null>(
-    null
+    null,
   );
   const [showCustomUrl, setShowCustomUrl] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -85,7 +85,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
       setDistricts(data.districts || []);
     } catch (e) {
       setDistrictSearchError(
-        (e as Error).message || "District lookup failed. Try again."
+        (e as Error).message || "District lookup failed. Try again.",
       );
     } finally {
       setDistrictSearchLoading(false);
@@ -99,7 +99,11 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
     return (
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button type="button" disabled={isLoading} className="w-full bg-zinc-900 hover:bg-zinc-800 cursor-pointer">
+          <Button
+            type="button"
+            disabled={isLoading}
+            className="w-full bg-zinc-900 hover:bg-zinc-800 cursor-pointer"
+          >
             {isLoading ? "Signing In..." : "Sign In"}
           </Button>
         </AlertDialogTrigger>
@@ -127,8 +131,8 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
                   <br />
                   Student is currently pending approval from Northshore for
                   approval for app use. Until, that is complete Student is not
-                  recommended for public use unless you understand and accept the
-                  risks.{" "}
+                  recommended for public use unless you understand and accept
+                  the risks.{" "}
                   <strong>
                     Never share your login information with anyone you do not
                     trust. If you suspect the privacy has been violated, please
@@ -140,7 +144,10 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmLogin} className="bg-zinc-900 hover:bg-zinc-800">
+            <AlertDialogAction
+              onClick={handleConfirmLogin}
+              className="bg-zinc-900 hover:bg-zinc-800"
+            >
               I understand.
             </AlertDialogAction>
           </AlertDialogFooter>

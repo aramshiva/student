@@ -101,7 +101,7 @@ export default function AttendanceGraph({
   pushNums(dataShape.totals.unexcusedTardies);
   Object.keys(periodNameMap).forEach((k) => nums.add(Number(k)));
   dataShape.absenceDays.forEach((day) =>
-    day.periods.forEach((p: Period) => nums.add(p.number))
+    day.periods.forEach((p: Period) => nums.add(p.number)),
   );
 
   const sortedPeriods = Array.from(nums).sort((a, b) => a - b);
@@ -117,7 +117,7 @@ export default function AttendanceGraph({
       const unexcusedTardies = find(dataShape.totals.unexcusedTardies);
 
       const hasAbsences = dataShape.absenceDays.some((day) =>
-        day.periods.some((p: Period) => p.number === n)
+        day.periods.some((p: Period) => p.number === n),
       );
 
       if (

@@ -27,7 +27,9 @@ interface SchoolInfoResponse {
   };
 }
 
-function normalizeStaff(listing?: SchoolInfoResponse["StudentSchoolInfoListing"]): Staff[] {
+function normalizeStaff(
+  listing?: SchoolInfoResponse["StudentSchoolInfoListing"],
+): Staff[] {
   const raw = listing?.StaffLists?.StaffList;
   if (!raw) return [];
   return Array.isArray(raw) ? raw : [raw];
@@ -36,7 +38,9 @@ function normalizeStaff(listing?: SchoolInfoResponse["StudentSchoolInfoListing"]
 export default function SchoolInfoPage() {
   const router = useRouter();
   const [staff, setStaff] = useState<Staff[]>([]);
-  const [info, setInfo] = useState<SchoolInfoResponse["StudentSchoolInfoListing"] | null>(null);
+  const [info, setInfo] = useState<
+    SchoolInfoResponse["StudentSchoolInfoListing"] | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,7 +80,9 @@ export default function SchoolInfoPage() {
     const parts = [
       info._SchoolAddress,
       info._SchoolAddress2,
-      [info._SchoolCity, info._SchoolState, info._SchoolZip].filter(Boolean).join(", "),
+      [info._SchoolCity, info._SchoolState, info._SchoolZip]
+        .filter(Boolean)
+        .join(", "),
     ].filter((p) => p && String(p).trim().length > 0);
     return parts.join("\n");
   }, [info]);
@@ -125,14 +131,19 @@ export default function SchoolInfoPage() {
     <div className="min-h-screen bg-white dark:bg-zinc-900 p-9 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">{info?._School || "School Info"}</CardTitle>
+          <CardTitle className="text-xl">
+            {info?._School || "School Info"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
           {info?._Principal && (
             <div>
               <span className="font-medium">Principal:</span> {info._Principal}
               {info._PrincipalEmail && (
-                <a className="ml-2 underline" href={`mailto:${info._PrincipalEmail}`}>
+                <a
+                  className="ml-2 underline"
+                  href={`mailto:${info._PrincipalEmail}`}
+                >
                   {info._PrincipalEmail}
                 </a>
               )}
@@ -146,12 +157,21 @@ export default function SchoolInfoPage() {
           {(info?._Phone || info?._Phone2) && (
             <div>
               <span className="font-medium">Phone:</span> {info._Phone}
-              {info._Phone2 ? <span className="ml-2"><span className="font-medium">Fax:</span> {info._Phone2}</span> : null}
+              {info._Phone2 ? (
+                <span className="ml-2">
+                  <span className="font-medium">Fax:</span> {info._Phone2}
+                </span>
+              ) : null}
             </div>
           )}
           {info?._URL && (
             <div>
-              <a className="underline" href={info._URL} target="_blank" rel="noreferrer">
+              <a
+                className="underline"
+                href={info._URL}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {info._URL}
               </a>
             </div>

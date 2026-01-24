@@ -134,7 +134,11 @@ export default function StudentDashboard() {
   const [tempUnit, setTempUnit] = useState<TempUnit>(() => {
     if (typeof window === "undefined") return "fahrenheit";
     const stored = localStorage.getItem("tempUnit");
-    if (stored === "celsius" || stored === "fahrenheit" || stored === "kelvin") {
+    if (
+      stored === "celsius" ||
+      stored === "fahrenheit" ||
+      stored === "kelvin"
+    ) {
       return stored;
     }
     return localStorage.getItem("celsius") === "1" ? "celsius" : "fahrenheit";
@@ -142,7 +146,11 @@ export default function StudentDashboard() {
 
   const resolveTempUnit = (): TempUnit => {
     const stored = localStorage.getItem("tempUnit");
-    if (stored === "celsius" || stored === "fahrenheit" || stored === "kelvin") {
+    if (
+      stored === "celsius" ||
+      stored === "fahrenheit" ||
+      stored === "kelvin"
+    ) {
       return stored;
     }
     return localStorage.getItem("celsius") === "1" ? "celsius" : "fahrenheit";
@@ -352,11 +360,12 @@ export default function StudentDashboard() {
             const weatherJson: WeatherData = await weatherRes.json();
             if (weatherJson?.current?.temp) {
               const tempC = weatherJson.current.temp;
-              const tempValue = preferredUnit === "celsius"
-                ? Math.round(tempC)
-                : preferredUnit === "kelvin"
-                  ? Math.round(tempC + 273.15)
-                  : Math.round((tempC * 9) / 5 + 32);
+              const tempValue =
+                preferredUnit === "celsius"
+                  ? Math.round(tempC)
+                  : preferredUnit === "kelvin"
+                    ? Math.round(tempC + 273.15)
+                    : Math.round((tempC * 9) / 5 + 32);
               setTemp(tempValue);
             }
           }

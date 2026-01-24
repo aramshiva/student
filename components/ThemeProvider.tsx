@@ -338,7 +338,9 @@ function ThemeCustomizerProvider({ children }: { children: React.ReactNode }) {
 function SelectionWrapper({ children }: { children: React.ReactNode }) {
   const { color } = useThemeCustomizer();
   const selectionClasses =
-    color === "Zinc" ? "" : "selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]";
+    color === "Zinc"
+      ? ""
+      : "selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]";
   return <div className={selectionClasses}>{children}</div>;
 }
 

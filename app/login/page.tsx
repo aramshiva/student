@@ -22,9 +22,10 @@ export default function Home() {
         let serverMessage: string | null = null;
         try {
           const text = await response.text();
-          
+
           if (response.status === 403 && text.includes("Access denied")) {
-            serverMessage = "Forbidden: Your StudentVUE access has been denied by Synergy (HTTP error 403)";
+            serverMessage =
+              "Forbidden: Your StudentVUE access has been denied by Synergy (HTTP error 403)";
           } else {
             try {
               responseBody = JSON.parse(text);
@@ -42,8 +43,8 @@ export default function Home() {
           serverMessage || `HTTP error! status: ${response.status}`,
         );
       }
-      
-      const raw = responseBody || await response.json();
+
+      const raw = responseBody || (await response.json());
       const gradebookRoot = raw?.Gradebook ?? raw;
       const errorMessage =
         gradebookRoot?.["@ErrorMessage"] || gradebookRoot?._ErrorMessage;

@@ -390,7 +390,8 @@ export default function SchoolCalendarPage() {
                     -
                     {Math.round(
                       convertTempFromC(selectedDayWeather.tempMax, tempUnit),
-                    )} {tempUnitLabel(tempUnit)}
+                    )}{" "}
+                    {tempUnitLabel(tempUnit)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">

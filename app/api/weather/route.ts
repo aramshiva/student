@@ -28,7 +28,7 @@ async function zipToCoords(zip: string): Promise<{ lat: number; lon: number }> {
     `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zip)}&country=US&format=json&limit=1`,
     {
       headers: { "User-Agent": "student-portal" },
-    }
+    },
   );
   const data = await res.json();
 
@@ -51,14 +51,14 @@ export async function POST(req: Request) {
     if (!zip) {
       return NextResponse.json(
         { error: "zip code is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { lat, lon } = await zipToCoords(String(zip).trim());
 
     const weatherRes = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,precipitation,uv_index&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto&forecast_days=10`
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m,precipitation,uv_index&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code&timezone=auto&forecast_days=10`,
     );
 
     if (!weatherRes.ok) {
@@ -101,7 +101,8 @@ export async function POST(req: Request) {
       date,
       tempMin: weatherData.daily.temperature_2m_min[idx],
       tempMax: weatherData.daily.temperature_2m_max[idx],
-      condition: weatherCodeMap[weatherData.daily.weather_code[idx]] || "Unknown",
+      condition:
+        weatherCodeMap[weatherData.daily.weather_code[idx]] || "Unknown",
       precipitation: weatherData.daily.precipitation_sum[idx] || 0,
     }));
 

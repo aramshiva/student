@@ -23,7 +23,8 @@ export default function Home() {
           <div className="grid grid-cols-[minmax(18rem,28rem)_1fr] gap-10 items-center w-full">
             <div className="max-w-lg">
               <p className="text-4xl font-medium pb-1">
-                Empower your academia. <Badge variant="outline">EARLY ACCESS</Badge>
+                Empower your academia.{" "}
+                <Badge variant="outline">EARLY ACCESS</Badge>
               </p>
               <p className="text-xl pb-5 wrap-normal">
                 Student is a clean, minimalist, powerful, open-source
@@ -49,21 +50,18 @@ export default function Home() {
               </div>
               <p className="text-xs text-gray-600">
                 District or Teacher?{" "}
-                <Link
-                  href="mailto:inquires@aram.sh"
-                  className="underline"
-                >
+                <Link href="mailto:inquires@aram.sh" className="underline">
                   Email us for info and security details.
                 </Link>
               </p>
             </div>
             <div className="relative w-full flex justify-end hover:scale-102 transition-transform duration-300 ease-out cursor-pointer hover:-skew-x-3">
               <Image
-              src="/screenshots/gradebook.png"
-              alt="Gradebook screenshot"
-              width={2500}
-              height={2500}
-              className="relative z-10 h-auto"
+                src="/screenshots/gradebook.png"
+                alt="Gradebook screenshot"
+                width={2500}
+                height={2500}
+                className="relative z-10 h-auto"
               />
             </div>
           </div>

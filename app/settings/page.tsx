@@ -50,9 +50,9 @@ export default function SettingsPage() {
   const [calcGrades, setCalcGrades] = useState(false);
   const [hideGradeCalcWarning, setHideGradeCalcWarning] = useState(false);
   const [dontTrackMe, setDontTrackMe] = useState(false);
-  const [tempUnit, setTempUnit] = useState<
-    "fahrenheit" | "celsius" | "kelvin"
-  >("fahrenheit");
+  const [tempUnit, setTempUnit] = useState<"fahrenheit" | "celsius" | "kelvin">(
+    "fahrenheit",
+  );
 
   useEffect(() => {
     const scale = loadCustomGPAScale();
@@ -380,7 +380,9 @@ export default function SettingsPage() {
         <div className="pl-5 pt-1 space-y-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
             <div className="space-y-2">
-              <label className="text-sm font-medium block">Temperature Unit</label>
+              <label className="text-sm font-medium block">
+                Temperature Unit
+              </label>
               <Select
                 value={tempUnit}
                 onValueChange={(val) => {

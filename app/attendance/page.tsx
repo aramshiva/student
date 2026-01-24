@@ -107,7 +107,7 @@ export default function AttendancePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [periodNameMap, setPeriodNameMap] = useState<Record<number, string>>(
-    {}
+    {},
   );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -139,7 +139,7 @@ export default function AttendancePage() {
         };
 
         const parsePeriodTotals = (
-          w?: APIPeriodTotalsWrapper
+          w?: APIPeriodTotalsWrapper,
         ): PeriodTotal[] => {
           if (!w) return [];
           const totals = normalizeArray(w.PeriodTotal);
@@ -215,8 +215,8 @@ export default function AttendancePage() {
             const arr: ScheduleClassListing[] = Array.isArray(classList)
               ? classList
               : classList
-              ? [classList]
-              : [];
+                ? [classList]
+                : [];
             const map: Record<number, string> = {};
             for (const c of arr) {
               const num = Number(c._Period);
@@ -301,7 +301,7 @@ export default function AttendancePage() {
           period7Totals.activities > 0 ||
           period7Totals.unexcusedTardies > 0 ||
           dataShape.absenceDays.some((day) =>
-            day.periods.some((p) => p.number === 7)
+            day.periods.some((p) => p.number === 7),
           )
         ) {
           if (!dataShape.totals.excused?.find((p) => p.number === 7)) {
@@ -357,7 +357,11 @@ export default function AttendancePage() {
         <>
           <div className="space-y-5">
             <>
-              <AttendanceGraph dataShape={dataShape} isLoading={isLoading} periodNameMap={periodNameMap} />
+              <AttendanceGraph
+                dataShape={dataShape}
+                isLoading={isLoading}
+                periodNameMap={periodNameMap}
+              />
               <Table className="px-8">
                 <TableHeader>
                   <TableRow>
@@ -428,7 +432,7 @@ export default function AttendancePage() {
                     : (() => {
                         const nums = new Set<number>();
                         const pushNums = (
-                          list?: { number: number; total: number }[]
+                          list?: { number: number; total: number }[],
                         ) => list?.forEach((l) => nums.add(l.number));
                         pushNums(dataShape?.totals.activities);
                         pushNums(dataShape?.totals.excused);
@@ -436,16 +440,16 @@ export default function AttendancePage() {
                         pushNums(dataShape?.totals.unexcused);
                         pushNums(dataShape?.totals.unexcusedTardies);
                         Object.keys(periodNameMap).forEach((k) =>
-                          nums.add(Number(k))
+                          nums.add(Number(k)),
                         );
                         dataShape?.absenceDays.forEach((day) =>
-                          day.periods.forEach((p) => nums.add(p.number))
+                          day.periods.forEach((p) => nums.add(p.number)),
                         );
                         const sorted = Array.from(nums).sort((a, b) => a - b);
                         return sorted
                           .map((n) => {
                             const find = (
-                              list?: { number: number; total: number }[]
+                              list?: { number: number; total: number }[],
                             ) => list?.find((l) => l.number === n)?.total ?? 0;
                             const a = find(dataShape?.totals.activities);
                             const e = find(dataShape?.totals.excused);
@@ -454,7 +458,7 @@ export default function AttendancePage() {
                             const ut = find(dataShape?.totals.unexcusedTardies);
 
                             const hasAbsences = dataShape?.absenceDays.some(
-                              (day) => day.periods.some((p) => p.number === n)
+                              (day) => day.periods.some((p) => p.number === n),
                             );
 
                             if (

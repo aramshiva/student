@@ -8,7 +8,7 @@ export default function LogoutPage() {
 
   useEffect(() => {
     localStorage.removeItem("Student.creds");
-    
+
     router.push("/login");
   }, [router]);
 

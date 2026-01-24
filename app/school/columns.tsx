@@ -88,7 +88,9 @@ export const columns: ColumnDef<Staff>[] = [
     cell: ({ row }) => {
       const phone = formatPhone(row.original._Phone, row.original._Extn);
       return phone ? (
-        <a href={`tel:${phone}`} className="hover:underline">{phone}</a>
+        <a href={`tel:${phone}`} className="hover:underline">
+          {phone}
+        </a>
       ) : (
         <span className="text-muted-foreground">—</span>
       );
