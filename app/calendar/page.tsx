@@ -1,244 +1,272 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Course, Mark, Assignment } from "@/types/gradebook";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Calendar as CalendarIcon,
+  PartyPopper,
+  BookOpen,
+  CalendarDays,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { addDays } from "date-fns";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-interface AssignmentEvent {
-  assignment: Assignment;
-  courseName: string;
-  courseTitle: string;
-  courseId: string;
-  dueDate: Date;
+interface CalendarEvent {
+  _Date: string;
+  _Title: string;
+  _DayType: "Holiday" | "Assignment" | "Regular";
+  _StartTime: string;
+  _Icon?: string;
+  _DGU?: string;
+  _AddLinkData?: string;
+  _Link?: string;
+  _EvtDescription?: string;
 }
 
-function getCurrentMark(m: Mark | Mark[] | undefined): Mark | null {
-  if (!m) return null;
-  if (Array.isArray(m)) return m[m.length - 1] || null;
-  return m;
+interface CalendarData {
+  CalendarListing: {
+    EventLists: {
+      EventList: CalendarEvent[];
+    };
+    _SchoolBegDate: string;
+    _SchoolEndDate: string;
+    _MonthBegDate: string;
+    _MonthEndDate: string;
+  };
 }
 
-export default function CalendarPage() {
+interface ParsedAssignment {
+  teacher: string;
+  course: string;
+  assignment: string;
+  score: string;
+}
+
+const parseEventDate = (dateStr: string): Date | null => {
+  const [month, day, year] = dateStr.split("/").map(Number);
+  if (!month || !day || !year) return null;
+  return new Date(year, month - 1, day);
+};
+
+const parseAssignment = (title: string): ParsedAssignment | null => {
+  const separator = " : ";
+  const sepIndex = title.lastIndexOf(separator);
+  if (sepIndex === -1) return null;
+
+  const left = title.slice(0, sepIndex);
+  const right = title.slice(sepIndex + separator.length).trim();
+
+  const doubleSpaceIndex = left.search(/\s{2,}/);
+  if (doubleSpaceIndex === -1) return null;
+
+  const teacher = left.slice(0, doubleSpaceIndex).trim();
+  const course = left.slice(doubleSpaceIndex).replace(/^\s+/, "");
+
+  const scoreMatch = right.match(/^(.+?)\s*-\s*Score:\s*(.+)$/);
+  if (!scoreMatch) {
+    return { teacher, course, assignment: right, score: "-" };
+  }
+
+  return {
+    teacher,
+    course,
+    assignment: scoreMatch[1].trim(),
+    score: scoreMatch[2].trim(),
+  };
+};
+
+const EventCard = ({
+  event,
+  parsed,
+}: {
+  event: CalendarEvent;
+  parsed: ParsedAssignment | null;
+}) => {
+  if (event._DayType === "Holiday") {
+    return (
+      <Alert className="bg-red-50 dark:bg-red-950">
+        <PartyPopper className="size-4" />
+        <AlertTitle>{event._Title}</AlertTitle>
+        {event._StartTime && (
+          <AlertDescription>{event._StartTime}</AlertDescription>
+        )}
+      </Alert>
+    );
+  }
+
+  if (event._DayType === "Assignment") {
+    if (!parsed) {
+      return (
+        <Alert className="bg-blue-50 dark:bg-blue-950">
+          <BookOpen className="size-4" />
+          <AlertTitle>{event._Title}</AlertTitle>
+        </Alert>
+      );
+    }
+
+    return (
+      <Alert className="bg-blue-50 dark:bg-blue-950">
+        <BookOpen className="size-4" />
+        <AlertTitle className="flex items-center gap-2">
+          {parsed.assignment}
+          <Badge className="ml-auto text-xs">
+            {parsed.score}%
+          </Badge>
+        </AlertTitle>
+        <AlertDescription>
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">
+              {parsed.course}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Teacher: {parsed.teacher}
+            </div>
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (event._DayType === "Regular") {
+    return (
+      <Alert>
+        <CalendarDays className="size-4" />
+        <AlertTitle>{event._Title}</AlertTitle>
+        <AlertDescription>
+          {event._StartTime && <div className="mb-2">{event._StartTime}</div>}
+          {event._EvtDescription && (
+            <div className="whitespace-pre-wrap text-sm">
+              {event._EvtDescription.replace(/&#xD;&#xA;/g, "\n")}
+            </div>
+          )}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  return null;
+};
+
+export default function SchoolCalendarPage() {
   const router = useRouter();
-  const [assignments, setAssignments] = useState<AssignmentEvent[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const inFlightRef = useRef(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date(),
+  );
+  const [month, setMonth] = useState<Date>(new Date());
 
-  const fetchGradebook = useCallback(async () => {
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
-
-    const creds = localStorage.getItem("Student.creds");
-    if (!creds) {
-      router.push("/login");
-      return;
-    }
-
-    const credentials = JSON.parse(creds);
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/synergy/gradebook", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      const data = await res.json();
-
-      if (data["@ErrorMessage"]) {
-        throw new Error(data["@ErrorMessage"]);
+  const fetchCalendar = useCallback(
+    async (requestDate?: Date) => {
+      const creds = localStorage.getItem("Student.creds");
+      if (!creds) {
+        router.push("/login");
+        return;
       }
 
-      const gbRoot = data?.Gradebook || data || {};
-      const courses: Course[] = gbRoot?.Courses?.Course || [];
+      const credentials = JSON.parse(creds);
+      setIsLoading(true);
+      setError(null);
 
-      const allAssignments: AssignmentEvent[] = [];
+      try {
+        const body: Record<string, string> = { ...credentials };
 
-      for (const course of courses) {
-        const currentMark = getCurrentMark(course?.Marks?.Mark);
-        if (!currentMark) continue;
-
-        const courseAssignments: Assignment[] =
-          currentMark?.Assignments?.Assignment || [];
-
-        for (const assignment of courseAssignments) {
-          if (assignment._DueDate) {
-            const dueDate = new Date(assignment._DueDate);
-            if (!isNaN(dueDate.getTime())) {
-              allAssignments.push({
-                assignment,
-                courseName: course._CourseName,
-                courseTitle: course._Title,
-                courseId: course._CourseID,
-                dueDate,
-              });
-            }
-          }
+        if (requestDate) {
+          const m = String(requestDate.getMonth() + 1).padStart(2, "0");
+          const d = String(requestDate.getDate()).padStart(2, "0");
+          const y = requestDate.getFullYear();
+          body.request_date = `${m}/${d}/${y}`;
         }
-      }
 
-      allAssignments.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
-      setAssignments(allAssignments);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setIsLoading(false);
-      inFlightRef.current = false;
-    }
-  }, [router]);
+        const res = await fetch("/api/synergy/calendar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data: CalendarData = await res.json();
+
+        const eventList = data?.CalendarListing?.EventLists?.EventList || [];
+        setEvents(Array.isArray(eventList) ? eventList : [eventList]);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [router],
+  );
 
   useEffect(() => {
-    fetchGradebook();
-  }, [fetchGradebook]);
+    fetchCalendar();
+  }, [fetchCalendar]);
 
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
-
-  const getAssignmentsForDate = (date: Date) => {
-    return assignments.filter(
-      (a) =>
-        a.dueDate.getDate() === date.getDate() &&
-        a.dueDate.getMonth() === date.getMonth() &&
-        a.dueDate.getFullYear() === date.getFullYear(),
-    );
-  };
-
-  const previousMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1),
-    );
-  };
-
-  const nextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1),
-    );
-  };
-
-  const renderCalendar = () => {
-    const daysInMonth = getDaysInMonth(currentDate);
-    const firstDay = getFirstDayOfMonth(currentDate);
-    const days = [];
-
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="min-h-28 p-3"></div>);
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        day,
+  const handleMonthChange = useCallback(
+    (newMonth: Date) => {
+      setMonth(newMonth);
+      const firstOfMonth = new Date(
+        newMonth.getFullYear(),
+        newMonth.getMonth(),
+        1,
       );
-      const dayAssignments = getAssignmentsForDate(date);
-      const isToday =
-        date.getDate() === new Date().getDate() &&
-        date.getMonth() === new Date().getMonth() &&
-        date.getFullYear() === new Date().getFullYear();
+      fetchCalendar(firstOfMonth);
+    },
+    [fetchCalendar],
+  );
 
-      days.push(
-        <div
-          key={day}
-          className={`min-h-28 p-3 border border-zinc-200 dark:border-zinc-900 ${
-            isToday ? "bg-zinc-100 dark:bg-zinc-900" : ""
-          }`}
-        >
-          <div
-            className={`text-sm font-medium mb-2 ${isToday ? "font-bold" : "text-zinc-600 dark:text-zinc-400"}`}
-          >
-            {day}
-          </div>
-          <div className="space-y-1.5">
-            {dayAssignments.map((event, idx) => (
-              <a
-                key={idx}
-                href={`/gradebook/${event.assignment._GradebookID}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-xs p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg transition-all group relative cursor-pointer"
-              >
-                <div className="font-medium truncate text-black dark:text-white group-hover:invisible">
-                  {event.courseTitle}
-                </div>
-                <div className="truncate text-zinc-500 dark:text-zinc-400 mt-0.5 group-hover:invisible">
-                  {event.assignment._Measure}
-                </div>
-                <div className="hidden group-hover:block absolute z-10 left-0 top-0 w-max max-w-xs p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg">
-                  <div className="font-medium text-black dark:text-white">
-                    {event.courseTitle}
-                  </div>
-                  <div className="text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    {event.assignment._Measure}
-                  </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>,
+  const handlePresetDate = useCallback(
+    (days: number) => {
+      const newDate = addDays(new Date(), days);
+      setSelectedDate(newDate);
+      const firstOfMonth = new Date(
+        newDate.getFullYear(),
+        newDate.getMonth(),
+        1,
       );
-    }
+      setMonth(firstOfMonth);
 
-    return days;
-  };
+      if (events.length === 0) {
+        fetchCalendar(firstOfMonth);
+      }
+    },
+    [fetchCalendar, events],
+  );
+
+  const selectedDateEvents = useMemo(() => {
+    if (!selectedDate) return [];
+    return events.filter((event) => {
+      const eventDate = parseEventDate(event._Date);
+      if (!eventDate) return false;
+      return (
+        eventDate.getDate() === selectedDate.getDate() &&
+        eventDate.getMonth() === selectedDate.getMonth() &&
+        eventDate.getFullYear() === selectedDate.getFullYear()
+      );
+    });
+  }, [events, selectedDate]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <Skeleton className="h-7 w-[200px]" />
-            <Skeleton className="h-10 w-10 rounded-full" />
+        <Skeleton className="h-8 w-48 mb-6" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
           </div>
-        </div>
-
-        <div className="rounded-lg overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-900">
-          <div className="grid grid-cols-7 gap-0">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div
-                key={day}
-                className="p-3 text-center text-sm font-semibold bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-0">
-            {Array.from({ length: 35 }).map((_, i) => (
-              <div
-                key={i}
-                className="min-h-28 p-3 border border-zinc-200 dark:border-zinc-900"
-              >
-                <Skeleton className="h-4 w-5 mb-2" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-8">
-          <Skeleton className="h-6 w-[200px] mb-4" />
-          <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div
-                key={i}
-                className="p-4 border border-zinc-200 dark:border-zinc-900 rounded-lg"
-              >
-                <Skeleton className="h-5 w-[60%] mb-2" />
-                <Skeleton className="h-4 w-[40%]" />
-              </div>
-            ))}
+          <div className="lg:col-span-1">
+            <Skeleton className="h-[350px] w-full rounded-lg" />
           </div>
         </div>
       </div>
@@ -255,70 +283,80 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={previousMonth}
-            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <h2 className="text-xl font-semibold">
-            {currentDate.toLocaleDateString("en-US", {
-              month: "long",
-              year: "numeric",
-            })}
-          </h2>
-          <button
-            onClick={nextMonth}
-            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
+        <div className="lg:col-span-2">
+          <div className="mb-4 flex items-center gap-2">
+            <CalendarIcon size={20} />
+            <h2 className="text-xl font-semibold">
+              {selectedDate
+                ? selectedDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : "Select a date"}
+            </h2>
+          </div>
 
-      <div className="rounded-lg overflow-hidden shadow-sm border border-zinc-200 dark:border-zinc-900">
-        <div className="grid grid-cols-7 gap-0">
-          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-            <div
-              key={day}
-              className="p-3 text-center text-sm font-semibold bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800"
-            >
-              {day}
+          {selectedDateEvents.length === 0 ? (
+            <div className="text-center py-12 text-zinc-500 dark:text-zinc-400">
+              <p>No events for this day</p>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-3">
+              {selectedDateEvents.map((event, idx) => (
+                <EventCard
+                  key={idx}
+                  event={event}
+                  parsed={
+                    event._DayType === "Assignment"
+                      ? parseAssignment(event._Title)
+                      : null
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
-        <div className="grid grid-cols-7 gap-0">{renderCalendar()}</div>
-      </div>
 
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold mb-4">Upcoming Assignments</h3>
-        <div className="space-y-2">
-          {assignments
-            .filter((a) => a.dueDate >= new Date())
-            .slice(0, 10)
-            .map((event, idx) => (
-              <button
-                key={idx}
-                onClick={() =>
-                  router.push(`/gradebook/${event.assignment._GradebookID}`)
-                }
-                className="w-full p-4 border hover:cursor-pointer border-zinc-200 dark:border-zinc-900 rounded-lg hover:shadow-sm transition-shadow text-left"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-semibold">{event.courseTitle}</div>
-                    <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {event.assignment._Measure}
-                    </div>
-                  </div>
-                  <div className="text-sm text-zinc-500">
-                    {event.dueDate.toLocaleDateString()}
-                  </div>
-                </div>
-              </button>
-            ))}
+        <div>
+          <div className="sticky top-6">
+            <Card className="w-full">
+              <CardContent className="p-4 flex justify-center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              month={month}
+              onMonthChange={handleMonthChange}
+              fixedWeeks
+              className="p-0"
+            />
+              </CardContent>
+              {![0, 5, 6].includes(new Date().getDay()) && (
+            <CardFooter className="flex flex-wrap gap-2 border-t">
+              {[
+                { label: "Today", value: 0 },
+                { label: "Tomorrow", value: 1 },
+                { label: "In 3 days", value: 3 },
+                { label: "In a week", value: 7 },
+                { label: "In 2 weeks", value: 14 },
+              ].map((preset) => (
+                <Button
+                  key={preset.value}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => handlePresetDate(preset.value)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </CardFooter>
+              )}
+            </Card>
+          </div>
         </div>
       </div>
     </div>
