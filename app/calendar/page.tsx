@@ -287,7 +287,7 @@ export default function SchoolCalendarPage() {
         <div className="lg:col-span-2">
           <div className="mb-4 flex items-center gap-2">
             <CalendarIcon size={20} />
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-xl font-medium">
               {selectedDate
                 ? selectedDate.toLocaleDateString("en-US", {
                     weekday: "long",
