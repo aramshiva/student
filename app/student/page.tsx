@@ -339,7 +339,6 @@ export default function StudentDashboard() {
           }
         }
 
-        // Fetch weather
         try {
           const zip = localStorage.getItem("Student.zip") || "98028";
           const preferredUnit = resolveTempUnit();
@@ -385,7 +384,7 @@ export default function StudentDashboard() {
           />
         )}
         <div>
-          <h1 className="text-2xl font-medium">
+          <h1 className="text-2xl font-medium font-[Montreal]">
             {greeting}
             {studentName ? `, ${studentName}` : permId ? `, ${permId}` : ""}.
             {temp
@@ -398,7 +397,7 @@ export default function StudentDashboard() {
                 } outside`
               : ""}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground font-[Montreal] font-medium">
             Here are your recent activity messages.
           </p>
         </div>

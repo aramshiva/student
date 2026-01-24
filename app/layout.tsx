@@ -45,7 +45,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <ClientLayout>{children}</ClientLayout>
+          <ClientLayout>
+            <div>{children}</div>
+          </ClientLayout>
         </ThemeProvider>
         <SpeedInsights />
       </body>

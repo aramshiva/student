@@ -177,3 +177,46 @@ body {
   font-weight: 800;
   font-style: normal;
 }
+
+@font-face {
+  font-family : "Montreal";
+  src:
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-Book.woff2") format("woff2"),
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-Book.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family : "Montreal";
+  src:
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-Regular.woff2") format("woff2"),
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-Regular.woff") format("woff");
+  font-weight: 450;
+  font-style: normal;
+}
+
+@font-face {
+  font-family : "Montreal";
+  src:
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-Medium.woff2") format("woff2"),
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-Medium.woff") format("woff");
+  font-weight: 530;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montreal";
+  src: url("/fonts/pp-neue-montreal/PPNeueMontreal-SemiBold.woff2") format("woff2"),
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-SemiBold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family : "Montreal";
+  src:
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-Bold.woff2") format("woff2"),
+    url("/fonts/pp-neue-montreal/PPNeueMontreal-Bold.woff") format("woff");
+  font-weight: 800;
+  font-style: normal;
+}

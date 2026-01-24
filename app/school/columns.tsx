@@ -32,7 +32,9 @@ export const columns: ColumnDef<Staff>[] = [
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <span className="font-medium">{row.original._Name}</span>,
+    cell: ({ row }) => (
+      <span className="font-medium">{row.original._Name}</span>
+    ),
   },
   {
     accessorKey: "_Title",
@@ -62,10 +64,7 @@ export const columns: ColumnDef<Staff>[] = [
     cell: ({ row }) => {
       const email = row.original._EMail || "";
       return email ? (
-        <a
-          className="hover:underline"
-          href={`mailto:${email}`}
-        >
+        <a className="hover:underline" href={`mailto:${email}`}>
           {email}
         </a>
       ) : (
@@ -88,7 +87,11 @@ export const columns: ColumnDef<Staff>[] = [
     ),
     cell: ({ row }) => {
       const phone = formatPhone(row.original._Phone, row.original._Extn);
-      return phone ? phone : <span className="text-muted-foreground">—</span>;
+      return phone ? (
+        <a href={`tel:${phone}`} className="hover:underline">{phone}</a>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      );
     },
   },
 ];
