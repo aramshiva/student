@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { SiGithub } from "react-icons/si";
 import Image from "next/image";
 import Link from "next/link";
-import { Lock, EyeOff, Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
+import Tilt from 'react-parallax-tilt';
+
 
 export default function Home() {
   const { setTheme } = useTheme();
@@ -55,7 +56,8 @@ export default function Home() {
                 </Link>
               </p>
             </div>
-            <div className="relative w-full flex justify-end hover:scale-102 transition-transform duration-300 ease-out cursor-pointer hover:-skew-x-3">
+            <Tilt glareEnable>
+            <div className="relative w-full flex justify-end">
               <Image
                 src="/screenshots/gradebook.png"
                 alt="Gradebook screenshot"
@@ -64,6 +66,7 @@ export default function Home() {
                 className="relative z-10 h-auto"
               />
             </div>
+            </Tilt>
           </div>
         </div>
         {/* 

@@ -35,6 +35,7 @@
     "react-day-picker": "^9.13.0",
     "react-dom": "19.1.0",
     "react-icons": "^5.5.0",
+    "react-parallax-tilt": "^1.7.316",
     "recharts": "2.15.4",
     "shadcn": "^3.6.1",
     "tailwind-merge": "^3.4.0",
