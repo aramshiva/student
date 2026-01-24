@@ -277,7 +277,7 @@ export default function DocumentsPage() {
           </EmptyDescription>
         </Empty>
       ) : (
-        <Card className="p-4">
+        <>
           <div className="flex flex-wrap items-center gap-4 mb-4">
             <div className="flex items-center gap-2 text-sm">
               {isLoading ? (
@@ -403,16 +403,7 @@ export default function DocumentsPage() {
                   ))}
             </TableBody>
           </Table>
-        </Card>
-      )}
-      {!isLoading && docs.length > 0 && (
-        <p className="text-xs text-zinc-500">
-          {isLoading ? (
-            <Skeleton className="h-4 w-[150px]" />
-          ) : (
-            `Showing ${docs.length} document(s).`
-          )}
-        </p>
+          </>
       )}
     </div>
   );
