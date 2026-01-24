@@ -156,7 +156,7 @@ const EventCard = ({
   if (event._DayType === "Assignment") {
     if (!parsed) {
       return (
-        <Alert className="bg-blue-50 dark:bg-blue-950">
+        <Alert className="bg-zinc-50 dark:bg-zinc-900">
           <BookOpen className="size-4" />
           <AlertTitle>{event._Title}</AlertTitle>
         </Alert>
@@ -164,7 +164,7 @@ const EventCard = ({
     }
 
     return (
-      <Alert className="bg-blue-50 dark:bg-blue-950">
+      <Alert className="bg-zinc-50 dark:bg-zinc-900">
         <BookOpen className="size-4" />
         <AlertTitle className="flex items-center gap-2">
           {parsed.assignment}
