@@ -10,6 +10,7 @@ export type ReportCard = Record<string, unknown>;
 export type Attachment = Record<string, unknown>;
 export type AuthToken = Record<string, unknown>;
 export type Schedule = Record<string, unknown>;
+export type HealthInfo = Record<string, unknown>;
 
 export interface DistrictInfo {
   name: string;
@@ -387,6 +388,27 @@ export class SynergyClient {
       DocumentGU: documentGuid,
     });
     return r ?? {};
+  }
+  async getHealthInfo(options?: {
+    childIntID?: number;
+    healthConditions?: boolean;
+    healthVisits?: boolean;
+    healthImmunizations?: boolean;
+  }): Promise<HealthInfo> {
+    const {
+      childIntID = 0,
+      healthConditions = false,
+      healthVisits = false,
+      healthImmunizations = true,
+    } = options || {};
+
+    const r = await this.requestMultiWeb("StudentHealthInfo", {
+      ChildIntID: childIntID,
+      HealthConditions: healthConditions,
+      HealthVisits: healthVisits,
+      HealthImmunizations: healthImmunizations,
+    });
+    return r?.StudentHealthData ?? {};
   }
 
   async call<T = unknown>(methodName: string, params?: unknown): Promise<T> {
