@@ -51,6 +51,8 @@ export default function Home() {
         throw new Error(String(errorMessage));
       }
       localStorage.setItem("Student.creds", JSON.stringify(credentials));
+      const selectedDistrictZip = (credentials as any).zipcode || "98028";
+      localStorage.setItem("Student.zip", selectedDistrictZip);
       // saves creds in LOCAL STORAGE (not cloud)
       // redirects to student page
       window.location.href = "/student";

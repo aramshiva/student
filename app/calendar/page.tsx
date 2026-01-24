@@ -7,11 +7,14 @@ import {
   PartyPopper,
   BookOpen,
   CalendarDays,
+  Cloud,
+  Droplets,
+  Wind,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { addDays } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -45,6 +48,27 @@ interface ParsedAssignment {
   course: string;
   assignment: string;
   score: string;
+}
+
+interface WeatherData {
+  current: {
+    time: string;
+    temp: number;
+    unit: string;
+    condition: string;
+    windSpeed: string;
+    precipitation: number;
+    precipitationUnit: string;
+    uvIndex: number;
+  };
+  ten: Array<{
+    date: string;
+    tempMin: number;
+    tempMax: number;
+    condition: string;
+    precipitation: number;
+  }>;
+  location?: string;
 }
 
 const parseEventDate = (dateStr: string): Date | null => {
@@ -161,6 +185,8 @@ export default function SchoolCalendarPage() {
     new Date(),
   );
   const [month, setMonth] = useState<Date>(new Date());
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
 
   const fetchCalendar = useCallback(
     async (requestDate?: Date) => {
@@ -204,9 +230,33 @@ export default function SchoolCalendarPage() {
     [router],
   );
 
+  const fetchWeather = useCallback(async () => {
+    const zip = localStorage.getItem("Student.zip");
+    if (!zip) {
+      setWeatherLoading(false);
+      return;
+    }
+    setWeatherLoading(true);
+    try {
+      const res = await fetch("/api/weather", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ zip }),
+      });
+      if (!res.ok) throw new Error("Failed to fetch weather");
+      const data: WeatherData = await res.json();
+      setWeather(data);
+    } catch (err) {
+      console.error("Weather fetch error:", err);
+    } finally {
+      setWeatherLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchCalendar();
-  }, [fetchCalendar]);
+    fetchWeather();
+  }, [fetchCalendar, fetchWeather]);
 
   const handleMonthChange = useCallback(
     (newMonth: Date) => {
@@ -239,18 +289,21 @@ export default function SchoolCalendarPage() {
     [fetchCalendar, events],
   );
 
+  const selectedDayWeather = useMemo(() => {
+    if (!weather || !selectedDate) return null;
+    const dateStr = selectedDate.toISOString().split("T")[0];
+    return weather.ten.find((day) => day.date === dateStr);
+  }, [weather, selectedDate]);
+
   const selectedDateEvents = useMemo(() => {
     if (!selectedDate) return [];
+    const selectedDateStr = selectedDate.toISOString().split("T")[0];
     return events.filter((event) => {
       const eventDate = parseEventDate(event._Date);
       if (!eventDate) return false;
-      return (
-        eventDate.getDate() === selectedDate.getDate() &&
-        eventDate.getMonth() === selectedDate.getMonth() &&
-        eventDate.getFullYear() === selectedDate.getFullYear()
-      );
+      return eventDate.toISOString().split("T")[0] === selectedDateStr;
     });
-  }, [events, selectedDate]);
+  }, [selectedDate, events]);
 
   if (isLoading) {
     return (
@@ -287,7 +340,7 @@ export default function SchoolCalendarPage() {
         <div className="lg:col-span-2">
           <div className="mb-4 flex items-center gap-2">
             <CalendarIcon size={20} />
-            <h2 className="text-xl font-medium">
+            <p className="text-xl font-medium">
               {selectedDate
                 ? selectedDate.toLocaleDateString("en-US", {
                     weekday: "long",
@@ -296,7 +349,28 @@ export default function SchoolCalendarPage() {
                     year: "numeric",
                   })
                 : "Select a date"}
-            </h2>
+            </p>
+            {selectedDayWeather && !weatherLoading && (
+              <div className="ml-auto flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <Cloud className="size-4" />
+                  <span className="text-sm">
+                    {selectedDayWeather.tempMin}-{selectedDayWeather.tempMax}{" "}
+                    C°
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Wind className="size-4" />
+                  <span className="text-sm">{selectedDayWeather.condition}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Droplets className="size-4" />
+                  <span className="text-sm">
+                    {selectedDayWeather.precipitation}mm
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {selectedDateEvents.length === 0 ? (
