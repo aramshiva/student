@@ -16,6 +16,7 @@ import {
   BookOpen,
   Table,
   School,
+  LogOutIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -471,6 +472,15 @@ export function AppSidebar() {
                 >
                   <SettingsIcon className="size-4" />
                   <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/logout"
+                  className="cursor-pointer flex items-center gap-2"
+                >
+                  <LogOutIcon className="size-4" />
+                  <span>Log out</span>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>

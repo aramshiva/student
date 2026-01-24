@@ -99,6 +99,17 @@ interface TodayScheduleClass {
   end?: string;
 }
 
+interface WeatherData {
+  current: {
+    temp: number;
+    condition: string;
+    windSpeed: number;
+    precipitation: number;
+  };
+}
+
+type TempUnit = "fahrenheit" | "celsius" | "kelvin";
+
 function greetingForNow(date = new Date()) {
   const h = date.getHours();
   if (h < 5) return "Good Night";
@@ -119,6 +130,23 @@ export default function StudentDashboard() {
   const [todayScheduleError, setTodayScheduleError] = useState<string | null>(
     null,
   );
+  const [temp, setTemp] = useState<number | null>(null);
+  const [tempUnit, setTempUnit] = useState<TempUnit>(() => {
+    if (typeof window === "undefined") return "fahrenheit";
+    const stored = localStorage.getItem("tempUnit");
+    if (stored === "celsius" || stored === "fahrenheit" || stored === "kelvin") {
+      return stored;
+    }
+    return localStorage.getItem("celsius") === "1" ? "celsius" : "fahrenheit";
+  });
+
+  const resolveTempUnit = (): TempUnit => {
+    const stored = localStorage.getItem("tempUnit");
+    if (stored === "celsius" || stored === "fahrenheit" || stored === "kelvin") {
+      return stored;
+    }
+    return localStorage.getItem("celsius") === "1" ? "celsius" : "fahrenheit";
+  };
   useEffect(() => {
     (async () => {
       const credsRaw = localStorage.getItem("Student.creds");
@@ -310,6 +338,30 @@ export default function StudentDashboard() {
             setTodaySchedule([]);
           }
         }
+
+        // Fetch weather
+        try {
+          const zip = localStorage.getItem("Student.zip") || "98028";
+          const preferredUnit = resolveTempUnit();
+          setTempUnit(preferredUnit);
+          const weatherRes = await fetch("/api/weather", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ zip }),
+          });
+          if (weatherRes.ok) {
+            const weatherJson: WeatherData = await weatherRes.json();
+            if (weatherJson?.current?.temp) {
+              const tempC = weatherJson.current.temp;
+              const tempValue = preferredUnit === "celsius"
+                ? Math.round(tempC)
+                : preferredUnit === "kelvin"
+                  ? Math.round(tempC + 273.15)
+                  : Math.round((tempC * 9) / 5 + 32);
+              setTemp(tempValue);
+            }
+          }
+        } catch {}
       } catch (e) {
         setError((e as Error).message);
       } finally {
@@ -335,7 +387,16 @@ export default function StudentDashboard() {
         <div>
           <h1 className="text-2xl font-medium">
             {greeting}
-            {studentName ? `, ${studentName}` : permId ? `, ${permId}` : ""}
+            {studentName ? `, ${studentName}` : permId ? `, ${permId}` : ""}.
+            {temp
+              ? ` It's ${temp}${
+                  tempUnit === "kelvin"
+                    ? "K"
+                    : tempUnit === "celsius"
+                      ? "°C"
+                      : "°F"
+                } outside`
+              : ""}
           </h1>
           <p className="text-sm text-muted-foreground">
             Here are your recent activity messages.

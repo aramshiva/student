@@ -77,6 +77,30 @@ interface WeatherData {
   location?: string;
 }
 
+type TempUnit = "fahrenheit" | "celsius" | "kelvin";
+
+const getTempUnit = (): TempUnit => {
+  if (typeof window === "undefined") return "fahrenheit";
+  const stored = localStorage.getItem("tempUnit");
+  if (stored === "celsius" || stored === "fahrenheit" || stored === "kelvin") {
+    return stored;
+  }
+  return localStorage.getItem("celsius") === "1" ? "celsius" : "fahrenheit";
+};
+
+const convertTempFromC = (tempC: number, unit: TempUnit): number => {
+  if (!Number.isFinite(tempC)) return tempC;
+  if (unit === "celsius") return tempC;
+  if (unit === "kelvin") return tempC + 273.15;
+  return (tempC * 9) / 5 + 32;
+};
+
+const tempUnitLabel = (unit: TempUnit): string => {
+  if (unit === "kelvin") return "K";
+  if (unit === "celsius") return "°C";
+  return "°F";
+};
+
 const parseEventDate = (dateStr: string): Date | null => {
   const [month, day, year] = dateStr.split("/").map(Number);
   if (!month || !day || !year) return null;
@@ -189,6 +213,7 @@ export default function SchoolCalendarPage() {
   const [month, setMonth] = useState<Date>(new Date());
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
+  const [tempUnit, setTempUnit] = useState<TempUnit>(() => getTempUnit());
 
   const fetchCalendar = useCallback(
     async (requestDate?: Date) => {
@@ -238,6 +263,8 @@ export default function SchoolCalendarPage() {
       setWeatherLoading(false);
       return;
     }
+    const preferredUnit = getTempUnit();
+    setTempUnit(preferredUnit);
     setWeatherLoading(true);
     try {
       const res = await fetch("/api/weather", {
@@ -357,7 +384,13 @@ export default function SchoolCalendarPage() {
                 <div className="flex items-center gap-1">
                   <Cloud className="size-4" />
                   <span className="text-sm">
-                    {selectedDayWeather.tempMin}-{selectedDayWeather.tempMax} C°
+                    {Math.round(
+                      convertTempFromC(selectedDayWeather.tempMin, tempUnit),
+                    )}
+                    -
+                    {Math.round(
+                      convertTempFromC(selectedDayWeather.tempMax, tempUnit),
+                    )} {tempUnitLabel(tempUnit)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">

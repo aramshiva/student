@@ -50,6 +50,9 @@ export default function SettingsPage() {
   const [calcGrades, setCalcGrades] = useState(false);
   const [hideGradeCalcWarning, setHideGradeCalcWarning] = useState(false);
   const [dontTrackMe, setDontTrackMe] = useState(false);
+  const [tempUnit, setTempUnit] = useState<
+    "fahrenheit" | "celsius" | "kelvin"
+  >("fahrenheit");
 
   useEffect(() => {
     const scale = loadCustomGPAScale();
@@ -60,6 +63,18 @@ export default function SettingsPage() {
       !!localStorage.getItem("Student.dontShowGradeCalcWarning"),
     );
     setDontTrackMe(localStorage.getItem("umami.disabled") === "1");
+    const storedUnit = localStorage.getItem("tempUnit");
+    if (
+      storedUnit === "celsius" ||
+      storedUnit === "fahrenheit" ||
+      storedUnit === "kelvin"
+    ) {
+      setTempUnit(storedUnit);
+    } else if (localStorage.getItem("celsius") === "1") {
+      setTempUnit("celsius");
+    } else {
+      setTempUnit("fahrenheit");
+    }
     setIsLoaded(true);
   }, []);
 
@@ -145,12 +160,15 @@ export default function SettingsPage() {
     resetCalculateGradesEnabled();
     localStorage.removeItem("Student.dontShowGradeCalcWarning");
     localStorage.removeItem("umami.disabled");
+    localStorage.removeItem("celsius");
+    localStorage.removeItem("tempUnit");
     const scale = loadCustomGPAScale();
     setEntries(ORDER.map((letter) => ({ letter, value: scale[letter] })));
     setBounds(loadCustomGradeBounds());
     setCalcGrades(loadCalculateGradesEnabled());
     setHideGradeCalcWarning(false);
     setDontTrackMe(false);
+    setTempUnit("fahrenheit");
     setSavedMsg("Reset to default");
     setTimeout(() => setSavedMsg(null), 1500);
   };
@@ -350,6 +368,48 @@ export default function SettingsPage() {
               {savedMsg}
             </span>
           )}
+        </div>
+      </section>
+      <section className="space-y-4">
+        <header>
+          <h2 className="text-lg font-medium">Units & Preferences</h2>
+          <p className="text-xs text-zinc-500">
+            Customize units and display preferences
+          </p>
+        </header>
+        <div className="pl-5 pt-1 space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
+            <div className="space-y-2">
+              <label className="text-sm font-medium block">Temperature Unit</label>
+              <Select
+                value={tempUnit}
+                onValueChange={(val) => {
+                  if (
+                    val === "celsius" ||
+                    val === "fahrenheit" ||
+                    val === "kelvin"
+                  ) {
+                    setTempUnit(val);
+                    localStorage.setItem("tempUnit", val);
+                    if (val === "celsius") {
+                      localStorage.setItem("celsius", "1");
+                    } else {
+                      localStorage.removeItem("celsius");
+                    }
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select temperature unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fahrenheit">Fahrenheit (°F)</SelectItem>
+                  <SelectItem value="celsius">Celsius (°C)</SelectItem>
+                  <SelectItem value="kelvin">Kelvin (K)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
       </section>
       <section className="space-y-4">
