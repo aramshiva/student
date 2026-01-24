@@ -14,7 +14,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { addDays } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -138,15 +144,11 @@ const EventCard = ({
         <BookOpen className="size-4" />
         <AlertTitle className="flex items-center gap-2">
           {parsed.assignment}
-          <Badge className="ml-auto text-xs">
-            {parsed.score}%
-          </Badge>
+          <Badge className="ml-auto text-xs">{parsed.score}%</Badge>
         </AlertTitle>
         <AlertDescription>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">
-              {parsed.course}
-            </div>
+            <div className="text-xs text-muted-foreground">{parsed.course}</div>
             <div className="text-xs text-muted-foreground">
               Teacher: {parsed.teacher}
             </div>
@@ -355,20 +357,23 @@ export default function SchoolCalendarPage() {
                 <div className="flex items-center gap-1">
                   <Cloud className="size-4" />
                   <span className="text-sm">
-                    {selectedDayWeather.tempMin}-{selectedDayWeather.tempMax}{" "}
-                    C°
+                    {selectedDayWeather.tempMin}-{selectedDayWeather.tempMax} C°
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Wind className="size-4" />
-                  <span className="text-sm">{selectedDayWeather.condition}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Droplets className="size-4" />
                   <span className="text-sm">
-                    {selectedDayWeather.precipitation}mm
+                    {selectedDayWeather.condition}
                   </span>
                 </div>
+                {selectedDayWeather.precipitation !== 0 && (
+                  <div className="flex items-center gap-1">
+                    <Droplets className="size-4" />
+                    <span className="text-sm">
+                      {selectedDayWeather.precipitation}mm
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -398,36 +403,36 @@ export default function SchoolCalendarPage() {
           <div className="sticky top-6">
             <Card className="w-full">
               <CardContent className="p-4 flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              month={month}
-              onMonthChange={handleMonthChange}
-              fixedWeeks
-              className="p-0"
-            />
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  month={month}
+                  onMonthChange={handleMonthChange}
+                  fixedWeeks
+                  className="p-0"
+                />
               </CardContent>
               {![0, 5, 6].includes(new Date().getDay()) && (
-            <CardFooter className="flex flex-wrap gap-2 border-t">
-              {[
-                { label: "Today", value: 0 },
-                { label: "Tomorrow", value: 1 },
-                { label: "In 3 days", value: 3 },
-                { label: "In a week", value: 7 },
-                { label: "In 2 weeks", value: 14 },
-              ].map((preset) => (
-                <Button
-                  key={preset.value}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handlePresetDate(preset.value)}
-                >
-                  {preset.label}
-                </Button>
-              ))}
-            </CardFooter>
+                <CardFooter className="flex flex-wrap gap-2 border-t">
+                  {[
+                    { label: "Today", value: 0 },
+                    { label: "Tomorrow", value: 1 },
+                    { label: "In 3 days", value: 3 },
+                    { label: "In a week", value: 7 },
+                    { label: "In 2 weeks", value: 14 },
+                  ].map((preset) => (
+                    <Button
+                      key={preset.value}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handlePresetDate(preset.value)}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </CardFooter>
               )}
             </Card>
           </div>
