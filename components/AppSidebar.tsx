@@ -15,6 +15,7 @@ import {
   CalendarDays,
   BookOpen,
   Table,
+  School,
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,6 +49,7 @@ const primaryNav = [
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "Mail", href: "/mail", icon: Mail },
   { name: "Test History", href: "/tests", icon: BookCheck },
+  { name: "School Information", href: "/school", icon: School }
 ];
 
 export function AppSidebar() {

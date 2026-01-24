@@ -40,6 +40,7 @@ export default function ClientLayout({
       "/schedule": "Class Schedule",
       "/calendar": "Calendar",
       "/login": "Log In",
+      "/school": "School Information",
     };
     if (Object.prototype.hasOwnProperty.call(map, p)) return map[p];
     if (p.startsWith("/gradebook/")) return "Assignment";
