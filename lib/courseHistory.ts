@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 
 type Input = {
   districtUrl: string;
@@ -103,13 +103,11 @@ export async function fetchStudentVue({
       }
     }
 
-    const page = new JSDOM(html);
-    const document = page.window.document;
+    const $ = cheerio.load(html);
 
-    const scriptText = Array.from(
-      document.querySelectorAll("script") as unknown as Array<{ textContent: string | null }>,
-    )
-      .map((s) => s.textContent || "")
+    const scriptText = $("script")
+      .toArray()
+      .map((el) => $(el).html() || "")
       .find((t) => t.includes("PXP.CourseHistory"));
 
     let courseHistory: unknown = null;
@@ -124,23 +122,20 @@ export async function fetchStudentVue({
       }
     }
 
-      const gradRows = Array.from(
-        document.querySelectorAll(".pxp-summary .details tbody tr[data-guid]") as unknown as Array<
-        HTMLElement
-      >,
-    ).map((tr) => {
-      const cells = tr.querySelectorAll("td, th") as unknown as Array<
-        HTMLElement
-      >;
-      return {
-        subject: cells[0]?.textContent?.trim(),
-        required: cells[1]?.textContent?.trim(),
-        completed: cells[2]?.textContent?.trim(),
-        inProgress: cells[3]?.textContent?.trim(),
-        remaining: cells[4]?.textContent?.trim(),
-        guid: tr.getAttribute("data-guid"),
-      };
-    });
+    const gradRows = $(".pxp-summary .details tbody tr[data-guid]")
+      .toArray()
+      .map((tr) => {
+        const $tr = $(tr);
+        const cells = $tr.find("td, th").toArray();
+        return {
+          subject: $(cells[0]).text().trim(),
+          required: $(cells[1]).text().trim(),
+          completed: $(cells[2]).text().trim(),
+          inProgress: $(cells[3]).text().trim(),
+          remaining: $(cells[4]).text().trim(),
+          guid: $tr.attr("data-guid") || "",
+        };
+      });
 
     return {
       graduationRequirements: gradRows,
