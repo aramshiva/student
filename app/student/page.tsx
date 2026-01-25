@@ -393,7 +393,7 @@ export default function StudentDashboard() {
           />
         )}
         <div>
-          <h1 className="text-2xl font-medium font-[Montreal]">
+          <h1 className="text-2xl font-medium font-[Montreal,sans]">
             {greeting}
             {studentName ? `, ${studentName}` : permId ? `, ${permId}` : ""}.
             {temp
@@ -406,7 +406,7 @@ export default function StudentDashboard() {
                 } outside`
               : ""}
           </h1>
-          <p className="text-sm text-muted-foreground font-[Montreal] font-medium">
+          <p className="text-sm text-muted-foreground font-medium">
             Here are your recent activity messages.
           </p>
         </div>

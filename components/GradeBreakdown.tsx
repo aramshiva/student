@@ -76,7 +76,7 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
                   const typeData = byType[calc._Type];
                   const earned = typeData?.earned || 0;
                   const possible = typeData?.possible || 0;
-                  const fraction = `${earned}/${possible}`;
+                  const fraction = `${Math.round(earned * 100) / 100}/${Math.round(possible * 100) / 100}`;
                   const hasAssignments = possible > 0;
                   const pct = hasAssignments ? (earned / possible) * 100 : 0;
                   const grade = hasAssignments ? `${Math.round(pct)}%` : "N/A";
@@ -152,7 +152,7 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
                       <TableCell>
                         {Number.isFinite(pct) ? `${Math.round(pct)}%` : "N/A"}
                       </TableCell>
-                      <TableCell>{`${data.earned}/${data.possible}`}</TableCell>
+                      <TableCell>{`${Math.round(data.earned * 100) / 100}/${Math.round(data.possible * 100) / 100}`}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -184,7 +184,7 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
       <CardContent>
         <div className="flex flex-col items-start sm:items-center gap-2 py-4">
           <div className="text-3xl font-semibold tracking-tight">
-            {totals.earned}/{totals.possible}
+            {Math.round(totals.earned * 100) / 100}/{Math.round(totals.possible * 100) / 100}
           </div>
           <div className="text-sm text-zinc-500">
             {Number.isFinite(pct) ? `${Math.round(pct)}%` : "N/A"} overall
