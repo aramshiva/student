@@ -27,7 +27,6 @@ import {
   Table,
   School,
   MessageCircle,
-  History,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -97,11 +96,6 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           label: "Test History",
           action: () => navigate("/tests"),
           icon: <BookCheck className="text-sm" />,
-        },
-        {
-          label: "Course History",
-          action: () => navigate("/history"),
-          icon: <History className="text-sm" />,
         },
         {
           label: "School Information",

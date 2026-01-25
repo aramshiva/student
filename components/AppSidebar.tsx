@@ -17,7 +17,6 @@ import {
   Table,
   School,
   LogOutIcon,
-  History,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,7 +50,6 @@ const primaryNav = [
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "Mail", href: "/mail", icon: Mail },
   { name: "Test History", href: "/tests", icon: BookCheck },
-  { name: "Course History", href: "/history", icon: History },
   { name: "School Information", href: "/school", icon: School },
 ];
 
