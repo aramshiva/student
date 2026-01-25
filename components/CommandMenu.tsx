@@ -25,6 +25,8 @@ import {
   BookCheck,
   SunMoon,
   Table,
+  School,
+  MessageCircle,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -71,6 +73,11 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           icon: <Table className="text-sm" />,
         },
         {
+          label: "Calendar",
+          action: () => navigate("/calendar"),
+          icon: <CalendarDays className="text-sm" />,
+        },
+        {
           label: "Attendance",
           action: () => navigate("/attendance"),
           icon: <Table2 className="text-sm" />,
@@ -91,14 +98,14 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           icon: <BookCheck className="text-sm" />,
         },
         {
+          label: "School Information",
+          action: () => navigate("/school"),
+          icon: <School className="text-sm" />,
+        },
+        {
           label: "Settings",
           action: () => navigate("/settings"),
           icon: <Settings className="text-sm" />,
-        },
-        {
-          label: "Calendar",
-          action: () => navigate("/calendar"),
-          icon: <CalendarDays className="text-sm" />,
         },
       ],
     },
@@ -125,14 +132,13 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
     {
       heading: "Session",
       entries: [
+        { label: "Give Feedback",
+          action: () => navigate("/feedback"),
+          icon: <MessageCircle className="text-sm" />
+        },
         {
           label: "Logout",
-          action: () => {
-            try {
-              localStorage.removeItem("Student.creds");
-            } catch {}
-            router.push("/");
-          },
+          action: () => navigate("/logout"),
           icon: <LogOut className="text-sm" />,
         },
       ],
