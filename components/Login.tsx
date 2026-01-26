@@ -102,7 +102,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           <Button
             type="button"
             disabled={isLoading}
-            className="w-full bg-zinc-900 hover:bg-zinc-800 cursor-pointer"
+            className="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-50 cursor-pointer"
           >
             {isLoading ? "Signing In..." : "Sign In"}
           </Button>
