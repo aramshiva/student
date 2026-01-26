@@ -146,7 +146,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmLogin}
-              className="bg-zinc-900 hover:bg-zinc-800"
+              className="bg-zinc-900 hover:bg-zinc-800 text-zinc-50 cursor-pointer"
             >
               I understand.
             </AlertDialogAction>
