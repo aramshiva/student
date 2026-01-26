@@ -8,7 +8,7 @@ Student is an alternative client for StudentVUE®, a popular school LMS software
 
 <sub>StudentVUE® is a registered trademark of Edupoint Educational Systems, LLC. This project is not affiliated with Edupoint or Synergy.</sub>
 
-The app features a gradebook, schedule, calendar, attendance, documents, mail, test history, and school information. It has a clean interface and powerful features like Hypothetical Mode to make use easier.
+The app features a gradebook, schedule, calendar, attendance, documents, mail, test history, and school information. It has a clean interface and powerful features like Hypothetical Mode to make use easier. Student does not store, see or keep any of your personal data, a full privacy policy can be read [here](https://student.aram.sh/privacy).
 
 ## Development
 Student is a [Next.js](https://nextjs.org/) app, using [TypeScript](https://www.typescriptlang.org/). 
