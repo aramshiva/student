@@ -128,10 +128,10 @@ export function GradeChart({
 
   if (minimal) {
     return (
-      <Card
+      <div
         className={`${
           forceStickyInHeader
-            ? "mb-0 shadow-none border-0 bg-transparent"
+            ? "mb-0 shadow-none bg-transparent"
             : "mb-2"
         } `}
       >
@@ -199,7 +199,7 @@ export function GradeChart({
             </label>
           </div>
         </CardContent>
-      </Card>
+      </div>
     );
   }
 
