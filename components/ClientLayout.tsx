@@ -24,6 +24,7 @@ export default function ClientLayout({
     pathname !== "/" &&
     pathname !== "/privacy" &&
     pathname !== "/login" &&
+    pathname !== "/docs" &&
     pathname !== "/404";
   const pageTitle = React.useMemo(() => {
     if (!pathname) return "";

@@ -41,6 +41,7 @@
     "react-parallax-tilt": "^1.7.316",
     "recharts": "2.15.4",
     "shadcn": "^3.6.1",
+    "swagger-ui-react": "^5.31.0",
     "tailwind-merge": "^3.4.0",
     "tough-cookie": "^6.0.0",
     "vaul": "^1.1.2"
@@ -51,6 +52,7 @@
     "@types/node": "^20.19.19",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/swagger-ui-react": "^5.18.0",
     "eslint": "^9.37.0",
     "eslint-config-next": "15.4.6",
     "tailwindcss": "^4.1.14",
