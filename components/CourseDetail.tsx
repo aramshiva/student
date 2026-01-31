@@ -248,6 +248,28 @@ export default function CourseDetail({
     setHypotheticalNewAssignments((prev) => [...prev, newAssignment]);
   }, [currentMark, originalAssignments]);
 
+  const handleDeleteAssignment = React.useCallback((id: string) => {
+    setHypotheticalNewAssignments((prev) =>
+      prev.filter((a) => a._GradebookID !== id)
+    );
+    setHypotheticalScores((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setHypotheticalCategories((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
+
+  const handleResetAll = React.useCallback(() => {
+    setHypotheticalScores({});
+    setHypotheticalCategories({});
+    setHypotheticalNewAssignments([]);
+  }, []);
+
   const calcGrades = loadCalculateGradesEnabled();
   let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
   let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw
@@ -408,6 +430,8 @@ export default function CourseDetail({
           onEditScore={handleHypotheticalScoreChange}
           onEditCategory={handleHypotheticalCategoryChange}
           onCreateAssignment={handleCreateHypotheticalAssignment}
+          onDeleteAssignment={handleDeleteAssignment}
+          onResetAll={handleResetAll}
         />
       </div>
     </div>

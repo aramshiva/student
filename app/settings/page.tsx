@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
   loadCustomGPAScale,
   saveCustomGPAScale,
@@ -37,8 +37,30 @@ import {
   THEMES,
   ThemeColor,
 } from "@/components/ThemeProvider";
+import { Copy, Check } from "lucide-react";
 
 const ORDER = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"];
+
+const LOCALSTORAGE_KEYS = [
+  // "Student.creds",
+  "Student.zip",
+  "Student.studentName",
+  "Student.studentPhoto",
+  "Student.studentPermId",
+  "Student.studentSchool",
+  "Student.reportingPeriodIndex",
+  "Student.reportingPeriodEnd",
+  "Student.quickStats",
+  "Student.deletedMails",
+  "Student.customGPAScale",
+  "Student.customGradeBounds",
+  "Student.calculateGrades",
+  "Student.dontShowGradeCalcWarning",
+  "theme-color",
+  "tempUnit",
+  "celsius",
+  "umami.disabled",
+];
 
 export default function SettingsPage() {
   const { color, setColor } = useThemeCustomizer();
@@ -53,6 +75,39 @@ export default function SettingsPage() {
   const [tempUnit, setTempUnit] = useState<"fahrenheit" | "celsius" | "kelvin">(
     "fahrenheit",
   );
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
+
+  const copyToClipboard = useCallback(async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedItem(label);
+      setTimeout(() => setCopiedItem(null), 2000);
+    } catch {
+      console.error("Failed to copy to clipboard");
+    }
+  }, []);
+
+  const getLocalStorageData = useCallback(() => {
+    const data: Record<string, string | null> = {};
+    for (const key of LOCALSTORAGE_KEYS) {
+      data[key] = localStorage.getItem(key);
+    }
+    return data;
+  }, []);
+
+  const generateDebugInfo = useCallback(() => {
+    const info = {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language,
+      screenSize: `${window.screen.width}x${window.screen.height}`,
+      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timestamp: new Date().toISOString(),
+      localStorage: getLocalStorageData(),
+    };
+    return JSON.stringify(info, null, 2);
+  }, [getLocalStorageData]);
 
   useEffect(() => {
     const scale = loadCustomGPAScale();
@@ -450,6 +505,99 @@ export default function SettingsPage() {
                 opt-out.
               </span>
             </label>
+          </div>
+        </div>
+      </section>
+      <section className="space-y-4">
+        <header>
+          <h2 className="text-lg font-medium">Developer & Debug</h2>
+          <p className="text-xs text-zinc-500">
+            Tools for debugging and development. Use with caution.
+          </p>
+        </header>
+        <div className="pl-5 pt-1 space-y-6">
+          <div className="space-y-2">
+            <h3 className="font-lg font-medium">Copy Debug Info</h3>
+            <p className="text-sm text-zinc-500">
+              Copy all debug information including localStorage data, browser
+              info, and settings. <span className="font-semibold">Do not share this information with anyone you do not trust. It contains info to access your account. It contains your grades and other student info. It does not contain credentials.</span>
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyToClipboard(generateDebugInfo(), "debug-info")}
+              className="flex items-center gap-2"
+            >
+              {copiedItem === "debug-info" ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy Debug Info
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-lg font-medium">Copy localStorage</h3>
+            <p className="text-sm text-zinc-500">
+              Copy all Student localStorage data as JSON. <span className="font-semibold">Do not share this information with anyone you do not trust. It contains your grades and other student info. It does not contain credentials.</span>
+            </p>
+            <Button
+              variant="outline"
+              onClick={() =>
+                copyToClipboard(
+                  JSON.stringify(getLocalStorageData(), null, 2),
+                  "localStorage",
+                )
+              }
+              className="flex items-center gap-2"
+            >
+              {copiedItem === "localStorage" ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy localStorage
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-lg font-medium">Copy Credentials</h3>
+            <p className="text-sm text-zinc-500">
+              Copy your stored credentials. <span className="font-semibold">Do not share this information with anyone you do not trust. It contains info to access your account.</span>
+            </p>
+            <Button
+              variant="outline"
+              onClick={() =>
+                copyToClipboard(
+                  localStorage.getItem("Student.creds") || "No credentials",
+                  "creds",
+                )
+              }
+              className="flex items-center gap-2"
+            >
+              {copiedItem === "creds" ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy Credentials
+                </>
+              )}
+            </Button>
           </div>
         </div>
       </section>

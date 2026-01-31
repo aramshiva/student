@@ -94,8 +94,10 @@ function GradebookPageContent() {
       for (const course of courses) {
         const currentMark = getCurrentMark(course?.Marks?.Mark);
         if (!currentMark) continue;
-        const portalRaw = Number(currentMark?._CalculatedScoreRaw) || 0;
-        let effectivePct = portalRaw;
+        const rawScore = currentMark?._CalculatedScoreRaw;
+        const hasPortalGrade =
+          rawScore != null && rawScore !== "" && rawScore !== "0";
+        let effectivePct = hasPortalGrade ? Number(rawScore) : NaN;
         if (calcFlag) {
           const assignments: Assignment[] =
             currentMark?.Assignments?.Assignment || [];
@@ -115,9 +117,9 @@ function GradebookPageContent() {
           });
           if (possible > 0) effectivePct = (earned / possible) * 100;
         }
-        if (effectivePct > 0) {
+        const letter = numericToLetterGrade(effectivePct);
+        if (Number.isFinite(effectivePct) && letter !== "N/A") {
           gradedCourses++;
-          const letter = numericToLetterGrade(effectivePct);
           totalGPAPoints += gpaScale[letter] ?? 0;
         }
         const assignments: Assignment[] =
@@ -131,7 +133,7 @@ function GradebookPageContent() {
       const overallGPA =
         gradedCourses > 0
           ? (totalGPAPoints / gradedCourses).toFixed(2)
-          : "0.00";
+          : "N/A";
       const payload = {
         gpa: overallGPA,
         missing: missingCount,

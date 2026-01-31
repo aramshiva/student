@@ -87,22 +87,23 @@ export default function Dashboard({
   const gpaScale = loadCustomGPAScale();
   const computationBasis = courses.map((course) => {
     const currentMark = getCurrentMark(course.Marks.Mark);
-    const portalRaw = Number(currentMark?._CalculatedScoreRaw) || 0;
+    const rawScore = currentMark?._CalculatedScoreRaw;
+    const hasGrade = rawScore != null && rawScore !== "" && rawScore !== "0";
+    const portalRaw = hasGrade ? Number(rawScore) : NaN;
     const localPct = recomputeCoursePercent(course);
     const effectivePct = calcGrades && localPct != null ? localPct : portalRaw;
     const letter = numericToLetterGrade(Math.round(effectivePct));
-    return { course, effectivePct, letter };
+    const isValidForGPA = Number.isFinite(effectivePct) && letter !== "N/A";
+    return { course, effectivePct, letter, isValidForGPA };
   });
-  const validCourses = computationBasis.filter(
-    (c) => Number.isFinite(c.effectivePct) && (c.effectivePct as number) > 0,
-  );
+  const validCourses = computationBasis.filter((c) => c.isValidForGPA);
   const totalPoints = validCourses.reduce(
     (acc, c) => acc + (gpaScale[c.letter] ?? 0),
     0,
   );
   const gpa = validCourses.length
     ? (totalPoints / validCourses.length).toFixed(2)
-    : "0.00";
+    : "N/A";
 
   return (
     <>

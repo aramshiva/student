@@ -15,7 +15,7 @@ import {
   useReactTable,
   Row,
 } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Trash2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -60,6 +60,8 @@ interface AssignmentsTableProps {
   onToggleHypothetical?: (enabled: boolean) => void;
   onCreateAssignment?: () => void;
   onEditCategory?: (id: string, category: string) => void;
+  onDeleteAssignment?: (id: string) => void;
+  onResetAll?: () => void;
 }
 
 function ScoreEditor({
@@ -202,6 +204,8 @@ function AssignmentsTableBase({
   onToggleHypothetical,
   onEditCategory,
   onCreateAssignment,
+  onDeleteAssignment,
+  onResetAll,
 }: AssignmentsTableProps) {
   const availableCategories = React.useMemo(
     () =>
@@ -256,6 +260,7 @@ function AssignmentsTableBase({
   >({});
   const onEditScoreRef = React.useRef(onEditScore);
   const onEditCategoryRef = React.useRef(onEditCategory);
+  const onDeleteAssignmentRef = React.useRef(onDeleteAssignment);
 
   React.useEffect(() => {
     onEditScoreRef.current = onEditScore;
@@ -264,6 +269,10 @@ function AssignmentsTableBase({
   React.useEffect(() => {
     onEditCategoryRef.current = onEditCategory;
   }, [onEditCategory]);
+
+  React.useEffect(() => {
+    onDeleteAssignmentRef.current = onDeleteAssignment;
+  }, [onDeleteAssignment]);
   React.useEffect(() => {
     setDraftScores((prev) => {
       const next = { ...prev };
@@ -697,6 +706,30 @@ function AssignmentsTableBase({
           );
         },
       },
+      ...(hypotheticalMode
+        ? [
+            {
+              id: "actions",
+              header: "",
+              cell: ({ row }: { row: Row<Assignment> }) => {
+                const a = row.original;
+                return (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-zinc-500 hover:text-red-600 dark:hover:text-red-500"
+                    onClick={() =>
+                      onDeleteAssignmentRef.current?.(a._GradebookID)
+                    }
+                    title="Remove assignment"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                );
+              },
+            },
+          ]
+        : []),
     ],
     [
       decodeEntities,
@@ -737,6 +770,17 @@ function AssignmentsTableBase({
         <CardAction>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
+              {hypotheticalMode && onResetAll && (
+                <Button
+                  onClick={onResetAll}
+                  size="sm"
+                  variant="outline"
+                  className="h-8"
+                >
+                  <RotateCcw className="h-4 w-4 mr-1" />
+                  Reset All
+                </Button>
+              )}
               {hypotheticalMode && onCreateAssignment && (
                 <Button
                   onClick={onCreateAssignment}
