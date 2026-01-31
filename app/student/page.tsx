@@ -229,27 +229,35 @@ export default function StudentDashboard() {
           }
         }
 
-        try {
-          const nameRes = await fetch("/api/synergy/name", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: creds.username || creds.user || creds.userId,
-              password: creds.password || creds.pass,
-              district_url: creds.district_url || creds.district || creds.host,
-            }),
-          });
-          if (nameRes.ok) {
-            const nameJson = await nameRes.json();
-            if (
-              nameJson &&
-              typeof nameJson.name === "string" &&
-              nameJson.name.trim()
-            ) {
-              setStudentName(nameJson.name.trim());
+        const cachedName = localStorage.getItem("Student.studentName");
+        if (cachedName && cachedName.trim()) {
+          setStudentName(cachedName.trim());
+        } else {
+          try {
+            const nameRes = await fetch("/api/synergy/name", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                username: creds.username || creds.user || creds.userId,
+                password: creds.password || creds.pass,
+                district_url:
+                  creds.district_url || creds.district || creds.host,
+              }),
+            });
+            if (nameRes.ok) {
+              const nameJson = await nameRes.json();
+              if (
+                nameJson &&
+                typeof nameJson.name === "string" &&
+                nameJson.name.trim()
+              ) {
+                const name = nameJson.name.trim();
+                setStudentName(name);
+                localStorage.setItem("Student.studentName", name);
+              }
             }
-          }
-        } catch {}
+          } catch {}
+        }
         const messagesJson: PXPMessagesApiResponse = await messagesRes.json();
         const listingsRaw =
           messagesJson?.PXPMessagesData?.SynergyMailMessageListingByStudents

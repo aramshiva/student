@@ -107,36 +107,70 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    if (studentName) return;
+    const needsName = !studentName;
+    const needsStudentInfo = !permId || !school;
+    if (!needsName && !needsStudentInfo) return;
+
     const credsRaw = localStorage.getItem("Student.creds");
     if (!credsRaw) return;
     let aborted = false;
+
     (async () => {
       try {
         const creds = JSON.parse(credsRaw);
-        const res = await fetch("/api/synergy/name", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: creds.username || creds.user || creds.userId,
-            password: creds.password || creds.pass,
-            district_url: creds.district_url || creds.district || creds.host,
-          }),
-        });
-        if (!aborted && res.ok) {
-          const data = await res.json();
-          if (data && typeof data.name === "string" && data.name.trim()) {
-            const nm = data.name.trim();
-            setStudentName(nm);
-            localStorage.setItem("Student.studentName", nm);
+
+        if (needsName) {
+          const res = await fetch("/api/synergy/name", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: creds.username || creds.user || creds.userId,
+              password: creds.password || creds.pass,
+              district_url: creds.district_url || creds.district || creds.host,
+            }),
+          });
+          if (!aborted && res.ok) {
+            const data = await res.json();
+            if (data && typeof data.name === "string" && data.name.trim()) {
+              const nm = data.name.trim();
+              setStudentName(nm);
+              localStorage.setItem("Student.studentName", nm);
+            }
+          }
+        }
+
+        if (needsStudentInfo) {
+          const res = await fetch("/api/synergy/student", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: credsRaw,
+          });
+          if (!aborted && res.ok) {
+            const data = await res.json();
+            if (data) {
+              if (data.PermID && !permId) {
+                const pid = String(data.PermID);
+                setPermId(pid);
+                localStorage.setItem("Student.studentPermId", pid);
+              }
+              if (data.CurrentSchool && !school) {
+                setSchool(data.CurrentSchool);
+                localStorage.setItem("Student.studentSchool", data.CurrentSchool);
+              }
+              if (data.Photo && !studentPhoto) {
+                setStudentPhoto(data.Photo);
+                localStorage.setItem("Student.studentPhoto", data.Photo);
+              }
+            }
           }
         }
       } catch {}
     })();
+
     return () => {
       aborted = true;
     };
-  }, [studentName]);
+  }, [studentName, permId, school, studentPhoto]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
