@@ -144,7 +144,7 @@ export default function Dashboard({
           </div>
           <div className="flex items-center space-x-4 md:self-start">
             <div className="text-right">
-              <div className="text-sm text-zinc-500">GPA</div>
+              <div className="text-sm text-zinc-500">Semester GPA</div>
               <div className="text-2xl font-bold">{gpa}</div>
             </div>
           </div>
