@@ -2,7 +2,8 @@
 
 # Student
 
-![](https://api.checklyhq.com/v1/badges/checks/15980c57-d0b5-4c51-9b62-24a3e916c70b?style=flat&theme=default) ![Time Spent Coding](https://hackatime-badge.hackclub.com/U0616280E6P/student) ![GitHub commit status](https://img.shields.io/github/checks-status/aramshiva/student/main) ![GitHub last commit](https://img.shields.io/github/last-commit/aramshiva/student)
+![](https://api.checklyhq.com/v1/badges/checks/15980c57-d0b5-4c51-9b62-24a3e916c70b?style=flat&theme=default) ![Time Spent Coding](https://hackatime-badge.hackclub.com/U0616280E6P/student) ![GitHub commit status](https://img.shields.io/github/checks-status/aramshiva/student/main) ![GitHub last commit](https://img.shields.io/github/last-commit/aramshiva/student) ![License](https://img.shields.io/github/license/aramshiva/student) ![GitHub stars](https://img.shields.io/github/stars/aramshiva/student
+)
 
 Student is an alternative client for StudentVUE®, a popular school LMS software used in the US. It features a refreshed UI with more powerful features to help maintain academics.
 
