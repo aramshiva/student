@@ -118,9 +118,10 @@ function GradebookPageContent() {
           if (possible > 0) effectivePct = (earned / possible) * 100;
         }
         const letter = numericToLetterGrade(effectivePct);
-        if (Number.isFinite(effectivePct) && letter !== "N/A") {
+        const gpaPoints = gpaScale[letter];
+        if (Number.isFinite(effectivePct) && letter !== "N/A" && gpaPoints != null) {
           gradedCourses++;
-          totalGPAPoints += gpaScale[letter] ?? 0;
+          totalGPAPoints += gpaPoints;
         }
         const assignments: Assignment[] =
           currentMark?.Assignments?.Assignment || [];
