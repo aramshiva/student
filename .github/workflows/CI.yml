@@ -1,0 +1,47 @@
+name: Continuous Integration
+permissions: read-all
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  prettier:
+    runs-on: ubuntu-latest
+    name: Prettier
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.x"
+          cache: "bun"
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Run Prettier
+        run: bunx prettier --check .
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build Project
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.x"
+          cache: "bun"
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build Project
+        run: bun run build
