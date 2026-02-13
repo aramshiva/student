@@ -35,6 +35,7 @@ interface CourseDetailProps {
   onBack: () => void;
   initialSticky?: boolean;
   onStateChange?: (sticky: boolean) => void;
+  hideGradeCalcWarning?: boolean;
 }
 
 export default function CourseDetail({
@@ -42,6 +43,7 @@ export default function CourseDetail({
   onBack,
   initialSticky = false,
   onStateChange,
+  hideGradeCalcWarning = false,
 }: CourseDetailProps) {
   const marks = course.Marks.Mark;
   const currentMark = getCurrentMark(marks);
@@ -365,7 +367,8 @@ export default function CourseDetail({
                 </p>
               </div>
             </div>
-            {!dontShowGradeCalcWarning &&
+            {!hideGradeCalcWarning &&
+              !dontShowGradeCalcWarning &&
               !calcGrades &&
               !hasRubric &&
               !hypotheticalMode &&
