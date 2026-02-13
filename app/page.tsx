@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import Tilt from 'react-parallax-tilt';
+import { Computer } from "lucide-react";
 
 
 export default function Home() {
@@ -31,7 +32,7 @@ export default function Home() {
                 Student is a clean, minimalist, powerful, open-source
                 StudentVUE® client. Built by students, for students.
               </p>
-              <div className="flex gap-2 pb-6">
+              <div className="flex flex-wrap gap-2 pb-6">
                 <Link href="/login">
                   <Button className="cursor-pointer bg-zinc-950 hover:bg-zinc-800 p-[18px] text-white">
                     <Image
@@ -46,6 +47,11 @@ export default function Home() {
                 <Link href="https://github.com/aramshiva/student">
                   <Button className="cursor-pointer p-[18px]" variant="outline">
                     <SiGithub /> View Source Code
+                  </Button>
+                </Link>
+                  <Link href="/gradebook/mock">
+                  <Button className="cursor-pointer p-[18px]" variant="outline">
+                    <Computer /> View Mock Data
                   </Button>
                 </Link>
               </div>
