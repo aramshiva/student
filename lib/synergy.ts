@@ -48,8 +48,9 @@ const builder = new XMLBuilder({
 const escapeXmlText = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-const sanitizeDomain = (raw: string): string => {
+const sanitizeDomain = (raw: string): { host: string; pathPrefix: string } => {
   // sanitize and validate a synergy host string
+  // some schools use cutom domain prefixs eg. sisstudent.fcps.edu/svue
   let s = (raw || "").trim();
 
   const lower = s.toLowerCase();
@@ -61,26 +62,35 @@ const sanitizeDomain = (raw: string): string => {
     s = s.slice(atIdx + 1);
   }
 
-  for (const cut of ["/", "?", "#"]) {
+  for (const cut of ["?", "#"]) {
     const idx = s.indexOf(cut);
     if (idx !== -1) {
       s = s.slice(0, idx);
-      break;
     }
   }
 
-  while (s.endsWith("/")) s = s.slice(0, -1);
-  // no need for trailing slashes ^
+  // split host from path prefix at the first slash
+  let host: string;
+  let pathPrefix = "";
+  const slashIdx = s.indexOf("/");
+  if (slashIdx !== -1) {
+    host = s.slice(0, slashIdx);
+    pathPrefix = s.slice(slashIdx); // includes leading /
+  } else {
+    host = s;
+  }
 
-  while (s.endsWith(".")) s = s.slice(0, -1);
-  // also no need for trailing dots ^
+  // clean up path prefix: strip trailing slashes
+  while (pathPrefix.endsWith("/")) pathPrefix = pathPrefix.slice(0, -1);
 
-  s = s.toLowerCase();
+  while (host.endsWith(".")) host = host.slice(0, -1);
 
-  if (!s) throw new Error("Host is empty");
-  if (s.length > 253) throw new Error("Host too long");
+  host = host.toLowerCase();
 
-  const labels = s.split(".");
+  if (!host) throw new Error("Host is empty");
+  if (host.length > 253) throw new Error("Host too long");
+
+  const labels = host.split(".");
   for (const label of labels) {
     if (label.length > 63) throw new Error("dns label too long");
     if (label.startsWith("-") || label.endsWith("-")) {
@@ -88,7 +98,7 @@ const sanitizeDomain = (raw: string): string => {
     }
   }
 
-  return s;
+  return { host, pathPrefix };
 };
 
 interface MinimalFetchInit {
@@ -124,11 +134,14 @@ type Operation =
 
 export class SynergyClient {
   private domain: string;
+  private pathPrefix: string;
   private userID: string;
   private password: string;
 
   constructor(domain: string, userID: string, password: string) {
-    this.domain = sanitizeDomain(domain);
+    const sanitized = sanitizeDomain(domain);
+    this.domain = sanitized.host;
+    this.pathPrefix = sanitized.pathPrefix;
     this.userID = userID;
     this.password = password;
   }
@@ -222,7 +235,7 @@ export class SynergyClient {
   }
 
   private endpoint() {
-    return `https://${this.domain}/Service/PXPCommunication.asmx`;
+    return `https://${this.domain}${this.pathPrefix}/Service/PXPCommunication.asmx`;
   }
 
   private buildEnvelope(
