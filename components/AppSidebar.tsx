@@ -66,6 +66,7 @@ export function AppSidebar() {
     totalCourses: number;
     ts: number;
   } | null>(null);
+  const [cumGPA, setCumGPA] = React.useState<{ value: string; label: string } | null>(null);
   const [nextPeriod, setNextPeriod] = React.useState<{
     period: number;
     courseTitle: string;
@@ -77,16 +78,17 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const KEY = "Student.quickStats";
     const read = () => {
       try {
-        const raw = localStorage.getItem(KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        setQuickStats((prev) => {
-          if (!prev || prev.ts !== parsed.ts) return parsed;
-          return prev;
-        });
+        const raw = localStorage.getItem("Student.quickStats");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setQuickStats((prev) => (!prev || prev.ts !== parsed.ts ? parsed : prev));
+        }
+      } catch {}
+      try {
+        const raw = localStorage.getItem("Student.cumGPA");
+        if (raw) setCumGPA(JSON.parse(raw));
       } catch {}
     };
     read();
@@ -382,6 +384,12 @@ export function AppSidebar() {
                           {quickStats.gpa}
                         </p>
                       </div>
+                      {cumGPA && (
+                        <div className="flex items-baseline justify-between">
+                          <p className="font-medium tracking-tight">{cumGPA.label}</p>
+                          <p className="text-sm font-semibold">{cumGPA.value}</p>
+                        </div>
+                      )}
                       <div className="flex items-baseline justify-between">
                         <p className="font-medium tracking-tight">Missing</p>
                         <p
