@@ -308,6 +308,12 @@ export function AppSidebar() {
     return () => clearInterval(interval);
   }, []);
 
+  const isOnMockPage = pathname?.startsWith("/gradebook/mock");
+  const displayPhoto = isOnMockPage ? "" : studentPhoto;
+  const displayPermId = isOnMockPage ? "100001" : permId;
+  const displaySchool = isOnMockPage ? "Lincoln High School" : school;
+  const displayStudentName = isOnMockPage ? "Alex Johnson" : studentName;
+
   return (
     <Sidebar
       collapsible="icon"
@@ -338,14 +344,19 @@ export function AppSidebar() {
               {primaryNav.map((item) => {
                 const active = pathname?.startsWith(item.href);
                 const Icon = item.icon;
+                const isOnMockPage = pathname?.startsWith("/gradebook/mock");
+                const isGradebook = item.href === "/gradebook";
+                const isDisabled = isOnMockPage && !isGradebook;
+                
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
                       isActive={!!active}
-                      tooltip={item.name}
+                      tooltip={isDisabled ? `${item.name} is disabled on mock page` : item.name}
+                      className={isDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}
                     >
-                      <Link href={item.href} className="flex items-center">
+                      <Link href={item.href} className={`flex items-center ${isDisabled ? "opacity-50" : ""}`}>
                         <Icon className="shrink-0" />
                         <span>{item.name}</span>
                       </Link>
@@ -438,50 +449,55 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
       <SidebarFooter>
-        {(studentPhoto || permId || school) && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="cursor-pointer w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md mt-1 flex items-center gap-2 p-2 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1">
-                {studentPhoto ? (
+        {(displayPhoto || displayPermId || displaySchool) && (
+          <DropdownMenu disabled={isOnMockPage}>
+            <DropdownMenuTrigger asChild disabled={isOnMockPage}>
+              <button 
+                className={`cursor-pointer w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md mt-1 flex items-center gap-2 p-2 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1 ${
+                  isOnMockPage ? "opacity-50 hover:bg-transparent cursor-not-allowed" : ""
+                }`}
+                disabled={isOnMockPage}
+              >
+                {displayPhoto ? (
                   <Avatar>
                     <AvatarImage
                       className="rounded-full object-cover aspect-square group-data-[collapsible=icon]:size-8"
-                      src={`data:image/png;base64,${studentPhoto}`}
+                      src={`data:image/png;base64,${displayPhoto}`}
                     />
                     <AvatarFallback>
-                      {(studentName || permId || school || "S").slice(0, 2)}
+                      {(displayStudentName || displayPermId || displaySchool || "S").slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
                   <div className="size-9 shrink-0 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-medium uppercase group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:text-sm">
-                    {(studentName || permId || school || "S").slice(0, 2)}
+                    {(displayStudentName || displayPermId || displaySchool || "S").slice(0, 2)}
                   </div>
                 )}
                 <div className="min-w-0 text-left group-data-[collapsible=icon]:hidden md:block">
-                  {(studentName || permId) && (
+                  {(displayStudentName || displayPermId) && (
                     <p className="truncate text-xs font-medium leading-tight">
-                      {studentName || permId}
+                      {displayStudentName || displayPermId}
                     </p>
                   )}
-                  {school && (
+                  {displaySchool && (
                     <p className="truncate text-[10px] text-muted-foreground leading-tight">
-                      {school}
+                      {displaySchool}
                     </p>
                   )}
                 </div>
-                <ChevronUp className="ml-auto size-4 opacity-60 group-data-[collapsible=icon]:hidden" />
+                <ChevronUp className={`ml-auto size-4 opacity-60 group-data-[collapsible=icon]:hidden ${isOnMockPage ? "hidden" : ""}`} />
               </button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="start" side="top" className="w-52">
               <DropdownMenuLabel className="text-xs">Account</DropdownMenuLabel>
               <div className="px-2 pb-1 pt-0.5">
-                {permId && (
-                  <p className="text-xs font-medium truncate">ID: {permId}</p>
+                {displayPermId && (
+                  <p className="text-xs font-medium truncate">ID: {displayPermId}</p>
                 )}
-                {school && (
+                {displaySchool && (
                   <p className="text-xs text-muted-foreground truncate">
-                    {school}
+                    {displaySchool}
                   </p>
                 )}
               </div>

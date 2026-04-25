@@ -12,6 +12,56 @@ export type AuthToken = Record<string, unknown>;
 export type Schedule = Record<string, unknown>;
 export type HealthInfo = Record<string, unknown>;
 
+export interface CourseCatalogEntry {
+  ID: string;
+  Detail: string;
+  Department: string;
+  CourseID: string;
+  CourseTitle: string;
+  CourseDuration: string;
+  Credit: string;
+  Term: string;
+  CollegePrep: string;
+  CourseFee: string;
+  OCRElective: string;
+  OCRLocked: string;
+  OCRComment: string;
+  Schools: string;
+}
+
+export interface CourseCatalogResponse {
+  success: boolean;
+  data: CourseCatalogEntry[];
+  totalCount: number;
+}
+
+export interface CourseRequestEntry {
+  ID: string;
+  Detail: string;
+  Department: string;
+  CourseID: string;
+  CourseTitle: string;
+  CourseDuration: string;
+  Credit: string;
+  CollegePrep: string;
+  CourseFee: string;
+  OCRElective: string;
+  OCRLocked: string;
+  OCRComment: string;
+  Schools: string;
+  SchedPriorityElective: string;
+  TermOverride: string;
+  TermPreference: string | null;
+  OCRAction: string;
+}
+
+export interface AddCourseResponse {
+  refreshSearch: boolean;
+  mainResults: CourseRequestEntry[];
+  altResults: CourseRequestEntry[] | null;
+  teacherResults: unknown[];
+}
+
 export interface DistrictInfo {
   name: string;
   address: string;
@@ -122,7 +172,7 @@ async function fetchWithTimeout(
   const c = new AbortController();
   const id = setTimeout(() => c.abort(), ms);
   try {
-    return await fetch(input, { ...(init as any), signal: c.signal }); // eslint-disable-line @typescript-eslint/no-explicit-any
+    return await fetch(input, { ...(init as any), signal: c.signal, cache: "no-store" as const }); // eslint-disable-line @typescript-eslint/no-explicit-any
   } finally {
     clearTimeout(id);
   }
@@ -422,6 +472,231 @@ export class SynergyClient {
       HealthImmunizations: healthImmunizations,
     });
     return r?.StudentHealthData ?? {};
+  }
+
+  private async getSessionCookie(): Promise<string> {
+    const c = new AbortController();
+    const id = setTimeout(() => c.abort(), 15000);
+    try {
+      // Use raw globalThis.fetch to bypass Next.js fetch caching,
+      // which can strip set-cookie headers from cached responses.
+      const res = await globalThis.fetch(this.endpoint(), {
+        method: "POST",
+        headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
+        body: this.buildEnvelope(
+          "ProcessWebServiceRequest",
+          "StudentInfo",
+          {},
+        ),
+        signal: c.signal,
+        cache: "no-store",
+      });
+
+      if (!res.ok) throw new Error(`Session init HTTP ${res.status}`);
+
+      const setCookie =
+        res.headers.getSetCookie?.().join("; ") ||
+        res.headers.get("set-cookie") ||
+        "";
+      const match = setCookie.match(/ASP\.NET_SessionId=([^;\s]+)/i);
+      if (!match) throw new Error("Missing ASP.NET_SessionId");
+      return `ASP.NET_SessionId=${match[1]}`;
+    } finally {
+      clearTimeout(id);
+    }
+  }
+
+  private pxp2Endpoint() {
+    return `https://${this.domain}${this.pathPrefix}/Service/PXP2Communication.asmx/DXDataGridRequest`;
+  }
+
+  async getCourseCatalog(
+    termIndex = 1,
+  ): Promise<CourseCatalogResponse> {
+    const cookie = await this.getSessionCookie();
+
+    const res = await fetchWithTimeout(this.pxp2Endpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, */*",
+        Cookie: cookie,
+      },
+      body: JSON.stringify({
+        request: {
+          agu: 0,
+          dataRequestType: "Load",
+          gridParameters: JSON.stringify({
+            AGU: "0",
+            TermIndexForHomeSchool: termIndex,
+          }),
+        },
+      }),
+    });
+
+    const raw = await res.text().catch(() => "");
+    if (!res.ok)
+      throw new Error(
+        process.env.NODE_ENV === "development"
+          ? `HTTP ${res.status} from DXDataGrid: ${raw.slice(0, 400)}`
+          : `HTTP ${res.status} from DXDataGrid`,
+      );
+
+    const json = JSON.parse(raw);
+    const inner = json?.d?.Data;
+    if (!inner || !inner.success) {
+      throw new Error(json?.d?.Error || "DXDataGrid request failed");
+    }
+
+    return {
+      success: inner.success,
+      data: inner.data ?? [],
+      totalCount: inner.totalCount ?? 0,
+    };
+  }
+
+  async getCourseRequests(
+    termIndex = 1,
+    searchValue: string | null = null,
+  ): Promise<CourseCatalogResponse> {
+    const cookie = await this.getSessionCookie();
+
+    const res = await fetchWithTimeout(this.pxp2Endpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, */*",
+        Cookie: cookie,
+      },
+      body: JSON.stringify({
+        request: {
+          agu: 0,
+          dataRequestType: "Load",
+          gridParameters: JSON.stringify({
+            AGU: "0",
+            TermIndexForHomeSchool: termIndex,
+          }),
+          dataSourceTypeName: "9D8B759A-CDAF-47D5-9036-085782D785DA",
+          loadOptions: {
+            searchOperation: "contains",
+            searchValue,
+          },
+        },
+      }),
+    });
+
+    const raw = await res.text().catch(() => "");
+    if (!res.ok)
+      throw new Error(
+        process.env.NODE_ENV === "development"
+          ? `HTTP ${res.status} from DXDataGrid: ${raw.slice(0, 400)}`
+          : `HTTP ${res.status} from DXDataGrid`,
+      );
+
+    const json = JSON.parse(raw);
+    const inner = json?.d?.Data;
+    if (!inner || !inner.success) {
+      throw new Error(json?.d?.Error || "DXDataGrid request failed");
+    }
+
+    return {
+      success: inner.success,
+      data: inner.data ?? [],
+      totalCount: inner.totalCount ?? 0,
+    };
+  }
+
+  private courseRequestEndpoint() {
+    return `https://${this.domain}${this.pathPrefix}/PXP2_CourseRequest.aspx/AddCourse`;
+  }
+
+  async addCourse(schoolYearCourseGU: string): Promise<AddCourseResponse> {
+    const cookie = await this.getSessionCookie();
+
+    const res = await fetchWithTimeout(this.courseRequestEndpoint(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, */*",
+        Cookie: cookie,
+      },
+      body: JSON.stringify({
+        request: {
+          agu: 0,
+          schoolYearCourseGU,
+        },
+      }),
+    });
+
+    const raw = await res.text().catch(() => "");
+    if (!res.ok)
+      throw new Error(
+        process.env.NODE_ENV === "development"
+          ? `HTTP ${res.status} from AddCourse: ${raw.slice(0, 400)}`
+          : `HTTP ${res.status} from AddCourse`,
+      );
+
+    const json = JSON.parse(raw);
+    const inner = json?.d?.Data;
+    if (json?.d?.Error) {
+      throw new Error(json.d.Error);
+    }
+    if (!inner) {
+      throw new Error("AddCourse request failed");
+    }
+
+    return {
+      refreshSearch: inner.refreshSearch ?? false,
+      mainResults: inner.mainResults ?? [],
+      altResults: inner.altResults ?? null,
+      teacherResults: inner.teacherResults ?? [],
+    };
+  }
+
+  async removeCourse(crAccessGU: string): Promise<AddCourseResponse> {
+    const cookie = await this.getSessionCookie();
+
+    const res = await fetchWithTimeout(
+      `https://${this.domain}${this.pathPrefix}/PXP2_CourseRequest.aspx/RemoveCourse`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json, */*",
+          Cookie: cookie,
+        },
+        body: JSON.stringify({
+          request: {
+            agu: 0,
+            crAccessGU,
+          },
+        }),
+      },
+    );
+
+    const raw = await res.text().catch(() => "");
+    if (!res.ok)
+      throw new Error(
+        process.env.NODE_ENV === "development"
+          ? `HTTP ${res.status} from RemoveCourse: ${raw.slice(0, 400)}`
+          : `HTTP ${res.status} from RemoveCourse`,
+      );
+
+    const json = JSON.parse(raw);
+    const inner = json?.d?.Data;
+    if (json?.d?.Error) {
+      throw new Error(json.d.Error);
+    }
+    if (!inner) {
+      throw new Error("RemoveCourse request failed");
+    }
+
+    return {
+      refreshSearch: inner.refreshSearch ?? false,
+      mainResults: inner.mainResults ?? [],
+      altResults: inner.altResults ?? null,
+      teacherResults: inner.teacherResults ?? [],
+    };
   }
 
   async call<T = unknown>(methodName: string, params?: unknown): Promise<T> {
