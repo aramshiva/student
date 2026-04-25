@@ -87,7 +87,7 @@ const parser = new XMLParser({
   ignoreAttributes: false,
   ignoreDeclaration: true,
   attributeNamePrefix: "_",
-  isArray: (_name, jpath) => alwaysArray.has(jpath),
+  isArray: (_name, jpath) => alwaysArray.has(jpath as string),
 });
 
 const builder = new XMLBuilder({

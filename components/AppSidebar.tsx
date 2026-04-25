@@ -450,7 +450,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         {(displayPhoto || displayPermId || displaySchool) && (
-          <DropdownMenu disabled={isOnMockPage}>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild disabled={isOnMockPage}>
               <button 
                 className={`cursor-pointer w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md mt-1 flex items-center gap-2 p-2 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1 ${
