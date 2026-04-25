@@ -478,8 +478,6 @@ export class SynergyClient {
     const c = new AbortController();
     const id = setTimeout(() => c.abort(), 15000);
     try {
-      // Use raw globalThis.fetch to bypass Next.js fetch caching,
-      // which can strip set-cookie headers from cached responses.
       const res = await globalThis.fetch(this.endpoint(), {
         method: "POST",
         headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
