@@ -283,12 +283,13 @@ function GradebookPageContent() {
             totalCredits += credits;
           }
         }
-        const result = { value: totalCredits > 0 ? (totalPoints / totalCredits).toFixed(3) : "N/A", label: candidates.label };
-        setCumGPA(result);
-        try { localStorage.setItem("Student.cumGPA", JSON.stringify(result)); } catch {}
-      } catch {
-        setCumGPA({ value: "N/A", label: "Cum GPA" });
-      }
+        if (totalCredits > 0) {
+          const result = { value: (totalPoints / totalCredits).toFixed(3), label: candidates.label };
+          setCumGPA(result);
+          try { localStorage.setItem("Student.cumGPA", JSON.stringify(result)); } catch {}
+        }
+      } catch {}
+
     };
     fetchCumGPA();
   }, []);

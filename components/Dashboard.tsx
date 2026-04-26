@@ -145,10 +145,10 @@ export default function Dashboard({
             )}
           </div>
           <div className="flex items-center space-x-8 md:self-start">
-            {cumGPA !== undefined && (
+            {cumGPA != null && (
               <div className="text-right">
-                <div className="text-sm text-zinc-500">{cumGPA?.label ?? "Cum GPA"}</div>
-                <div className="text-2xl font-bold">{cumGPA?.value ?? "..."}</div>
+                <div className="text-sm text-zinc-500">{cumGPA.label}</div>
+                <div className="text-2xl font-bold">{cumGPA.value}</div>
               </div>
             )}
             <div className="text-right">
