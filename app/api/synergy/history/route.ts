@@ -9,8 +9,10 @@ export async function POST(req: Request) {
     if (!body)
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
 
-    const { district_url, username, password, timeout_ms } =
-      body as Record<string, unknown>;
+    const { district_url, username, password, timeout_ms } = body as Record<
+      string,
+      unknown
+    >;
 
     if (!district_url || !username || !password) {
       return NextResponse.json(

@@ -184,7 +184,8 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
       <CardContent>
         <div className="flex flex-col items-start sm:items-center gap-2 py-4">
           <div className="text-3xl font-semibold tracking-tight">
-            {Math.round(totals.earned * 100) / 100}/{Math.round(totals.possible * 100) / 100}
+            {Math.round(totals.earned * 100) / 100}/
+            {Math.round(totals.possible * 100) / 100}
           </div>
           <div className="text-sm text-zinc-500">
             {Number.isFinite(pct) ? `${Math.round(pct)}%` : "N/A"} overall

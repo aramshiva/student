@@ -252,7 +252,7 @@ export default function CourseDetail({
 
   const handleDeleteAssignment = React.useCallback((id: string) => {
     setHypotheticalNewAssignments((prev) =>
-      prev.filter((a) => a._GradebookID !== id)
+      prev.filter((a) => a._GradebookID !== id),
     );
     setHypotheticalScores((prev) => {
       const next = { ...prev };

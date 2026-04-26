@@ -132,9 +132,10 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
     {
       heading: "Session",
       entries: [
-        { label: "Give Feedback",
+        {
+          label: "Give Feedback",
           action: () => navigate("/feedback"),
-          icon: <MessageCircle className="text-sm" />
+          icon: <MessageCircle className="text-sm" />,
         },
         {
           label: "Logout",

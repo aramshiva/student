@@ -9,6 +9,7 @@ import {
   loadCustomGPAScale,
   numericToLetterGrade,
   loadCalculateGradesEnabled,
+  letterToGPA,
 } from "@/utils/gradebook";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -33,6 +34,9 @@ function GradebookPageContent() {
     number | null
   >(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [cumGPA, setCumGPA] = useState<{ value: string; label: string } | null>(
+    null,
+  );
   const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
   const QUICK_STATS_STORAGE_KEY = "Student.quickStats";
 
@@ -119,7 +123,11 @@ function GradebookPageContent() {
         }
         const letter = numericToLetterGrade(effectivePct);
         const gpaPoints = gpaScale[letter];
-        if (Number.isFinite(effectivePct) && letter !== "N/A" && gpaPoints != null) {
+        if (
+          Number.isFinite(effectivePct) &&
+          letter !== "N/A" &&
+          gpaPoints != null
+        ) {
           gradedCourses++;
           totalGPAPoints += gpaPoints;
         }
@@ -132,9 +140,7 @@ function GradebookPageContent() {
       }
 
       const overallGPA =
-        gradedCourses > 0
-          ? (totalGPAPoints / gradedCourses).toFixed(2)
-          : "N/A";
+        gradedCourses > 0 ? (totalGPAPoints / gradedCourses).toFixed(2) : "N/A";
       const payload = {
         gpa: overallGPA,
         missing: missingCount,
@@ -232,6 +238,81 @@ function GradebookPageContent() {
     } catch {}
     fetchGradebook(stored);
   }, [fetchGradebook]);
+
+  useEffect(() => {
+    const fetchCumGPA = async () => {
+      try {
+        const cached = localStorage.getItem("Student.cumGPA");
+        if (cached) {
+          setCumGPA(JSON.parse(cached));
+          return;
+        }
+        const creds = localStorage.getItem("Student.creds");
+        if (!creds) return;
+        const credentials = JSON.parse(creds);
+        const res = await fetch("/api/synergy/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            district_url: credentials.district_url,
+            username: credentials.username,
+            password: credentials.password,
+            timeout_ms: 15000,
+          }),
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        type HistoryCourse = {
+          Mark: string;
+          CreditsAttempted: string;
+          CHSType: string;
+        };
+        const history: Array<{ Terms: Array<{ Courses: HistoryCourse[] }> }> =
+          json?.courseHistory ?? [];
+
+        const allCourses: HistoryCourse[] = history.flatMap((g) =>
+          g.Terms.flatMap((t) => t.Courses),
+        );
+
+        const isHS = (c: HistoryCourse) => {
+          const t = (c.CHSType ?? "").toLowerCase();
+          return t.includes("high") || t.includes("secondary");
+        };
+        const isMS = (c: HistoryCourse) => {
+          const t = (c.CHSType ?? "").toLowerCase();
+          return t.includes("middle") || t.includes("junior");
+        };
+
+        const hsCourses = allCourses.filter(isHS);
+        const candidates =
+          hsCourses.length > 0
+            ? { courses: hsCourses, label: "HS Cumulative GPA" }
+            : { courses: allCourses.filter(isMS), label: "MS Cumulative GPA" };
+
+        let totalPoints = 0;
+        let totalCredits = 0;
+        for (const course of candidates.courses) {
+          const gpaPoints = letterToGPA(course.Mark);
+          const credits = parseFloat(course.CreditsAttempted);
+          if (gpaPoints !== null && Number.isFinite(credits) && credits > 0) {
+            totalPoints += gpaPoints * credits;
+            totalCredits += credits;
+          }
+        }
+        if (totalCredits > 0) {
+          const result = {
+            value: (totalPoints / totalCredits).toFixed(3),
+            label: candidates.label,
+          };
+          setCumGPA(result);
+          try {
+            localStorage.setItem("Student.cumGPA", JSON.stringify(result));
+          } catch {}
+        }
+      } catch {}
+    };
+    fetchCumGPA();
+  }, []);
 
   useEffect(() => {
     if (!gradebookData || !initialCourseId) return;
@@ -334,6 +415,7 @@ function GradebookPageContent() {
       onRefresh={() => fetchGradebook(selectedReportingPeriod)}
       lastRefreshed={lastRefreshed}
       isLoading={isLoading}
+      cumGPA={cumGPA}
     />
   );
 }

@@ -46,6 +46,7 @@ interface DashboardProps {
   onRefresh?: () => void;
   lastRefreshed?: Date | null;
   isLoading?: boolean;
+  cumGPA?: { value: string; label: string } | null;
 }
 
 export default function Dashboard({
@@ -57,6 +58,7 @@ export default function Dashboard({
   onRefresh,
   lastRefreshed,
   isLoading = false,
+  cumGPA,
 }: DashboardProps) {
   const gbRoot = gradebookData.data.Gradebook ?? gradebookData.data;
   const courses: Course[] = gbRoot?.Courses?.Course || [];
@@ -142,7 +144,13 @@ export default function Dashboard({
               </div>
             )}
           </div>
-          <div className="flex items-center space-x-4 md:self-start">
+          <div className="flex items-center space-x-8 md:self-start">
+            {cumGPA != null && (
+              <div className="text-right">
+                <div className="text-sm text-zinc-500">{cumGPA.label}</div>
+                <div className="text-2xl font-bold">{cumGPA.value}</div>
+              </div>
+            )}
             <div className="text-right">
               <div className="text-sm text-zinc-500">Semester GPA</div>
               <div className="text-2xl font-bold">{gpa}</div>

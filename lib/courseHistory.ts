@@ -112,7 +112,9 @@ export async function fetchStudentVue({
 
     let courseHistory: unknown = null;
     if (scriptText) {
-      const match = scriptText.match(/PXP\.CourseHistory\s*=\s*(\[[\s\S]*?\]);/);
+      const match = scriptText.match(
+        /PXP\.CourseHistory\s*=\s*(\[[\s\S]*?\]);/,
+      );
       if (match) {
         try {
           courseHistory = JSON.parse(match[1]);

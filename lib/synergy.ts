@@ -172,7 +172,11 @@ async function fetchWithTimeout(
   const c = new AbortController();
   const id = setTimeout(() => c.abort(), ms);
   try {
-    return await fetch(input, { ...(init as any), signal: c.signal, cache: "no-store" as const }); // eslint-disable-line @typescript-eslint/no-explicit-any
+    return await fetch(input, {
+      ...(init as any),
+      signal: c.signal,
+      cache: "no-store" as const,
+    }); // eslint-disable-line @typescript-eslint/no-explicit-any
   } finally {
     clearTimeout(id);
   }
@@ -481,11 +485,7 @@ export class SynergyClient {
       const res = await globalThis.fetch(this.endpoint(), {
         method: "POST",
         headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
-        body: this.buildEnvelope(
-          "ProcessWebServiceRequest",
-          "StudentInfo",
-          {},
-        ),
+        body: this.buildEnvelope("ProcessWebServiceRequest", "StudentInfo", {}),
         signal: c.signal,
         cache: "no-store",
       });
@@ -508,9 +508,7 @@ export class SynergyClient {
     return `https://${this.domain}${this.pathPrefix}/Service/PXP2Communication.asmx/DXDataGridRequest`;
   }
 
-  async getCourseCatalog(
-    termIndex = 1,
-  ): Promise<CourseCatalogResponse> {
+  async getCourseCatalog(termIndex = 1): Promise<CourseCatalogResponse> {
     const cookie = await this.getSessionCookie();
 
     const res = await fetchWithTimeout(this.pxp2Endpoint(), {

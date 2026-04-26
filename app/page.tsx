@@ -7,9 +7,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
-import Tilt from 'react-parallax-tilt';
+import Tilt from "react-parallax-tilt";
 import { Computer } from "lucide-react";
-
 
 export default function Home() {
   const { setTheme } = useTheme();
@@ -49,7 +48,7 @@ export default function Home() {
                     <SiGithub /> View Source Code
                   </Button>
                 </Link>
-                  <Link href="/gradebook/mock">
+                <Link href="/gradebook/mock">
                   <Button className="cursor-pointer p-[18px]" variant="outline">
                     <Computer /> View Mock Data
                   </Button>
@@ -63,15 +62,15 @@ export default function Home() {
               </p>
             </div>
             <Tilt glareEnable>
-            <div className="relative w-full flex justify-end">
-              <Image
-                src="/screenshots/gradebook.png"
-                alt="Gradebook screenshot"
-                width={2500}
-                height={2500}
-                className="relative z-10 h-auto"
-              />
-            </div>
+              <div className="relative w-full flex justify-end">
+                <Image
+                  src="/screenshots/gradebook.png"
+                  alt="Gradebook screenshot"
+                  width={2500}
+                  height={2500}
+                  className="relative z-10 h-auto"
+                />
+              </div>
             </Tilt>
           </div>
         </div>

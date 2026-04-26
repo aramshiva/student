@@ -66,6 +66,10 @@ export function AppSidebar() {
     totalCourses: number;
     ts: number;
   } | null>(null);
+  const [cumGPA, setCumGPA] = React.useState<{
+    value: string;
+    label: string;
+  } | null>(null);
   const [nextPeriod, setNextPeriod] = React.useState<{
     period: number;
     courseTitle: string;
@@ -77,16 +81,19 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const KEY = "Student.quickStats";
     const read = () => {
       try {
-        const raw = localStorage.getItem(KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        setQuickStats((prev) => {
-          if (!prev || prev.ts !== parsed.ts) return parsed;
-          return prev;
-        });
+        const raw = localStorage.getItem("Student.quickStats");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          setQuickStats((prev) =>
+            !prev || prev.ts !== parsed.ts ? parsed : prev,
+          );
+        }
+      } catch {}
+      try {
+        const raw = localStorage.getItem("Student.cumGPA");
+        if (raw) setCumGPA((prev) => (JSON.stringify(prev) === raw ? prev : JSON.parse(raw)));
       } catch {}
     };
     read();
@@ -155,7 +162,10 @@ export function AppSidebar() {
               }
               if (data.CurrentSchool && !school) {
                 setSchool(data.CurrentSchool);
-                localStorage.setItem("Student.studentSchool", data.CurrentSchool);
+                localStorage.setItem(
+                  "Student.studentSchool",
+                  data.CurrentSchool,
+                );
               }
               if (data.Photo && !studentPhoto) {
                 setStudentPhoto(data.Photo);
@@ -347,16 +357,27 @@ export function AppSidebar() {
                 const isOnMockPage = pathname?.startsWith("/gradebook/mock");
                 const isGradebook = item.href === "/gradebook";
                 const isDisabled = isOnMockPage && !isGradebook;
-                
+
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
                       isActive={!!active}
-                      tooltip={isDisabled ? `${item.name} is disabled on mock page` : item.name}
-                      className={isDisabled ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}
+                      tooltip={
+                        isDisabled
+                          ? `${item.name} is disabled on mock page`
+                          : item.name
+                      }
+                      className={
+                        isDisabled
+                          ? "opacity-50 cursor-not-allowed pointer-events-none"
+                          : ""
+                      }
                     >
-                      <Link href={item.href} className={`flex items-center ${isDisabled ? "opacity-50" : ""}`}>
+                      <Link
+                        href={item.href}
+                        className={`flex items-center ${isDisabled ? "opacity-50" : ""}`}
+                      >
                         <Icon className="shrink-0" />
                         <span>{item.name}</span>
                       </Link>
@@ -377,11 +398,23 @@ export function AppSidebar() {
                   <div className="grid grid-cols-1 gap-2 text-xs pl-1">
                     <div className="rounded-md border bg-sidebar-accent/50 p-2 flex flex-col gap-1">
                       <div className="flex items-baseline justify-between">
-                        <p className="font-medium tracking-tight">Semester GPA</p>
+                        <p className="font-medium tracking-tight">
+                          Semester GPA
+                        </p>
                         <p className="text-sm font-semibold">
                           {quickStats.gpa}
                         </p>
                       </div>
+                      {cumGPA && (
+                        <div className="flex items-baseline justify-between">
+                          <p className="font-medium tracking-tight">
+                            {cumGPA.label}
+                          </p>
+                          <p className="text-sm font-semibold">
+                            {cumGPA.value}
+                          </p>
+                        </div>
+                      )}
                       <div className="flex items-baseline justify-between">
                         <p className="font-medium tracking-tight">Missing</p>
                         <p
@@ -452,9 +485,11 @@ export function AppSidebar() {
         {(displayPhoto || displayPermId || displaySchool) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild disabled={isOnMockPage}>
-              <button 
+              <button
                 className={`cursor-pointer w-full hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md mt-1 flex items-center gap-2 p-2 transition-colors group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1 ${
-                  isOnMockPage ? "opacity-50 hover:bg-transparent cursor-not-allowed" : ""
+                  isOnMockPage
+                    ? "opacity-50 hover:bg-transparent cursor-not-allowed"
+                    : ""
                 }`}
                 disabled={isOnMockPage}
               >
@@ -465,12 +500,22 @@ export function AppSidebar() {
                       src={`data:image/png;base64,${displayPhoto}`}
                     />
                     <AvatarFallback>
-                      {(displayStudentName || displayPermId || displaySchool || "S").slice(0, 2)}
+                      {(
+                        displayStudentName ||
+                        displayPermId ||
+                        displaySchool ||
+                        "S"
+                      ).slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                 ) : (
                   <div className="size-9 shrink-0 rounded-full bg-sidebar-accent flex items-center justify-center text-[11px] font-medium uppercase group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:text-sm">
-                    {(displayStudentName || displayPermId || displaySchool || "S").slice(0, 2)}
+                    {(
+                      displayStudentName ||
+                      displayPermId ||
+                      displaySchool ||
+                      "S"
+                    ).slice(0, 2)}
                   </div>
                 )}
                 <div className="min-w-0 text-left group-data-[collapsible=icon]:hidden md:block">
@@ -485,7 +530,9 @@ export function AppSidebar() {
                     </p>
                   )}
                 </div>
-                <ChevronUp className={`ml-auto size-4 opacity-60 group-data-[collapsible=icon]:hidden ${isOnMockPage ? "hidden" : ""}`} />
+                <ChevronUp
+                  className={`ml-auto size-4 opacity-60 group-data-[collapsible=icon]:hidden ${isOnMockPage ? "hidden" : ""}`}
+                />
               </button>
             </DropdownMenuTrigger>
 
@@ -493,7 +540,9 @@ export function AppSidebar() {
               <DropdownMenuLabel className="text-xs">Account</DropdownMenuLabel>
               <div className="px-2 pb-1 pt-0.5">
                 {displayPermId && (
-                  <p className="text-xs font-medium truncate">ID: {displayPermId}</p>
+                  <p className="text-xs font-medium truncate">
+                    ID: {displayPermId}
+                  </p>
                 )}
                 {displaySchool && (
                   <p className="text-xs text-muted-foreground truncate">

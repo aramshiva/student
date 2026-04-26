@@ -130,9 +130,7 @@ export function GradeChart({
     return (
       <div
         className={`${
-          forceStickyInHeader
-            ? "mb-0 shadow-none bg-transparent"
-            : "mb-2"
+          forceStickyInHeader ? "mb-0 shadow-none bg-transparent" : "mb-2"
         } `}
       >
         <CardContent className="p-1 pb-1">
