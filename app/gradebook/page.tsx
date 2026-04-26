@@ -271,7 +271,7 @@ function GradebookPageContent() {
         };
 
         const hsCourses = allCourses.filter(isHS);
-        const candidates = hsCourses.length > 0 ? { courses: hsCourses, label: "HS CumGPA" } : { courses: allCourses.filter(isMS), label: "MS CumGPA" };
+        const candidates = hsCourses.length > 0 ? { courses: hsCourses, label: "HS Cumulative GPA" } : { courses: allCourses.filter(isMS), label: "MS Cumulative GPA" };
 
         let totalPoints = 0;
         let totalCredits = 0;
