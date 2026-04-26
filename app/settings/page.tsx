@@ -520,7 +520,12 @@ export default function SettingsPage() {
             <h3 className="font-lg font-medium">Copy Debug Info</h3>
             <p className="text-sm text-zinc-500">
               Copy all debug information including localStorage data, browser
-              info, and settings. <span className="font-semibold">Do not share this information with anyone you do not trust. It contains info to access your account. It contains your grades and other student info. It does not contain credentials.</span>
+              info, and settings.{" "}
+              <span className="font-semibold">
+                Do not share this information with anyone you do not trust. It
+                contains info to access your account. It contains your grades
+                and other student info. It does not contain credentials.
+              </span>
             </p>
             <Button
               variant="outline"
@@ -545,7 +550,12 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <h3 className="font-lg font-medium">Copy localStorage</h3>
             <p className="text-sm text-zinc-500">
-              Copy all Student localStorage data as JSON. <span className="font-semibold">Do not share this information with anyone you do not trust. It contains your grades and other student info. It does not contain credentials.</span>
+              Copy all Student localStorage data as JSON.{" "}
+              <span className="font-semibold">
+                Do not share this information with anyone you do not trust. It
+                contains your grades and other student info. It does not contain
+                credentials.
+              </span>
             </p>
             <Button
               variant="outline"
@@ -574,7 +584,11 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <h3 className="font-lg font-medium">Copy Credentials</h3>
             <p className="text-sm text-zinc-500">
-              Copy your stored credentials. <span className="font-semibold">Do not share this information with anyone you do not trust. It contains info to access your account.</span>
+              Copy your stored credentials.{" "}
+              <span className="font-semibold">
+                Do not share this information with anyone you do not trust. It
+                contains info to access your account.
+              </span>
             </p>
             <Button
               variant="outline"

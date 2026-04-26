@@ -78,7 +78,9 @@ export function GraduationChart({ data }: GraduationChartProps) {
           const firstKey = activeSegments[0]?.key;
           const lastKey = activeSegments[activeSegments.length - 1]?.key;
 
-          const getRadius = (key: string): number | [number, number, number, number] => {
+          const getRadius = (
+            key: string,
+          ): number | [number, number, number, number] => {
             if (key === firstKey && key === lastKey) return [4, 4, 4, 4];
             if (key === firstKey) return [4, 0, 0, 4];
             if (key === lastKey) return [0, 4, 4, 0];
@@ -87,9 +89,7 @@ export function GraduationChart({ data }: GraduationChartProps) {
 
           return (
             <TableRow key={req.guid}>
-              <TableCell>
-                {req.subject}
-              </TableCell>
+              <TableCell>{req.subject}</TableCell>
               <TableCell className="">
                 {req.completed} / {req.required}
               </TableCell>

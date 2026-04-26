@@ -8,10 +8,10 @@ const spec = {
   openapi: "3.0.0",
   info: {
     title: "Student API",
-    description: "API endpoints for the Student. These endpoints may be rate limited, and misuse will lead in these being removed.",
+    description:
+      "API endpoints for the Student. These endpoints may be rate limited, and misuse will lead in these being removed.",
   },
-  servers: [
-  ],
+  servers: [],
   components: {
     schemas: {
       Credentials: {
@@ -38,7 +38,8 @@ const spec = {
         properties: {
           error: {
             type: "string",
-            description: "Error message. This will always include a error code with the error in the string.",
+            description:
+              "Error message. This will always include a error code with the error in the string.",
           },
         },
       },
@@ -48,7 +49,8 @@ const spec = {
     "/api/synergy/gradebook": {
       post: {
         summary: "Get gradebook data",
-        description: "Fetches the student's gradebook including courses, marks, and assignments",
+        description:
+          "Fetches the student's gradebook including courses, marks, and assignments",
         tags: ["Synergy"],
         requestBody: {
           required: true,
@@ -83,15 +85,30 @@ const spec = {
               },
             },
           },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
     "/api/synergy/student": {
       post: {
         summary: "Get student info",
-        description: "Fetches student profile information, including photo, ID, and school, sometimes may omit name.",
+        description:
+          "Fetches student profile information, including photo, ID, and school, sometimes may omit name.",
         tags: ["Synergy"],
         requestBody: {
           required: true,
@@ -113,14 +130,31 @@ const spec = {
                     FormattedName: { type: "string" },
                     CurrentSchool: { type: "string" },
                     Grade: { type: "string" },
-                    Photo: { type: "string", description: "base64 encoded photo" },
+                    Photo: {
+                      type: "string",
+                      description: "base64 encoded photo",
+                    },
                   },
                 },
               },
             },
           },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
@@ -139,15 +173,30 @@ const spec = {
         },
         responses: {
           "200": { description: "Schedule data" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
     "/api/synergy/attendance": {
       post: {
         summary: "Get attendance records",
-        description: "Fetches attendance data for the student, some schools may not use this feature.",
+        description:
+          "Fetches attendance data for the student, some schools may not use this feature.",
         tags: ["Synergy"],
         requestBody: {
           required: true,
@@ -159,8 +208,22 @@ const spec = {
         },
         responses: {
           "200": { description: "Attendance data" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
@@ -179,15 +242,30 @@ const spec = {
         },
         responses: {
           "200": { description: "Calendar data" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
     "/api/synergy/messages": {
       post: {
         summary: "Get messages",
-        description: "Fetches PXP messages and announcements. This does not include Synergy Mail.",
+        description:
+          "Fetches PXP messages and announcements. This does not include Synergy Mail.",
         tags: ["Synergy"],
         requestBody: {
           required: true,
@@ -199,15 +277,30 @@ const spec = {
         },
         responses: {
           "200": { description: "Messages data" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
     "/api/synergy/mail": {
       post: {
         summary: "Get Synergy mail",
-        description: "Fetches Synergy mail messages, some schools may not use this feature.",
+        description:
+          "Fetches Synergy mail messages, some schools may not use this feature.",
         tags: ["Synergy"],
         requestBody: {
           required: true,
@@ -219,15 +312,30 @@ const spec = {
         },
         responses: {
           "200": { description: "Mail data" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
     "/api/synergy/tests": {
       post: {
         summary: "Get test history",
-        description: "Fetches school test history, some schools may not use this feature.",
+        description:
+          "Fetches school test history, some schools may not use this feature.",
         tags: ["Synergy"],
         requestBody: {
           required: true,
@@ -239,8 +347,22 @@ const spec = {
         },
         responses: {
           "200": { description: "Test history data" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
@@ -259,8 +381,22 @@ const spec = {
         },
         responses: {
           "200": { description: "Documents list" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
@@ -293,8 +429,22 @@ const spec = {
         },
         responses: {
           "200": { description: "Document content" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
@@ -313,8 +463,22 @@ const spec = {
         },
         responses: {
           "200": { description: "Report cards list" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
@@ -333,15 +497,30 @@ const spec = {
         },
         responses: {
           "200": { description: "School information" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
     "/api/synergy/name": {
       post: {
         summary: "Get student name",
-        description: "Fetches the student's display name, sometimes this is included in /api/synergy/student and this is not needed.",
+        description:
+          "Fetches the student's display name, sometimes this is included in /api/synergy/student and this is not needed.",
         tags: ["Synergy"],
         requestBody: {
           required: true,
@@ -365,8 +544,22 @@ const spec = {
               },
             },
           },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },
@@ -394,8 +587,22 @@ const spec = {
         },
         responses: {
           "200": { description: "List of districts" },
-          "400": { description: "Bad request", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
-          "500": { description: "Server error", content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } } },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
         },
       },
     },

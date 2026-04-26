@@ -91,7 +91,9 @@ export default function HistoryPage() {
   }, []);
 
   // Flatten course history into table rows with term separators
-  const flattenCourseHistory = (courseHistory: GradeLevelData[]): CourseHistoryRow[] => {
+  const flattenCourseHistory = (
+    courseHistory: GradeLevelData[],
+  ): CourseHistoryRow[] => {
     const rows: CourseHistoryRow[] = [];
 
     courseHistory.forEach((gradeLevel) => {

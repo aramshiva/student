@@ -34,7 +34,9 @@ function GradebookPageContent() {
     number | null
   >(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
-  const [cumGPA, setCumGPA] = useState<{ value: string; label: string } | null>(null);
+  const [cumGPA, setCumGPA] = useState<{ value: string; label: string } | null>(
+    null,
+  );
   const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
   const QUICK_STATS_STORAGE_KEY = "Student.quickStats";
 
@@ -121,7 +123,11 @@ function GradebookPageContent() {
         }
         const letter = numericToLetterGrade(effectivePct);
         const gpaPoints = gpaScale[letter];
-        if (Number.isFinite(effectivePct) && letter !== "N/A" && gpaPoints != null) {
+        if (
+          Number.isFinite(effectivePct) &&
+          letter !== "N/A" &&
+          gpaPoints != null
+        ) {
           gradedCourses++;
           totalGPAPoints += gpaPoints;
         }
@@ -134,9 +140,7 @@ function GradebookPageContent() {
       }
 
       const overallGPA =
-        gradedCourses > 0
-          ? (totalGPAPoints / gradedCourses).toFixed(2)
-          : "N/A";
+        gradedCourses > 0 ? (totalGPAPoints / gradedCourses).toFixed(2) : "N/A";
       const payload = {
         gpa: overallGPA,
         missing: missingCount,
@@ -253,7 +257,11 @@ function GradebookPageContent() {
         });
         if (!res.ok) return;
         const json = await res.json();
-        type HistoryCourse = { Mark: string; CreditsAttempted: string; CHSType: string };
+        type HistoryCourse = {
+          Mark: string;
+          CreditsAttempted: string;
+          CHSType: string;
+        };
         const history: Array<{ Terms: Array<{ Courses: HistoryCourse[] }> }> =
           json?.courseHistory ?? [];
 
@@ -271,7 +279,10 @@ function GradebookPageContent() {
         };
 
         const hsCourses = allCourses.filter(isHS);
-        const candidates = hsCourses.length > 0 ? { courses: hsCourses, label: "HS Cumulative GPA" } : { courses: allCourses.filter(isMS), label: "MS Cumulative GPA" };
+        const candidates =
+          hsCourses.length > 0
+            ? { courses: hsCourses, label: "HS Cumulative GPA" }
+            : { courses: allCourses.filter(isMS), label: "MS Cumulative GPA" };
 
         let totalPoints = 0;
         let totalCredits = 0;
@@ -284,12 +295,16 @@ function GradebookPageContent() {
           }
         }
         if (totalCredits > 0) {
-          const result = { value: (totalPoints / totalCredits).toFixed(3), label: candidates.label };
+          const result = {
+            value: (totalPoints / totalCredits).toFixed(3),
+            label: candidates.label,
+          };
           setCumGPA(result);
-          try { localStorage.setItem("Student.cumGPA", JSON.stringify(result)); } catch {}
+          try {
+            localStorage.setItem("Student.cumGPA", JSON.stringify(result));
+          } catch {}
         }
       } catch {}
-
     };
     fetchCumGPA();
   }, []);
