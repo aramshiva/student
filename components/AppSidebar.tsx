@@ -93,7 +93,7 @@ export function AppSidebar() {
       } catch {}
       try {
         const raw = localStorage.getItem("Student.cumGPA");
-        if (raw) setCumGPA(JSON.parse(raw));
+        if (raw) setCumGPA((prev) => (JSON.stringify(prev) === raw ? prev : JSON.parse(raw)));
       } catch {}
     };
     read();

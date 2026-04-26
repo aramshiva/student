@@ -242,6 +242,11 @@ function GradebookPageContent() {
   useEffect(() => {
     const fetchCumGPA = async () => {
       try {
+        const cached = localStorage.getItem("Student.cumGPA");
+        if (cached) {
+          setCumGPA(JSON.parse(cached));
+          return;
+        }
         const creds = localStorage.getItem("Student.creds");
         if (!creds) return;
         const credentials = JSON.parse(creds);
