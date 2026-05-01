@@ -135,6 +135,10 @@ const sanitizeDomain = (raw: string): { host: string; pathPrefix: string } => {
 
   while (host.endsWith(".")) host = host.slice(0, -1);
 
+  if (host === "sisstudent.fcps.edu" && !pathPrefix) {
+    pathPrefix = "/SVUE";
+  }
+
   host = host.toLowerCase();
 
   if (!host) throw new Error("Host is empty");

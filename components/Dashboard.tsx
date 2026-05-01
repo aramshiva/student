@@ -46,7 +46,12 @@ interface DashboardProps {
   onRefresh?: () => void;
   lastRefreshed?: Date | null;
   isLoading?: boolean;
-  cumGPA?: { value: string; label: string } | null;
+  cumGPA?: {
+    value: string;
+    label: string;
+    rawPoints: number;
+    rawCredits: number;
+  } | null;
 }
 
 export default function Dashboard({
@@ -107,6 +112,19 @@ export default function Dashboard({
     ? (totalPoints / validCourses.length).toFixed(2)
     : "N/A";
 
+  const totalGPA = (() => {
+    if (!cumGPA || validCourses.length === 0) return null;
+    const combinedPoints = cumGPA.rawPoints + totalPoints;
+    const combinedCredits = cumGPA.rawCredits + validCourses.length;
+    const totalLabel = cumGPA.label
+      .replace("Cumulative", "Total")
+      .replace("CumGPA", "Total GPA");
+    return {
+      value: (combinedPoints / combinedCredits).toFixed(4),
+      label: totalLabel,
+    };
+  })();
+
   return (
     <>
       <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
@@ -144,18 +162,26 @@ export default function Dashboard({
               </div>
             )}
           </div>
+          {gpa !== "N/A" && (
           <div className="flex items-center space-x-8 md:self-start">
-            {cumGPA != null && (
-              <div className="text-right">
-                <div className="text-sm text-zinc-500">{cumGPA.label}</div>
-                <div className="text-2xl font-bold">{cumGPA.value}</div>
-              </div>
-            )}
             <div className="text-right">
               <div className="text-sm text-zinc-500">Semester GPA</div>
               <div className="text-2xl font-bold">{gpa}</div>
             </div>
+          {cumGPA != null && (
+            <div className="text-right">
+              <div className="text-sm text-zinc-500">{cumGPA.label}</div>
+              <div className="text-2xl font-bold">{cumGPA.value}</div>
+            </div>
+          )}
+          {(totalGPA != null && cumGPA != null) && (
+            <div className="text-right">
+              <div className="text-sm text-zinc-500">{totalGPA.label}</div>
+              <div className="text-2xl font-bold">{totalGPA.value}</div>
+            </div>
+          )}
           </div>
+          )}
         </div>
 
         <div>

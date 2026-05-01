@@ -34,9 +34,7 @@ function GradebookPageContent() {
     number | null
   >(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
-  const [cumGPA, setCumGPA] = useState<{ value: string; label: string } | null>(
-    null,
-  );
+  const [cumGPA, setCumGPA] = useState<{ value: string; label: string; rawPoints: number; rawCredits: number } | null>(null);
   const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
   const QUICK_STATS_STORAGE_KEY = "Student.quickStats";
 
@@ -244,8 +242,12 @@ function GradebookPageContent() {
       try {
         const cached = localStorage.getItem("Student.cumGPA");
         if (cached) {
-          setCumGPA(JSON.parse(cached));
-          return;
+          const parsed = JSON.parse(cached);
+          if (typeof parsed?.rawPoints === "number" && typeof parsed?.rawCredits === "number") {
+            setCumGPA(parsed);
+            return;
+          }
+          localStorage.removeItem("Student.cumGPA");
         }
         const creds = localStorage.getItem("Student.creds");
         if (!creds) return;
@@ -303,6 +305,8 @@ function GradebookPageContent() {
           const result = {
             value: (totalPoints / totalCredits).toFixed(3),
             label: candidates.label,
+            rawPoints: totalPoints,
+            rawCredits: totalCredits,
           };
           setCumGPA(result);
           try {
