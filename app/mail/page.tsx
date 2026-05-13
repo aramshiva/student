@@ -277,9 +277,9 @@ export default function MailPage() {
                 <h2 className="text-lg font-semibold mb-2">
                   <Skeleton className="h-7 w-full" />
                 </h2>
-                <p className="text-xs">
+                <div className="text-xs">
                   <Skeleton className="h-3 w-[40%]" />
-                </p>
+                </div>
               </div>
               <div className="space-y-2">
                 <Skeleton className="h-4 w-full" />
