@@ -9,6 +9,42 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Marks from "@/components/Marks";
+import { Course } from "@/types/gradebook";
+import { loadGradebookCache, loadCacheDuration } from "@/utils/gradebook";
+
+const DASHBOARD_CACHE_KEY = "Student.dashboardCache";
+
+interface DashboardCache {
+  messages: ParsedMessage[];
+  todaySchedule: TodayScheduleClass[];
+  photoBase64: string;
+  permId: string;
+  studentName: string;
+  temp: number | null;
+  tempUnit: TempUnit;
+  gradeCourses: Course[];
+  timestamp: number;
+}
+
+function loadDashboardCache(): DashboardCache | null {
+  try {
+    const raw = localStorage.getItem(DASHBOARD_CACHE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as DashboardCache;
+  } catch {
+    return null;
+  }
+}
+
+function saveDashboardCache(data: Omit<DashboardCache, "timestamp">) {
+  try {
+    localStorage.setItem(
+      DASHBOARD_CACHE_KEY,
+      JSON.stringify({ ...data, timestamp: Date.now() }),
+    );
+  } catch {}
+}
 
 interface NewStudentInfoRoot {
   FormattedName?: string;
@@ -126,6 +162,7 @@ export default function StudentDashboard() {
   const [photoBase64, setPhotoBase64] = useState("");
   const [permId, setPermId] = useState("");
   const [studentName, setStudentName] = useState("");
+  const [gradeCourses, setGradeCourses] = useState<Course[]>([]);
   const [todaySchedule, setTodaySchedule] = useState<TodayScheduleClass[]>([]);
   const [todayScheduleError, setTodayScheduleError] = useState<string | null>(
     null,
@@ -162,29 +199,75 @@ export default function StudentDashboard() {
         window.location.href = "/login";
         return;
       }
+
+      const cacheDurationMs = loadCacheDuration() * 60 * 1000;
+      if (cacheDurationMs > 0) {
+        const cached = loadDashboardCache();
+        if (cached && Date.now() - cached.timestamp < cacheDurationMs) {
+          setMessages(cached.messages);
+          setTodaySchedule(cached.todaySchedule);
+          setPhotoBase64(cached.photoBase64);
+          setPermId(cached.permId);
+          setStudentName(cached.studentName);
+          setTemp(cached.temp);
+          setTempUnit(cached.tempUnit);
+          setGradeCourses(cached.gradeCourses ?? []);
+          setLoading(false);
+          return;
+        }
+      }
+
       setLoading(true);
       setError(null);
       try {
         const creds = JSON.parse(credsRaw);
-        const studentInfoReq = fetch("/api/synergy/student", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(creds),
-        });
-        const messagesReq = fetch("/api/synergy/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: credsRaw,
-        });
-        const scheduleReq = fetch("/api/synergy/schedule", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: credsRaw,
-        });
+        let newGradeCourses: Course[] = [];
+
+        // Load gradebook from its own cache or API
+        try {
+          type GradebookLike = {
+            Gradebook?: { Courses?: { Course?: Course[] } };
+            Courses?: { Course?: Course[] };
+          };
+          const gbCached = loadGradebookCache(null);
+          const gbFresh =
+            cacheDurationMs > 0 &&
+            gbCached != null &&
+            Date.now() - gbCached.timestamp < cacheDurationMs;
+          let gbData: GradebookLike | null = gbFresh
+            ? (gbCached!.data as GradebookLike)
+            : null;
+          if (!gbData) {
+            const gbRes = await fetch("/api/synergy/gradebook", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: credsRaw,
+            });
+            if (gbRes.ok) gbData = (await gbRes.json()) as GradebookLike;
+          }
+          if (gbData) {
+            const root = gbData.Gradebook ?? gbData;
+            newGradeCourses = root?.Courses?.Course || [];
+            setGradeCourses(newGradeCourses);
+          }
+        } catch {}
+
         const [infoRes, messagesRes, scheduleRes] = await Promise.all([
-          studentInfoReq,
-          messagesReq,
-          scheduleReq,
+          fetch("/api/synergy/student", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(creds),
+          }),
+          fetch("/api/synergy/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: credsRaw,
+          }),
+          fetch("/api/synergy/schedule", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: credsRaw,
+          }),
         ]);
         if (!infoRes.ok) throw new Error(`Student info HTTP ${infoRes.status}`);
         if (!messagesRes.ok)
@@ -214,24 +297,29 @@ export default function StudentDashboard() {
             Grade: pull(legacy.Grade),
           };
         }
+        let newPhoto = "";
+        let newPermId = "";
         if (flat) {
           if (flat.Photo) {
+            newPhoto = flat.Photo;
             setPhotoBase64(flat.Photo);
             localStorage.setItem("Student.studentPhoto", flat.Photo);
           }
           if (flat.PermID !== undefined) {
-            const pid = String(flat.PermID);
-            setPermId(pid);
-            localStorage.setItem("Student.studentPermId", pid);
+            newPermId = String(flat.PermID);
+            setPermId(newPermId);
+            localStorage.setItem("Student.studentPermId", newPermId);
           }
           if (flat.CurrentSchool) {
             localStorage.setItem("Student.studentSchool", flat.CurrentSchool);
           }
         }
 
+        let newName = "";
         const cachedName = localStorage.getItem("Student.studentName");
         if (cachedName && cachedName.trim()) {
-          setStudentName(cachedName.trim());
+          newName = cachedName.trim();
+          setStudentName(newName);
         } else {
           try {
             const nameRes = await fetch("/api/synergy/name", {
@@ -251,13 +339,14 @@ export default function StudentDashboard() {
                 typeof nameJson.name === "string" &&
                 nameJson.name.trim()
               ) {
-                const name = nameJson.name.trim();
-                setStudentName(name);
-                localStorage.setItem("Student.studentName", name);
+                newName = nameJson.name.trim();
+                setStudentName(newName);
+                localStorage.setItem("Student.studentName", newName);
               }
             }
           } catch {}
         }
+
         const messagesJson: PXPMessagesApiResponse = await messagesRes.json();
         const listingsRaw =
           messagesJson?.PXPMessagesData?.SynergyMailMessageListingByStudents
@@ -268,10 +357,6 @@ export default function StudentDashboard() {
             ? listingsRaw
             : [listingsRaw]
           : [];
-        if (!list.length) {
-          setMessages([]);
-          return;
-        }
         const parseDate = (raw?: string): string => {
           if (!raw) return "";
           const cleaned = raw.replace(/ 00:00:00$/, "");
@@ -312,6 +397,7 @@ export default function StudentDashboard() {
         });
         setMessages(parsed);
 
+        let newSchedule: TodayScheduleClass[] = [];
         if (!scheduleRes.ok) {
           setTodayScheduleError(`Schedule HTTP ${scheduleRes.status}`);
         } else {
@@ -326,9 +412,8 @@ export default function StudentDashboard() {
             scheduleRoot?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo
               ?.Classes?.ClassInfo,
           );
-
           if (todayClassesRaw.length) {
-            const mapped: TodayScheduleClass[] = todayClassesRaw
+            newSchedule = todayClassesRaw
               .map(
                 (c: {
                   _Period?: string;
@@ -347,18 +432,20 @@ export default function StudentDashboard() {
                   end: c._EndTime,
                 }),
               )
-              .filter((c) => !!c.className)
-              .sort((a, b) => a.period - b.period);
-            setTodaySchedule(mapped);
-          } else {
-            setTodaySchedule([]);
+              .filter((c: TodayScheduleClass) => !!c.className)
+              .sort(
+                (a: TodayScheduleClass, b: TodayScheduleClass) =>
+                  a.period - b.period,
+              );
           }
+          setTodaySchedule(newSchedule);
         }
 
+        let newTemp: number | null = null;
+        let newTempUnit = resolveTempUnit();
         try {
           const zip = localStorage.getItem("Student.zip") || "98028";
-          const preferredUnit = resolveTempUnit();
-          setTempUnit(preferredUnit);
+          setTempUnit(newTempUnit);
           const weatherRes = await fetch("/api/weather", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -368,16 +455,29 @@ export default function StudentDashboard() {
             const weatherJson: WeatherData = await weatherRes.json();
             if (weatherJson?.current?.temp) {
               const tempC = weatherJson.current.temp;
-              const tempValue =
-                preferredUnit === "celsius"
+              newTemp =
+                newTempUnit === "celsius"
                   ? Math.round(tempC)
-                  : preferredUnit === "kelvin"
+                  : newTempUnit === "kelvin"
                     ? Math.round(tempC + 273.15)
                     : Math.round((tempC * 9) / 5 + 32);
-              setTemp(tempValue);
+              setTemp(newTemp);
             }
           }
         } catch {}
+
+        if (cacheDurationMs > 0) {
+          saveDashboardCache({
+            messages: parsed,
+            todaySchedule: newSchedule,
+            photoBase64: newPhoto,
+            permId: newPermId,
+            studentName: newName,
+            temp: newTemp,
+            tempUnit: newTempUnit,
+            gradeCourses: newGradeCourses,
+          });
+        }
       } catch (e) {
         setError((e as Error).message);
       } finally {
@@ -420,12 +520,20 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <Card className="px-2 py-5">
+      {gradeCourses.length > 0 && (
+        <Card className="pt-5 pb-4">
+          <CardHeader>
+            <CardTitle>Grades</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Marks courses={gradeCourses} />
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="pt-5 pb-4">
         <CardHeader>
           <CardTitle>Messages</CardTitle>
-          <CardDescription>
-            {loading ? "Refreshing..." : "Messages posted by your school"}
-          </CardDescription>
         </CardHeader>
         <CardContent>
           {!error && !loading && !messages.length && (
@@ -458,16 +566,7 @@ export default function StudentDashboard() {
 
       <Card className="px-2 py-5">
         <CardHeader>
-          <CardTitle>Your schedule for today</CardTitle>
-          <CardDescription>
-            {todayScheduleError
-              ? todayScheduleError
-              : todaySchedule.length
-                ? `Showing ${todaySchedule.length} classes`
-                : loading
-                  ? "Loading..."
-                  : "No classes found for today"}
-          </CardDescription>
+          <CardTitle>Today's Schedule</CardTitle>
         </CardHeader>
         <CardContent>
           {todaySchedule.length > 0 && (

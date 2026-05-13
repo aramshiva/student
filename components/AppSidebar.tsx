@@ -16,6 +16,7 @@ import {
   BookOpen,
   Table,
   School,
+  History,
   LogOutIcon,
 } from "lucide-react";
 import {
@@ -48,7 +49,7 @@ const primaryNav = [
   { name: "Calendar", href: "/calendar", icon: CalendarDays },
   { name: "Attendance", href: "/attendance", icon: Table2 },
   { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Mail", href: "/mail", icon: Mail },
+  { name: "Course History", href: "/history", icon: History },
   { name: "Test History", href: "/tests", icon: BookCheck },
   { name: "School Information", href: "/school", icon: School },
 ];
