@@ -373,7 +373,7 @@ export default function CourseDetail({
                 </div>
                 <p className="text-xs md:text-sm text-zinc-500 mt-1">
                   {effectivePct != null && Number.isFinite(effectivePct)
-                    ? `${Math.round(effectivePct)}%`
+                    ? `${effectivePct.toFixed(2)}%`
                     : "N/A"}
                 </p>
               </div>

@@ -115,7 +115,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
             <AlertDialogDescription>
               This app is not affiliated with {selectedDistrict.name} or
               Edupoint Educational Systems LLC. Your credentials are never saved
-              or shared—only used to connect to StudentVUE® servers. Use is at
+              or shared. It{"'"}s only used to connect to StudentVUE® servers. Use is at
               your own risk and subject to{" "}
               <Link
                 href="https://www.edupoint.com/terms-of-service"

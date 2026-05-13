@@ -527,7 +527,7 @@ function AssignmentsTableBase({
         cell: ({ row }) => {
           const a = row.original;
           const assignmentId = a._GradebookID;
-          const display = a._DisplayScore || a._Score || "—";
+          const display = a._DisplayScore || a._Score || "-";
 
           if (!hypotheticalMode) {
             return assignmentId ? (
@@ -577,7 +577,7 @@ function AssignmentsTableBase({
         cell: ({ row }) => {
           const pct = assignmentPercents[row.original._GradebookID];
           if (pct == null || isNaN(pct)) {
-            return <span className="text-sm text-zinc-400">—</span>;
+            return <span className="text-sm text-zinc-400">-</span>;
           }
           const letter = numericToLetterGrade(Math.round(pct));
           getGradeColor(letter);
@@ -626,7 +626,7 @@ function AssignmentsTableBase({
         header: "Score Type",
         cell: ({ row }) => (
           <span className="text-sm text-zinc-950 dark:text-white">
-            {row.original._ScoreType || "—"}
+            {row.original._ScoreType || "-"}
           </span>
         ),
       },
@@ -635,7 +635,7 @@ function AssignmentsTableBase({
         header: "Points",
         cell: ({ row }) => {
           const raw = (row.original._Points || "").trim();
-          const display = raw || "—";
+          const display = raw || "-";
           return (
             <span className="text-sm text-zinc-950 dark:text-white ">
               {display}
@@ -680,7 +680,7 @@ function AssignmentsTableBase({
                 className="text-sm text-zinc-400"
                 title="No score change data"
               >
-                —
+                -
               </span>
             );
           }

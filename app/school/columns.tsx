@@ -68,7 +68,7 @@ export const columns: ColumnDef<Staff>[] = [
           {email}
         </a>
       ) : (
-        <span className="text-muted-foreground">—</span>
+        <span className="text-muted-foreground">-</span>
       );
     },
   },
@@ -92,7 +92,7 @@ export const columns: ColumnDef<Staff>[] = [
           {phone}
         </a>
       ) : (
-        <span className="text-muted-foreground">—</span>
+        <span className="text-muted-foreground">-</span>
       );
     },
   },

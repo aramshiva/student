@@ -139,7 +139,7 @@ export default function AssignmentDetailPage() {
   }
 
   const isRubric = /rubric/i.test(assignment._ScoreType || "");
-  let scoreDisplay: string = "—";
+  let scoreDisplay: string = "-";
   if (isRubric) {
     if (assignment._Score) scoreDisplay = assignment._Score;
   } else if (assignment._Score && assignment._ScoreMaxValue) {
@@ -148,7 +148,7 @@ export default function AssignmentDetailPage() {
     scoreDisplay = assignment._Score;
   }
 
-  let percent: string = "—";
+  let percent: string = "-";
   if (assignment._Score && assignment._ScoreMaxValue) {
     const pct = calculatePercentage(
       Number(assignment._Score),
@@ -158,7 +158,7 @@ export default function AssignmentDetailPage() {
   }
 
   const pointsRaw = assignment._Points?.replace(/of/i, "/");
-  let pointsDisplay = assignment._Points || "—";
+  let pointsDisplay = assignment._Points || "-";
   if (pointsRaw) {
     const m = pointsRaw.match(/([0-9]*\.?[0-9]+)\s*\/\s*([0-9]*\.?[0-9]+)/);
     if (m) {
@@ -210,12 +210,12 @@ export default function AssignmentDetailPage() {
               {course ? ` • ${course._CourseName}` : ""}
             </p>
           </div>
-          {percent !== "—" && (
+          {percent !== "-" && (
             <div className="text-right">
               <div className="text-xl font-bold text-black dark:text-white">
                 {percent}
               </div>
-              {scoreDisplay !== "—" && (
+              {scoreDisplay !== "-" && (
                 <p className="text-xs text-zinc-500">{scoreDisplay}</p>
               )}
             </div>
@@ -230,7 +230,7 @@ export default function AssignmentDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-sm dark:text-white text-black">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
-              <Info label="Type" value={assignment._Type || "—"} />
+              <Info label="Type" value={assignment._Type || "-"} />
               <Info label="Date" value={formatDate(assignment._Date)} />
               <Info
                 label="Due"
@@ -266,7 +266,7 @@ export default function AssignmentDetailPage() {
               />
               <Info label="Score" value={scoreDisplay} />
               <Info label="Points" value={pointsDisplay} />
-              <Info label="Notes" value={assignment._Notes || "—"} />
+              <Info label="Notes" value={assignment._Notes || "-"} />
             </div>
             {assignment._MeasureDescription && (
               <div>

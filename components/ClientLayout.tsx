@@ -107,7 +107,9 @@ export default function ClientLayout({
 
 function CommandButton() {
   const [open, setOpen] = React.useState(false);
+  const [isMac, setIsMac] = React.useState(false);
   React.useEffect(() => {
+    setIsMac(navigator.userAgent.toLowerCase().includes("mac"));
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -127,12 +129,7 @@ function CommandButton() {
         onClick={() => setOpen(true)}
       >
         <KbdGroup>
-          <Kbd>
-            {typeof navigator !== "undefined" &&
-            navigator.userAgent?.toLowerCase().includes("mac")
-              ? "⌘"
-              : "Ctrl"}
-          </Kbd>
+          <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
           <span>+</span>
           <Kbd>K</Kbd>
         </KbdGroup>
