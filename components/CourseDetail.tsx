@@ -6,6 +6,7 @@ import {
   getCourseIcon,
   numericToLetterGrade,
   loadCalculateGradesEnabled,
+  isCalculateGradesSet,
 } from "@/utils/gradebook";
 import {
   parseSynergyAssignment,
@@ -283,7 +284,14 @@ export default function CourseDetail({
     setHypotheticalDeletedIds(new Set());
   }, []);
 
-  const calcGrades = loadCalculateGradesEnabled();
+  const hasGradeCalcError =
+    Number.isFinite(recalcTotals.pct) &&
+    !!currentMark?._CalculatedScoreRaw &&
+    Math.round(recalcTotals.pct) !==
+      Math.round(parseFloat(currentMark._CalculatedScoreRaw || "0"));
+  const calcGrades = isCalculateGradesSet()
+    ? loadCalculateGradesEnabled()
+    : !hasGradeCalcError;
   let effectiveLetter: string | undefined = currentMark?._CalculatedScoreString;
   let effectivePct: number | undefined = currentMark?._CalculatedScoreRaw
     ? parseFloat(currentMark._CalculatedScoreRaw)
@@ -383,12 +391,7 @@ export default function CourseDetail({
               !calcGrades &&
               !hasRubric &&
               !hypotheticalMode &&
-              Number.isFinite(recalcTotals.pct) &&
-              currentMark?._CalculatedScoreRaw &&
-              Math.round(recalcTotals.pct) !==
-                Math.round(
-                  parseFloat(currentMark._CalculatedScoreRaw || "0"),
-                ) && (
+              hasGradeCalcError && (
                 <>
                   <div className="pt-5" />
                   <Alert variant="destructive">

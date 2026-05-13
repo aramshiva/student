@@ -216,6 +216,15 @@ export function percentToGPA(pct: number): number | null {
 }
 const CALC_GRADES_STORAGE_KEY = "Student.calcGrades";
 
+export function isCalculateGradesSet(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(CALC_GRADES_STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
 export function loadCalculateGradesEnabled(): boolean {
   if (typeof window === "undefined") return false; // default off
   try {
