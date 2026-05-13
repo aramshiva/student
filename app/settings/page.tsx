@@ -12,6 +12,11 @@ import {
   loadCalculateGradesEnabled,
   saveCalculateGradesEnabled,
   resetCalculateGradesEnabled,
+  loadCacheDuration,
+  saveCacheDuration,
+  resetCacheDuration,
+  clearGradebookCache,
+  CACHE_DURATION_OPTIONS,
 } from "@/utils/gradebook";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -56,6 +61,8 @@ const LOCALSTORAGE_KEYS = [
   "Student.customGradeBounds",
   "Student.calculateGrades",
   "Student.dontShowGradeCalcWarning",
+  "Student.gradebookCache",
+  "Student.cacheDurationMinutes",
   "theme-color",
   "tempUnit",
   "celsius",
@@ -75,6 +82,7 @@ export default function SettingsPage() {
   const [tempUnit, setTempUnit] = useState<"fahrenheit" | "celsius" | "kelvin">(
     "fahrenheit",
   );
+  const [cacheDuration, setCacheDuration] = useState<number>(30);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
   const copyToClipboard = useCallback(async (text: string, label: string) => {
@@ -118,6 +126,7 @@ export default function SettingsPage() {
       !!localStorage.getItem("Student.dontShowGradeCalcWarning"),
     );
     setDontTrackMe(localStorage.getItem("umami.disabled") === "1");
+    setCacheDuration(loadCacheDuration());
     const storedUnit = localStorage.getItem("tempUnit");
     if (
       storedUnit === "celsius" ||
@@ -213,6 +222,8 @@ export default function SettingsPage() {
     resetCustomGPAScale();
     resetCustomGradeBounds();
     resetCalculateGradesEnabled();
+    resetCacheDuration();
+    clearGradebookCache();
     localStorage.removeItem("Student.dontShowGradeCalcWarning");
     localStorage.removeItem("umami.disabled");
     localStorage.removeItem("celsius");
@@ -224,6 +235,7 @@ export default function SettingsPage() {
     setHideGradeCalcWarning(false);
     setDontTrackMe(false);
     setTempUnit("fahrenheit");
+    setCacheDuration(loadCacheDuration());
     setSavedMsg("Reset to default");
     setTimeout(() => setSavedMsg(null), 1500);
   };
@@ -433,6 +445,39 @@ export default function SettingsPage() {
           </p>
         </header>
         <div className="pl-5 pt-1 space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
+            <div className="space-y-2">
+              <label className="text-sm font-medium block">
+                Gradebook Cache Duration
+              </label>
+              <Select
+                value={String(cacheDuration)}
+                onValueChange={(val) => {
+                  const num = Number(val);
+                  setCacheDuration(num);
+                  saveCacheDuration(num);
+                  clearGradebookCache();
+                }}
+              >
+                <SelectTrigger className="">
+                  <SelectValue placeholder="Select cache duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CACHE_DURATION_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                How long gradebook data is stored (cached) in the browser,
+                before re-fetching. You can force a refresh by clicking the{" "}
+                {'"'}Refresh{'"'} button to clear the cache and fetch fresh
+                data.
+              </p>
+            </div>
+          </div>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
             <div className="space-y-2">
               <label className="text-sm font-medium block">

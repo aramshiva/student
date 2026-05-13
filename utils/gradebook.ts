@@ -240,3 +240,82 @@ export function resetCalculateGradesEnabled() {
     localStorage.removeItem(CALC_GRADES_STORAGE_KEY);
   } catch {}
 }
+
+const CACHE_DURATION_KEY = "Student.cacheDurationMinutes";
+const GRADEBOOK_CACHE_KEY = "Student.gradebookCache";
+export const CACHE_DURATION_OPTIONS: { label: string; value: number }[] = [
+  { label: "Off", value: 0 },
+  { label: "5 minutes", value: 5 },
+  { label: "15 minutes", value: 15 },
+  { label: "30 minutes", value: 30 },
+  { label: "1 hour", value: 60 },
+  { label: "2 hours", value: 120 },
+];
+
+export function loadCacheDuration(): number {
+  if (typeof window === "undefined") return 30;
+  try {
+    const raw = localStorage.getItem(CACHE_DURATION_KEY);
+    if (raw === null) return 30;
+    const num = Number(raw);
+    return isNaN(num) ? 30 : num;
+  } catch {
+    return 30;
+  }
+}
+
+export function saveCacheDuration(minutes: number) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(CACHE_DURATION_KEY, String(minutes));
+  } catch {}
+}
+
+export function resetCacheDuration() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(CACHE_DURATION_KEY);
+  } catch {}
+}
+
+type GradebookCacheEntry = { data: unknown; timestamp: number };
+type GradebookCacheMap = Record<string, GradebookCacheEntry>;
+
+export function loadGradebookCache(
+  reportPeriod: number | null,
+): GradebookCacheEntry | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(GRADEBOOK_CACHE_KEY);
+    if (!raw) return null;
+    const map: GradebookCacheMap = JSON.parse(raw);
+    const key = reportPeriod === null ? "null" : String(reportPeriod);
+    return map[key] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveGradebookCache(
+  reportPeriod: number | null,
+  data: unknown,
+) {
+  if (typeof window === "undefined") return;
+  try {
+    let map: GradebookCacheMap = {};
+    try {
+      const raw = localStorage.getItem(GRADEBOOK_CACHE_KEY);
+      if (raw) map = JSON.parse(raw);
+    } catch {}
+    const key = reportPeriod === null ? "null" : String(reportPeriod);
+    map[key] = { data, timestamp: Date.now() };
+    localStorage.setItem(GRADEBOOK_CACHE_KEY, JSON.stringify(map));
+  } catch {}
+}
+
+export function clearGradebookCache() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(GRADEBOOK_CACHE_KEY);
+  } catch {}
+}

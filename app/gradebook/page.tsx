@@ -10,6 +10,9 @@ import {
   numericToLetterGrade,
   loadCalculateGradesEnabled,
   letterToGPA,
+  loadCacheDuration,
+  loadGradebookCache,
+  saveGradebookCache,
 } from "@/utils/gradebook";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -152,15 +155,71 @@ function GradebookPageContent() {
 
   const inFlightRef = useRef(false);
 
+  type RawRP = {
+    _Index?: string;
+    _GradePeriod?: string;
+    _StartDate?: string;
+    _EndDate?: string;
+  };
+
+  const applyGradebookData = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (data: any, reportPeriodIndex: number | null, refreshedAt: Date) => {
+      const periodArrayRaw = data?.ReportingPeriods?.ReportPeriod;
+      const periodsRaw: RawRP[] = periodArrayRaw
+        ? Array.isArray(periodArrayRaw)
+          ? periodArrayRaw
+          : [periodArrayRaw]
+        : [];
+      const mapped = periodsRaw.map((p) => ({
+        index: Number(p?._Index || 0),
+        label: p?._GradePeriod || `Period ${p?._Index}`,
+        start: p?._StartDate || "",
+        end: p?._EndDate || "",
+      }));
+      setReportingPeriods(mapped);
+      const currentIndex =
+        reportPeriodIndex != null
+          ? reportPeriodIndex
+          : data?.ReportingPeriod?._Index != null
+            ? Number(data.ReportingPeriod._Index)
+            : (mapped[0]?.index ?? 0);
+      setSelectedReportingPeriod(currentIndex);
+      try {
+        localStorage.setItem(REPORTING_PERIOD_STORAGE_KEY, String(currentIndex));
+      } catch {}
+      setGradebookData({ data });
+      computeAndStoreQuickStats(data);
+      setSelectedCourse(null);
+      setLastRefreshed(refreshedAt);
+    },
+    [computeAndStoreQuickStats],
+  );
+
   const fetchGradebook = useCallback(
-    async (reportPeriodIndex: number | null = null) => {
+    async (reportPeriodIndex: number | null = null, bypassCache = false) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
       const creds = localStorage.getItem("Student.creds");
       if (!creds) {
         window.location.href = "/login";
+        inFlightRef.current = false;
         return;
       }
+
+      if (!bypassCache) {
+        const cacheDurationMs = loadCacheDuration() * 60 * 1000;
+        if (cacheDurationMs > 0) {
+          const cached = loadGradebookCache(reportPeriodIndex);
+          if (cached && Date.now() - cached.timestamp < cacheDurationMs) {
+            applyGradebookData(cached.data, reportPeriodIndex, new Date(cached.timestamp));
+            setIsLoading(false);
+            inFlightRef.current = false;
+            return;
+          }
+        }
+      }
+
       const credentials = JSON.parse(creds);
       setIsLoading(true);
       setError(null);
@@ -179,42 +238,8 @@ function GradebookPageContent() {
         if (data["@ErrorMessage"]) {
           throw new Error(data["@ErrorMessage"]);
         }
-        const periodArrayRaw = data?.ReportingPeriods?.ReportPeriod;
-        type RawRP = {
-          _Index?: string;
-          _GradePeriod?: string;
-          _StartDate?: string;
-          _EndDate?: string;
-        };
-        const periodsRaw: RawRP[] = periodArrayRaw
-          ? Array.isArray(periodArrayRaw)
-            ? periodArrayRaw
-            : [periodArrayRaw]
-          : [];
-        const mapped = periodsRaw.map((p) => ({
-          index: Number(p?._Index || 0),
-          label: p?._GradePeriod || `Period ${p?._Index}`,
-          start: p?._StartDate || "",
-          end: p?._EndDate || "",
-        }));
-        setReportingPeriods(mapped);
-        const currentIndex =
-          reportPeriodIndex != null
-            ? reportPeriodIndex
-            : data?.ReportingPeriod?._Index != null
-              ? Number(data.ReportingPeriod._Index)
-              : (mapped[0]?.index ?? 0);
-        setSelectedReportingPeriod(currentIndex);
-        try {
-          localStorage.setItem(
-            REPORTING_PERIOD_STORAGE_KEY,
-            String(currentIndex),
-          );
-        } catch {}
-        setGradebookData({ data });
-        computeAndStoreQuickStats(data);
-        setSelectedCourse(null);
-        setLastRefreshed(new Date());
+        saveGradebookCache(reportPeriodIndex, data);
+        applyGradebookData(data, reportPeriodIndex, new Date());
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -222,7 +247,7 @@ function GradebookPageContent() {
         inFlightRef.current = false;
       }
     },
-    [computeAndStoreQuickStats],
+    [applyGradebookData],
   );
 
   useEffect(() => {
@@ -416,7 +441,7 @@ function GradebookPageContent() {
       reportingPeriods={reportingPeriods}
       selectedReportingPeriod={selectedReportingPeriod}
       onSelectReportingPeriod={(idx: number) => fetchGradebook(idx)}
-      onRefresh={() => fetchGradebook(selectedReportingPeriod)}
+      onRefresh={() => fetchGradebook(selectedReportingPeriod, true)}
       lastRefreshed={lastRefreshed}
       isLoading={isLoading}
       cumGPA={cumGPA}
