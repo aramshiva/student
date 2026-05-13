@@ -7,8 +7,15 @@ import type {
   Payload,
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent";
-import type { LegendPayload } from "recharts";
 import type { VerticalAlignmentType } from "recharts/types/component/DefaultLegendContent";
+
+type LegendPayload = {
+  value?: string;
+  color?: string;
+  dataKey?: string | number | ((obj: unknown) => unknown);
+  payload?: Record<string, unknown>;
+  inactive?: boolean;
+};
 
 import { cn } from "@/lib/utils";
 
