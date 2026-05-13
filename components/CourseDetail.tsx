@@ -61,9 +61,17 @@ export default function CourseDetail({
   >({});
   const [hypotheticalNewAssignments, setHypotheticalNewAssignments] =
     React.useState<Assignment[]>([]);
+  const [hypotheticalDeletedIds, setHypotheticalDeletedIds] = React.useState<
+    Set<string>
+  >(new Set());
 
   const effectiveAssignments = React.useMemo(() => {
-    let modifiedAssignments = originalAssignments;
+    let modifiedAssignments =
+      hypotheticalMode && hypotheticalDeletedIds.size > 0
+        ? originalAssignments.filter(
+            (a) => !hypotheticalDeletedIds.has(a._GradebookID),
+          )
+        : originalAssignments;
 
     if (
       hypotheticalMode &&
@@ -126,6 +134,7 @@ export default function CourseDetail({
   }, [
     originalAssignments,
     hypotheticalMode,
+    hypotheticalDeletedIds,
     hypotheticalScores,
     hypotheticalCategories,
     hypotheticalNewAssignments,
@@ -254,6 +263,7 @@ export default function CourseDetail({
     setHypotheticalNewAssignments((prev) =>
       prev.filter((a) => a._GradebookID !== id),
     );
+    setHypotheticalDeletedIds((prev) => new Set([...prev, id]));
     setHypotheticalScores((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -270,6 +280,7 @@ export default function CourseDetail({
     setHypotheticalScores({});
     setHypotheticalCategories({});
     setHypotheticalNewAssignments([]);
+    setHypotheticalDeletedIds(new Set());
   }, []);
 
   const calcGrades = loadCalculateGradesEnabled();
