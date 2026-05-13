@@ -7,10 +7,8 @@ import type {
   Payload,
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent";
-import type {
-  LegendPayload,
-  VerticalAlignmentType,
-} from "recharts/types/component/DefaultLegendContent";
+import type { LegendPayload } from "recharts";
+import type { VerticalAlignmentType } from "recharts/types/component/DefaultLegendContent";
 
 import { cn } from "@/lib/utils";
 
