@@ -156,7 +156,14 @@ export default function AttendanceGraph({
               axisLine={false}
             />
             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <ChartLegend content={({ payload, verticalAlign }) => <ChartLegendContent payload={payload} verticalAlign={verticalAlign} />} />
+            <ChartLegend
+              content={({ payload, verticalAlign }) => (
+                <ChartLegendContent
+                  payload={payload}
+                  verticalAlign={verticalAlign}
+                />
+              )}
+            />
             <Bar
               dataKey="activities"
               stackId="a"

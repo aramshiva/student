@@ -308,7 +308,14 @@ export function GradeChart({
               stroke="var(--color-grade)"
               stackId="a"
             />
-            <ChartLegend content={({ payload, verticalAlign }) => <ChartLegendContent payload={payload} verticalAlign={verticalAlign} />} />
+            <ChartLegend
+              content={({ payload, verticalAlign }) => (
+                <ChartLegendContent
+                  payload={payload}
+                  verticalAlign={verticalAlign}
+                />
+              )}
+            />
           </AreaChart>
         </ChartContainer>
         <div className="flex items-center justify-end gap-2 mt-2 pr-1">

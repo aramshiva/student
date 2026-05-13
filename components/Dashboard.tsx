@@ -163,24 +163,24 @@ export default function Dashboard({
             )}
           </div>
           {gpa !== "N/A" && (
-          <div className="flex items-center space-x-8 md:self-start">
-            <div className="text-right">
-              <div className="text-sm text-zinc-500">Semester GPA</div>
-              <div className="text-2xl font-bold">{gpa}</div>
+            <div className="flex items-center space-x-8 md:self-start">
+              <div className="text-right">
+                <div className="text-sm text-zinc-500">Semester GPA</div>
+                <div className="text-2xl font-bold">{gpa}</div>
+              </div>
+              {cumGPA != null && (
+                <div className="text-right">
+                  <div className="text-sm text-zinc-500">{cumGPA.label}</div>
+                  <div className="text-2xl font-bold">{cumGPA.value}</div>
+                </div>
+              )}
+              {totalGPA != null && cumGPA != null && (
+                <div className="text-right">
+                  <div className="text-sm text-zinc-500">{totalGPA.label}</div>
+                  <div className="text-2xl font-bold">{totalGPA.value}</div>
+                </div>
+              )}
             </div>
-          {cumGPA != null && (
-            <div className="text-right">
-              <div className="text-sm text-zinc-500">{cumGPA.label}</div>
-              <div className="text-2xl font-bold">{cumGPA.value}</div>
-            </div>
-          )}
-          {(totalGPA != null && cumGPA != null) && (
-            <div className="text-right">
-              <div className="text-sm text-zinc-500">{totalGPA.label}</div>
-              <div className="text-2xl font-bold">{totalGPA.value}</div>
-            </div>
-          )}
-          </div>
           )}
         </div>
 

@@ -162,8 +162,15 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
           <CardTitle>Grade Breakdown</CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className={categoryData.length > 2 ? "grid grid-cols-2 gap-6" : undefined}>
-            <ChartContainer config={weightedChartConfig} className="h-52 w-full">
+          <div
+            className={
+              categoryData.length > 2 ? "grid grid-cols-2 gap-6" : undefined
+            }
+          >
+            <ChartContainer
+              config={weightedChartConfig}
+              className="h-52 w-full"
+            >
               <BarChart accessibilityLayer data={chartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
@@ -181,8 +188,14 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
                   content={<ChartTooltipContent indicator="line" />}
                 />
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                <ChartLegend content={(props: any) => <ChartLegendContent {...props} />} />
-                <Bar dataKey="currentGrade" fill="var(--color-currentGrade)" radius={4} />
+                <ChartLegend
+                  content={(props: any) => <ChartLegendContent {...props} />}
+                />
+                <Bar
+                  dataKey="currentGrade"
+                  fill="var(--color-currentGrade)"
+                  radius={4}
+                />
                 <Bar dataKey="weight" fill="var(--color-weight)" radius={4} />
                 <Bar dataKey="grade" fill="var(--color-grade)" radius={4} />
               </BarChart>
@@ -193,10 +206,17 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
                 className="mx-auto aspect-square max-h-52 w-full"
               >
                 <RadarChart data={radarData}>
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
                   <PolarAngleAxis dataKey="category" />
                   <PolarGrid />
-                  <Radar dataKey="grade" fill="var(--color-grade)" fillOpacity={0.6} />
+                  <Radar
+                    dataKey="grade"
+                    fill="var(--color-grade)"
+                    fillOpacity={0.6}
+                  />
                 </RadarChart>
               </ChartContainer>
             )}
@@ -292,10 +312,17 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
               className="mx-auto aspect-square max-h-52 w-full"
             >
               <RadarChart data={radarData}>
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent />}
+                />
                 <PolarAngleAxis dataKey="category" />
                 <PolarGrid />
-                <Radar dataKey="grade" fill="var(--color-grade)" fillOpacity={0.6} />
+                <Radar
+                  dataKey="grade"
+                  fill="var(--color-grade)"
+                  fillOpacity={0.6}
+                />
               </RadarChart>
             </ChartContainer>
           </CardContent>

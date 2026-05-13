@@ -305,10 +305,7 @@ export function loadGradebookCache(
   }
 }
 
-export function saveGradebookCache(
-  reportPeriod: number | null,
-  data: unknown,
-) {
+export function saveGradebookCache(reportPeriod: number | null, data: unknown) {
   if (typeof window === "undefined") return;
   try {
     let map: GradebookCacheMap = {};

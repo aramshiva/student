@@ -37,7 +37,12 @@ function GradebookPageContent() {
     number | null
   >(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
-  const [cumGPA, setCumGPA] = useState<{ value: string; label: string; rawPoints: number; rawCredits: number } | null>(null);
+  const [cumGPA, setCumGPA] = useState<{
+    value: string;
+    label: string;
+    rawPoints: number;
+    rawCredits: number;
+  } | null>(null);
   const REPORTING_PERIOD_STORAGE_KEY = "Student.lastReportingPeriod";
   const QUICK_STATS_STORAGE_KEY = "Student.quickStats";
 
@@ -186,7 +191,10 @@ function GradebookPageContent() {
             : (mapped[0]?.index ?? 0);
       setSelectedReportingPeriod(currentIndex);
       try {
-        localStorage.setItem(REPORTING_PERIOD_STORAGE_KEY, String(currentIndex));
+        localStorage.setItem(
+          REPORTING_PERIOD_STORAGE_KEY,
+          String(currentIndex),
+        );
       } catch {}
       setGradebookData({ data });
       computeAndStoreQuickStats(data);
@@ -212,7 +220,11 @@ function GradebookPageContent() {
         if (cacheDurationMs > 0) {
           const cached = loadGradebookCache(reportPeriodIndex);
           if (cached && Date.now() - cached.timestamp < cacheDurationMs) {
-            applyGradebookData(cached.data, reportPeriodIndex, new Date(cached.timestamp));
+            applyGradebookData(
+              cached.data,
+              reportPeriodIndex,
+              new Date(cached.timestamp),
+            );
             setIsLoading(false);
             inFlightRef.current = false;
             return;
@@ -268,7 +280,10 @@ function GradebookPageContent() {
         const cached = localStorage.getItem("Student.cumGPA");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (typeof parsed?.rawPoints === "number" && typeof parsed?.rawCredits === "number") {
+          if (
+            typeof parsed?.rawPoints === "number" &&
+            typeof parsed?.rawCredits === "number"
+          ) {
             setCumGPA(parsed);
             return;
           }

@@ -95,7 +95,10 @@ export function AppSidebar() {
         const raw = localStorage.getItem("Student.cumGPA");
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (typeof parsed?.rawPoints === "number" && typeof parsed?.rawCredits === "number") {
+          if (
+            typeof parsed?.rawPoints === "number" &&
+            typeof parsed?.rawCredits === "number"
+          ) {
             setCumGPA((prev) => (JSON.stringify(prev) === raw ? prev : parsed));
           }
         }

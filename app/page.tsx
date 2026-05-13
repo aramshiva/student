@@ -9,7 +9,7 @@ import { useTheme } from "next-themes";
 import { useEffect } from "react";
 import Tilt from "react-parallax-tilt";
 import { Computer } from "lucide-react";
-import { Typewriter } from 'react-simple-typewriter'
+import { Typewriter } from "react-simple-typewriter";
 
 export default function Home() {
   const { setTheme } = useTheme();
@@ -25,14 +25,14 @@ export default function Home() {
           <div className="grid grid-cols-[minmax(18rem,28rem)_1fr] gap-10 items-center w-full">
             <div className="max-w-lg">
               <p className="text-4xl font-medium pb-1">
-                <Typewriter 
+                <Typewriter
                   words={[
                     "Upgrade your StudentVUE® experience.",
                     "Empower your academia",
                     "Enable your academic potential.",
                     "Analyze your grades like never before.",
                     "Unlock insights into your student performance.",
-                  ]} 
+                  ]}
                   loop={true}
                   cursor={true}
                 />{" "}
