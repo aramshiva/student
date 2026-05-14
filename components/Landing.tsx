@@ -6,10 +6,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
-import Tilt from "react-parallax-tilt";
+import { useEffect, useRef } from "react";
 import { Computer } from "lucide-react";
 import { Typewriter } from "react-simple-typewriter";
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 
 export default function Landing() {
   const { setTheme } = useTheme();
@@ -17,6 +22,26 @@ export default function Landing() {
   useEffect(() => {
     setTheme("light");
   }, [setTheme]);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const x = useSpring(rawX, { stiffness: 150, damping: 20 });
+  const y = useSpring(rawY, { stiffness: 150, damping: 20 });
+  const rotateX = useTransform(y, [-0.5, 0.5], [12, -12]);
+  const rotateY = useTransform(x, [-0.5, 0.5], [-12, 12]);
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    rawX.set((e.clientX - rect.left) / rect.width - 0.5);
+    rawY.set((e.clientY - rect.top) / rect.height - 0.5);
+  }
+
+  function handleMouseLeave() {
+    rawX.set(0);
+    rawY.set(0);
+  }
 
   return (
     <div className="bg-white">
@@ -71,17 +96,21 @@ export default function Landing() {
               </Link>
             </p>
           </div>
-          <Tilt glareEnable>
-            <div className="relative w-full flex justify-end">
-              <Image
-                src="/screenshots/gradebook.png"
-                alt="Gradebook screenshot"
-                width={2500}
-                height={2500}
-                className="relative z-10 h-auto"
-              />
-            </div>
-          </Tilt>
+          <motion.div
+            ref={cardRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            style={{ rotateX, rotateY, transformPerspective: 1000 }}
+            className="relative w-full flex justify-end"
+          >
+            <Image
+              src="/screenshots/gradebook.png"
+              alt="Gradebook screenshot"
+              width={2500}
+              height={2500}
+              className="relative z-10 h-auto"
+            />
+          </motion.div>
         </div>
       </div>
     </div>
