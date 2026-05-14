@@ -60,7 +60,6 @@ export default function Landing() {
                 loop={true}
                 cursor={true}
               />{" "}
-              <Badge variant="outline">EARLY ACCESS</Badge>
             </p>
             <p className="text-xl pb-5 wrap-normal">
               Student is a clean, minimalist, powerful, open-source StudentVUE®
@@ -92,11 +91,11 @@ export default function Landing() {
             <p className="text-xs text-gray-600">
               District or Teacher?{" "}
               <Link href="mailto:inquires@aram.sh" className="underline">
-                Email us for info and security details.
+                Email us for more info and security details.
               </Link>
             </p>
             <p className="text-xs text-gray-600 pt-1">
-              StudentVUE® is a registered trademark of Edupoint Educational Systems, LLC. This project is not affiliated with Edupoint. Use is subject to
+              StudentVUE® is a registered trademark of Edupoint Educational Systems, LLC. This project is not affiliated with Edupoint and use is subject to
               {" "}<Link href="https://www.edupoint.com/terms-conditions" className="underline">
               Edupoint's terms of service.</Link>
             </p>
