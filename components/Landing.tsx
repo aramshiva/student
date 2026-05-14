@@ -53,9 +53,9 @@ export default function Landing() {
                 words={[
                   "Upgrade your StudentVUE® experience.",
                   "Empower your academia",
-                  "Enable your academic potential.",
                   "Analyze your grades like never before.",
-                  "Unlock insights into your student performance.",
+                  "Unlock insights into your grades",
+                  "Upgrade your StudentVUE® interface"
                 ]}
                 loop={true}
                 cursor={true}
@@ -94,6 +94,11 @@ export default function Landing() {
               <Link href="mailto:inquires@aram.sh" className="underline">
                 Email us for info and security details.
               </Link>
+            </p>
+            <p className="text-xs text-gray-600 pt-1">
+              StudentVUE® is a registered trademark of Edupoint Educational Systems, LLC. This project is not affiliated with Edupoint, or Synergy. Use is at your own risk and subject to
+              <Link href="https://www.edupoint.com/terms-conditions">
+              Edupoint's terms of service.</Link>
             </p>
           </div>
           <motion.div
