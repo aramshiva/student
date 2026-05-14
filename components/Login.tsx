@@ -96,7 +96,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
     credentials.district_url === "https://wa-nor-psv.edupoint.com";
 
   const LoginButton = () => {
-    return (
+    return shouldShowAlert ? (
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
@@ -113,18 +113,6 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
               <TriangleAlert /> Warning
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This app is not affiliated with {selectedDistrict.name} or
-              Edupoint Educational Systems LLC. Your credentials are never saved
-              or shared. It{"'"}s only used to connect to StudentVUE® servers.
-              Use is at your own risk and subject to{" "}
-              <Link
-                href="https://www.edupoint.com/terms-of-service"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Edupoint{"'"}s terms of service
-              </Link>
-              .
               {shouldShowAlert && (
                 <>
                   <br />
@@ -153,6 +141,15 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    ) : (
+      <Button
+        type="button"
+        disabled={isLoading}
+        onClick={handleConfirmLogin}
+        className="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-50 cursor-pointer"
+      >
+        {isLoading ? "Signing In..." : "Sign In"}
+      </Button>
     );
   };
 
@@ -412,8 +409,8 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           <LoginButton />
         </form>
         <p className="text-zinc-500 text-xs pt-5 w-full max-w-md mb-4">
-          StudentVUE® is a registered trademark of Edupoint Educational Systems,
-          LLC. This project is not affiliated with Edupoint, or Synergy.
+          StudentVUE® is a registered trademark of Edupoint Educational Systems, LLC. This project is not affiliated with {selectedDistrict.name}, or Edupoint.
+          Use is at your own risk and subject to Edupoint{"'"}s <Link href="https://www.edupoint.com/terms-conditions">Terms and Conditions</Link>.
         </p>
       </div>
     </>
