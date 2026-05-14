@@ -96,8 +96,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
     credentials.district_url === "https://wa-nor-psv.edupoint.com";
 
   const LoginButton = () => {
-    return (
-      {shouldShowAlert ? (
+    return shouldShowAlert ? (
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
@@ -142,16 +141,15 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      ) : ( 
-          <Button
-            type="button"
-            disabled={isLoading}
-            onClick={handleConfirmLogin}
-            className="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-50 cursor-pointer"
-          >
-            {isLoading ? "Signing In..." : "Sign In"}
-          </Button>
-      )}
+    ) : (
+      <Button
+        type="button"
+        disabled={isLoading}
+        onClick={handleConfirmLogin}
+        className="w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-50 cursor-pointer"
+      >
+        {isLoading ? "Signing In..." : "Sign In"}
+      </Button>
     );
   };
 
