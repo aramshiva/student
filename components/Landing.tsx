@@ -28,14 +28,14 @@ export default function Landing() {
   const rawY = useMotionValue(0);
   const x = useSpring(rawX, { stiffness: 150, damping: 20 });
   const y = useSpring(rawY, { stiffness: 150, damping: 20 });
-  const rotateX = useTransform(y, [-0.5, 0.5], [12, -12]);
-  const rotateY = useTransform(x, [-0.5, 0.5], [-12, 12]);
+  const rotateX = useTransform(y, [-0.25, 0.25], [6, -6]);
+  const rotateY = useTransform(x, [-0.25, 0.25], [-6, 6]);
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = cardRef.current?.getBoundingClientRect();
     if (!rect) return;
-    rawX.set((e.clientX - rect.left) / rect.width - 0.5);
-    rawY.set((e.clientY - rect.top) / rect.height - 0.5);
+    rawX.set((e.clientX - rect.left) / rect.width - 0.25);
+    rawY.set((e.clientY - rect.top) / rect.height - 0.25);
   }
 
   function handleMouseLeave() {
