@@ -115,16 +115,14 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
             <AlertDialogDescription>
               {shouldShowAlert && (
                 <>
-                  <br />
-                  <br />
                   Student is currently pending approval from Northshore for
-                  approval for app use. Until, that is complete Student is not
+                  app use. Until that is complete Student is not
                   recommended for public use unless you understand and accept
                   the risks.{" "}
                   <strong>
                     Never share your login information with anyone you do not
                     trust. If you suspect the privacy has been violated, please
-                    contact your student{"'"}s school immediately.
+                    contact your school immediately.
                   </strong>
                 </>
               )}
