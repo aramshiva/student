@@ -14,7 +14,7 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-} from "framer-motion";
+} from "motion/react";
 
 export default function Landing() {
   const { setTheme } = useTheme();
