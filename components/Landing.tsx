@@ -96,8 +96,8 @@ export default function Landing() {
               </Link>
             </p>
             <p className="text-xs text-gray-600 pt-1">
-              StudentVUE® is a registered trademark of Edupoint Educational Systems, LLC. This project is not affiliated with Edupoint, or Synergy. Use is at your own risk and subject to
-              <Link href="https://www.edupoint.com/terms-conditions">
+              StudentVUE® is a registered trademark of Edupoint Educational Systems, LLC. This project is not affiliated with Edupoint. Use is subject to
+              {" "}<Link href="https://www.edupoint.com/terms-conditions" className="underline">
               Edupoint's terms of service.</Link>
             </p>
           </div>
