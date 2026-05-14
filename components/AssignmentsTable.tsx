@@ -766,7 +766,6 @@ function AssignmentsTableBase({
     <Card>
       <CardHeader>
         <CardTitle>Assignments ({assignments.length})</CardTitle>
-        <CardDescription>List of all assignments</CardDescription>
         <CardAction>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">

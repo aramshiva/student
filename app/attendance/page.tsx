@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import AttendanceGraph from "@/components/AttendanceGraph";
 
@@ -109,11 +108,6 @@ export default function AttendancePage() {
   const [periodNameMap, setPeriodNameMap] = useState<Record<number, string>>(
     {},
   );
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-
-  const toggleExpand = (dateKey: string) => {
-    setExpanded((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
-  };
 
   useEffect(() => {
     const creds = localStorage.getItem("Student.creds");
@@ -491,77 +485,79 @@ export default function AttendancePage() {
                 </TableBody>
               </Table>
             </>
-            {!isLoading &&
-              dataShape?.absenceDays.map((a) => {
-                const isOpen = expanded[a.date] ?? false;
-                return (
-                  <Card key={a.date} className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="pr-4">
-                        <h2 className="font-semibold text-lg flex items-center gap-2">
-                          <button
-                            type="button"
-                            aria-label={isOpen ? "Collapse" : "Expand"}
-                            onClick={() => toggleExpand(a.date)}
-                            className="rounded border px-2 py-0.5 text-xs font-medium hover:bg-zinc-100 dark:hover:bg-zinc-950 transition"
-                          >
-                            {isOpen ? "−" : "+"}
-                          </button>
-                          {a.displayDate}
-                        </h2>
-                        <p className="text-sm pt-2 text-zinc-500">
-                          {a.reason || "(No reason)"} -{" "}
-                          {a.note && <span>{a.note}</span>}
-                        </p>
-                      </div>
-                    </div>
-                    {isOpen && (
-                      <div>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-[60px]">#</TableHead>
-                              <TableHead>Course</TableHead>
-                              <TableHead>Staff</TableHead>
-                              <TableHead>Reason</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {a.periods.map((p) => (
-                              <TableRow key={p.number}>
-                                <TableCell>{p.number}</TableCell>
-                                <TableCell
-                                  className="max-w-[260px] truncate"
-                                  title={p.course}
-                                >
-                                  {p.course}
-                                </TableCell>
-                                <TableCell>{p.staff}</TableCell>
-                                <TableCell>{p.reason || p.name}</TableCell>
-                              </TableRow>
+            {(() => {
+              const periodNums = Array.from(
+                new Set(
+                  dataShape?.absenceDays.flatMap((d) =>
+                    d.periods.map((p) => p.number),
+                  ) ?? [],
+                ),
+              ).sort((a, b) => a - b);
+
+              return (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">
+                          {isLoading ? <Skeleton className="h-4 w-24" /> : "Date"}
+                        </TableHead>
+                        <TableHead>
+                          {isLoading ? <Skeleton className="h-4 w-20" /> : "Reason"}
+                        </TableHead>
+                        {isLoading
+                          ? Array.from({ length: 7 }).map((_, i) => (
+                              <TableHead key={i}>
+                                <Skeleton className="h-4 w-6" />
+                              </TableHead>
+                            ))
+                          : periodNums.map((n) => (
+                              <TableHead key={n} className="text-center whitespace-nowrap">
+                                {n}
+                              </TableHead>
                             ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </Card>
-                );
-              })}
-            {isLoading &&
-              Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="pr-4 flex-1">
-                      <h2 className="font-semibold text-lg mb-2">
-                        <Skeleton className="h-6 w-[120px]" />
-                      </h2>
-                      <p className="text-sm pt-2">
-                        <Skeleton className="h-4 w-[200px]" />
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading
+                        ? Array.from({ length: 5 }).map((_, i) => (
+                            <TableRow key={i}>
+                              <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                              <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                              {Array.from({ length: 7 }).map((_, j) => (
+                                <TableCell key={j}><Skeleton className="h-4 w-12" /></TableCell>
+                              ))}
+                            </TableRow>
+                          ))
+                        : dataShape?.absenceDays.map((day) => (
+                            <TableRow key={day.date}>
+                              <TableCell className="font-mono text-sm whitespace-nowrap">
+                                {day.date}
+                              </TableCell>
+                              <TableCell className="text-sm text-zinc-500 whitespace-nowrap">
+                                {day.reason || "—"}
+                              </TableCell>
+                              {periodNums.map((n) => {
+                                const p = day.periods.find((p) => p.number === n);
+                                return (
+                                  <TableCell key={n} className="text-center text-sm">
+                                    {p ? (
+                                      <span title={p.reason || p.name}>
+                                        {p.name || p.reason || "—"}
+                                      </span>
+                                    ) : (
+                                      <span className="text-zinc-300 dark:text-zinc-700">—</span>
+                                    )}
+                                  </TableCell>
+                                );
+                              })}
+                            </TableRow>
+                          ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              );
+            })()}
           </div>
         </>
       )}

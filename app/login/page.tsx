@@ -56,7 +56,7 @@ export default function Home() {
       localStorage.setItem("Student.zip", selectedDistrictZip);
       // saves creds in LOCAL STORAGE (not cloud)
       // redirects to student page
-      window.location.href = "/student";
+      window.location.href = "/";
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message || "Login failed");

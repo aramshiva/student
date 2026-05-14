@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -497,7 +496,7 @@ export default function StudentDashboard() {
             alt="Student Photo"
             width={80}
             height={80}
-            className="rounded-full h-[5.5rem] w-[5.5rem] aspect-square object-cover border"
+            className="rounded-full h-22 w-22 aspect-square object-cover border"
           />
         )}
         <div>

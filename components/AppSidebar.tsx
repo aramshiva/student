@@ -43,7 +43,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const primaryNav = [
-  { name: "Home", href: "/student", icon: Home },
+  { name: "Home", href: "/", icon: Home },
   { name: "Gradebook", href: "/gradebook", icon: BookOpen },
   { name: "Schedule", href: "/schedule", icon: Table },
   { name: "Calendar", href: "/calendar", icon: CalendarDays },
@@ -343,7 +343,7 @@ export function AppSidebar() {
       <SidebarHeader className="gap-1">
         <div className="flex items-center justify-between h-8 px-2">
           <Link
-            href="/student"
+            href="/"
             className="group-data-[collapsible=icon]:pt-1 pt-5 font-bold font-[Gosha] text-xl tracking-tight select-none"
           >
             <span className="inline group-data-[collapsible=icon]:hidden">

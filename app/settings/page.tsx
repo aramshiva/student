@@ -43,6 +43,12 @@ import {
   ThemeColor,
 } from "@/components/ThemeProvider";
 import { Copy, Check } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+
+const iconVariants = {
+  hidden: { opacity: 0, scale: 0.5 },
+  visible: { opacity: 1, scale: 1 },
+};
 
 const ORDER = ["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"];
 
@@ -561,8 +567,27 @@ export default function SettingsPage() {
           </p>
         </header>
         <div className="pl-5 pt-1 space-y-6">
-          <div className="space-y-2">
-            <h3 className="font-lg font-medium">Copy Debug Info</h3>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm">Copy Debug Info</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copyToClipboard(generateDebugInfo(), "debug-info")}
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {copiedItem === "debug-info" ? (
+                    <motion.span key="check" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                      <Check className="h-4 w-4" />
+                    </motion.span>
+                  ) : (
+                    <motion.span key="copy" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                      <Copy className="h-4 w-4" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </div>
             <p className="text-sm text-zinc-500">
               Copy all debug information including localStorage data, browser
               info, and settings.{" "}
@@ -572,28 +597,34 @@ export default function SettingsPage() {
                 and other student info. It does not contain credentials.
               </span>
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => copyToClipboard(generateDebugInfo(), "debug-info")}
-              className="flex items-center gap-2"
-            >
-              {copiedItem === "debug-info" ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copy Debug Info
-                </>
-              )}
-            </Button>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="font-lg font-medium">Copy localStorage</h3>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium">Copy localStorage</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  copyToClipboard(
+                    JSON.stringify(getLocalStorageData(), null, 2),
+                    "localStorage",
+                  )
+                }
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {copiedItem === "localStorage" ? (
+                    <motion.span key="check" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                      <Check className="h-4 w-4" />
+                    </motion.span>
+                  ) : (
+                    <motion.span key="copy" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                      <Copy className="h-4 w-4" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </div>
             <p className="text-sm text-zinc-500">
               Copy all Student localStorage data as JSON.{" "}
               <span className="font-semibold">
@@ -602,32 +633,34 @@ export default function SettingsPage() {
                 credentials.
               </span>
             </p>
-            <Button
-              variant="outline"
-              onClick={() =>
-                copyToClipboard(
-                  JSON.stringify(getLocalStorageData(), null, 2),
-                  "localStorage",
-                )
-              }
-              className="flex items-center gap-2"
-            >
-              {copiedItem === "localStorage" ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copy localStorage
-                </>
-              )}
-            </Button>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="font-lg font-medium">Copy Credentials</h3>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm">Copy Credentials</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  copyToClipboard(
+                    localStorage.getItem("Student.creds") || "No credentials",
+                    "creds",
+                  )
+                }
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {copiedItem === "creds" ? (
+                    <motion.span key="check" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                      <Check className="h-4 w-4" />
+                    </motion.span>
+                  ) : (
+                    <motion.span key="copy" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                      <Copy className="h-4 w-4" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </div>
             <p className="text-sm text-zinc-500">
               Copy your stored credentials.{" "}
               <span className="font-semibold">
@@ -635,28 +668,6 @@ export default function SettingsPage() {
                 contains info to access your account.
               </span>
             </p>
-            <Button
-              variant="outline"
-              onClick={() =>
-                copyToClipboard(
-                  localStorage.getItem("Student.creds") || "No credentials",
-                  "creds",
-                )
-              }
-              className="flex items-center gap-2"
-            >
-              {copiedItem === "creds" ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copy Credentials
-                </>
-              )}
-            </Button>
           </div>
         </div>
       </section>

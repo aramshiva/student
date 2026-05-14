@@ -27,6 +27,7 @@ import {
   Table,
   School,
   MessageCircle,
+  HistoryIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -59,7 +60,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
       entries: [
         {
           label: "Home",
-          action: () => navigate("/student"),
+          action: () => navigate("/"),
           icon: <Home className="text-sm" />,
         },
         {
@@ -88,9 +89,9 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           icon: <FileText className="text-sm" />,
         },
         {
-          label: "Mail",
-          action: () => navigate("/mail"),
-          icon: <Mail className="text-sm" />,
+          label: "Course History",
+          action: () => navigate("/history"),
+          icon: <HistoryIcon className="text-sm" />,
         },
         {
           label: "Test History",

@@ -2,6 +2,12 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, ArrowLeft } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+
+const iconVariants = {
+  hidden: { opacity: 0, scale: 0.5 },
+  visible: { opacity: 1, scale: 1 },
+};
 import Link from "next/link";
 
 const API_ENDPOINTS = [
@@ -91,19 +97,21 @@ export default function DebugPage() {
                 disabled={copiedItem === `loading-${endpoint}`}
                 className="shrink-0 min-w-[100px]"
               >
-                {copiedItem === `loading-${endpoint}` ? (
-                  <span className="text-xs">Loading...</span>
-                ) : copiedItem === `api-${endpoint}` ? (
-                  <>
-                    <Check className="h-4 w-4 mr-1" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copy
-                  </>
-                )}
+                <AnimatePresence mode="wait" initial={false}>
+                  {copiedItem === `loading-${endpoint}` ? (
+                    <motion.span key="loading" variants={iconVariants} initial="hidden" animate="visible" exit="hidden" className="text-xs">
+                      Loading...
+                    </motion.span>
+                  ) : copiedItem === `api-${endpoint}` ? (
+                    <motion.span key="check" variants={iconVariants} initial="hidden" animate="visible" exit="hidden" className="flex items-center gap-1">
+                      <Check className="h-4 w-4" /> Copied
+                    </motion.span>
+                  ) : (
+                    <motion.span key="copy" variants={iconVariants} initial="hidden" animate="visible" exit="hidden" className="flex items-center gap-1">
+                      <Copy className="h-4 w-4" /> Copy
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </Button>
             </div>
           ))}

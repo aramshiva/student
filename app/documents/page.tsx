@@ -10,7 +10,13 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, FileQuestionMark } from "lucide-react";
+import { Download, FileQuestionMark, Check, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+
+const iconVariants = {
+  hidden: { opacity: 0, scale: 0.5 },
+  visible: { opacity: 1, scale: 1 },
+};
 import {
   Select,
   SelectContent,
@@ -42,6 +48,7 @@ export default function DocumentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloaded, setDownloaded] = useState<string | null>(null);
   const [types, setTypes] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>("ALL");
 
@@ -236,6 +243,8 @@ export default function DocumentsPage() {
       if (objectUrl.startsWith("blob:")) {
         setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
       }
+      setDownloaded(guid);
+      setTimeout(() => setDownloaded(null), 2000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Download failed";
       alert(msg);
@@ -393,10 +402,24 @@ export default function DocumentsPage() {
                           className="hover:cursor-pointer"
                           variant="ghost"
                           size="sm"
-                          disabled={downloading === doc.guid}
+                          disabled={!!downloading}
                           onClick={(e) => downloadDocument(e, doc.guid)}
                         >
-                          <Download />
+                          <AnimatePresence mode="wait" initial={false}>
+                            {downloading === doc.guid ? (
+                              <motion.span key="loading" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              </motion.span>
+                            ) : downloaded === doc.guid ? (
+                              <motion.span key="check" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                                <Check className="h-4 w-4" />
+                              </motion.span>
+                            ) : (
+                              <motion.span key="download" variants={iconVariants} initial="hidden" animate="visible" exit="hidden">
+                                <Download className="h-4 w-4" />
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
                         </Button>
                       </TableCell>
                     </TableRow>

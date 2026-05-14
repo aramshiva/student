@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Student",
     description:
       "A alternative client for StudentVUE®, with a refreshed UI and more powerful features to help maintain academics.",
-    start_url: "/student",
+    start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#ffffff",

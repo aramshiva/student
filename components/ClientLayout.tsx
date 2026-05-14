@@ -20,8 +20,14 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("Student.creds"));
+  }, []);
+
   const showSidebar =
-    pathname !== "/" &&
+    (pathname !== "/" || isLoggedIn) &&
     pathname !== "/privacy" &&
     pathname !== "/login" &&
     pathname !== "/docs" &&
@@ -30,7 +36,7 @@ export default function ClientLayout({
     if (!pathname) return "";
     const p = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
     const map: Record<string, string> = {
-      "/student": "Dashboard",
+      "/": "Dashboard",
       "/attendance": "Attendance",
       "/documents": "Documents",
       "/gradebook": "Gradebook",
@@ -55,7 +61,7 @@ export default function ClientLayout({
     if (!pathname) return;
     const p = pathname === "/" ? "/" : pathname.replace(/\/+$/, "");
     const map: Record<string, string> = {
-      "/student": "Dashboard",
+      "/": "Dashboard",
       "/attendance": "Attendance",
       "/documents": "Documents",
       "/gradebook": "Gradebook",
