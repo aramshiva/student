@@ -347,10 +347,6 @@ export function GradeBreakdown({ calcs, assignments }: GradeBreakdownProps) {
                   return (
                     <TableRow key={type}>
                       <TableCell className="font-medium text-black dark:text-white">
-                        <span
-                          className="inline-block w-2.5 h-2.5 rounded-sm mr-2 align-middle"
-                          style={{ background: `var(--chart-${(i % 5) + 1})` }}
-                        />
                         {type}
                       </TableCell>
                       <TableCell>
