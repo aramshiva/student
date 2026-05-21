@@ -543,10 +543,10 @@ export default function AttendancePage() {
                                   <TableCell key={n} className="text-center text-sm">
                                     {p ? (
                                       <span title={p.reason || p.name}>
-                                        {p.name || p.reason || "No reason"}
+                                        {p.name || p.reason || "None"}
                                       </span>
                                     ) : (
-                                      <span className="text-gray-300 dark:text-gray-700">N/A</span>
+                                      <span className="text-gray-600">N/A</span>
                                     )}
                                   </TableCell>
                                 );
