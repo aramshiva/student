@@ -531,11 +531,11 @@ export default function AttendancePage() {
                           ))
                         : dataShape?.absenceDays.map((day) => (
                             <TableRow key={day.date}>
-                              <TableCell className="font-mono text-sm whitespace-nowrap">
+                              <TableCell className="text-sm whitespace-nowrap">
                                 {day.date}
                               </TableCell>
-                              <TableCell className="text-sm text-zinc-500 whitespace-nowrap">
-                                {day.reason || "—"}
+                              <TableCell className="text-sm whitespace-nowrap">
+                                {day.reason || ""}
                               </TableCell>
                               {periodNums.map((n) => {
                                 const p = day.periods.find((p) => p.number === n);
@@ -543,10 +543,10 @@ export default function AttendancePage() {
                                   <TableCell key={n} className="text-center text-sm">
                                     {p ? (
                                       <span title={p.reason || p.name}>
-                                        {p.name || p.reason || "—"}
+                                        {p.name || p.reason || "No reason"}
                                       </span>
                                     ) : (
-                                      <span className="text-zinc-300 dark:text-zinc-700">—</span>
+                                      <span className="text-gray-300 dark:text-gray-700">N/A</span>
                                     )}
                                   </TableCell>
                                 );
