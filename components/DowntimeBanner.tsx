@@ -11,7 +11,7 @@ const AFFECTED_DISTRICTS: Record<string, { name: string; message: string }> = {
   "wa-nor-psv.edupoint.com": {
     name: "Northshore School District",
     message:
-      "StudentVUE is currently down. Student is also down while StudentVUE is down. We appreciate your patience.",
+    "NSD's StudentVUE servers are currently down due to an expired certificate. During this downtime, Student will also be down. We appreciate your patience." 
   },
 };
 
