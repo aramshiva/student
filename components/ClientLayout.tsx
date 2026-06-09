@@ -14,6 +14,8 @@ import { CommandMenu } from "./CommandMenu";
 import { SidebarProvider, SidebarTrigger } from "./ui/sidebar";
 import { Button } from "./ui/button";
 import { Kbd, KbdGroup } from "./ui/kbd";
+import { DowntimeBanner } from "./DowntimeBanner";
+
 export default function ClientLayout({
   children,
 }: {
@@ -21,9 +23,19 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const [districtUrl, setDistrictUrl] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("Student.creds"));
+    const creds = localStorage.getItem("Student.creds");
+    setIsLoggedIn(!!creds);
+    if (creds) {
+      try {
+        const credsObj = JSON.parse(creds);
+        setDistrictUrl(credsObj.districtUrl || null);
+      } catch {
+        setDistrictUrl(null);
+      }
+    }
   }, []);
 
   const showSidebar =
@@ -88,22 +100,27 @@ export default function ClientLayout({
   }, [pathname]);
   return showSidebar ? (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar />
-        <div className="flex flex-col flex-1 min-w-0">
-          <header className="p-2 border-b flex items-center gap-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur dark:supports-[backdrop-filter]:bg-zinc-900/50 supports-[backdrop-filter]:bg-white/50 sticky top-0 z-10">
-            <SidebarTrigger />
-            {pageTitle && (
-              <div className="font-semibold md:text-base tracking-tight text-zinc-700 dark:text-zinc-200">
-                <p>{pageTitle}</p>
+      <div className="flex flex-col min-h-screen w-full">
+        {isLoggedIn && districtUrl && (
+          <DowntimeBanner districtUrl={districtUrl} />
+        )}
+        <div className="flex flex-1 w-full">
+          <AppSidebar />
+          <div className="flex flex-col flex-1 min-w-0">
+            <header className="p-2 border-b flex items-center gap-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur dark:supports-[backdrop-filter]:bg-zinc-900/50 supports-[backdrop-filter]:bg-white/50">
+              <SidebarTrigger />
+              {pageTitle && (
+                <div className="font-semibold md:text-base tracking-tight text-zinc-700 dark:text-zinc-200">
+                  <p>{pageTitle}</p>
+                </div>
+              )}
+              <div className="ml-auto flex items-center gap-2">
+                <CommandButton />
+                <ThemeToggle />
               </div>
-            )}
-            <div className="ml-auto flex items-center gap-2">
-              <CommandButton />
-              <ThemeToggle />
-            </div>
-          </header>
-          <main className="flex-1 w-full min-w-0">{children}</main>
+            </header>
+            <main className="flex-1 w-full min-w-0">{children}</main>
+          </div>
         </div>
       </div>
     </SidebarProvider>
