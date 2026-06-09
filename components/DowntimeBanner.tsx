@@ -8,10 +8,10 @@ interface DowntimeBannerProps {
 }
 
 const AFFECTED_DISTRICTS: Record<string, { name: string; message: string }> = {
-  "wa-nor-psv.edupoint.com": {
+  "https://wa-nor-psv.edupoint.com": {
     name: "Northshore School District",
     message:
-    "NSD's StudentVUE servers are currently down due to an expired certificate. During this downtime, Student will also be down. We appreciate your patience." 
+    "Northshore School Districts's StudentVUE servers are currently down due to an expired certificate. During this downtime, Student will also be down. We appreciate your patience." 
   },
 };
 
