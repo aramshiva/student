@@ -95,7 +95,7 @@ export default function DebugPage() {
                 size="sm"
                 onClick={() => fetchAndCopyEndpoint(endpoint)}
                 disabled={copiedItem === `loading-${endpoint}`}
-                className="shrink-0 min-w-25"
+                className="shrink-0 min-w-[100px]"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {copiedItem === `loading-${endpoint}` ? (
