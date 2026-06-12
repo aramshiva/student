@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { addDays } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getStoredCredentials, postJson, synergyPost } from "@/lib/clientApi";
 
 interface CalendarEvent {
   _Date: string;
@@ -217,34 +218,29 @@ export default function SchoolCalendarPage() {
 
   const fetchCalendar = useCallback(
     async (requestDate?: Date) => {
-      const creds = localStorage.getItem("Student.creds");
+      const creds = getStoredCredentials();
       if (!creds) {
         router.push("/login");
         return;
       }
 
-      const credentials = JSON.parse(creds);
       setIsLoading(true);
       setError(null);
 
       try {
-        const body: Record<string, string> = { ...credentials };
-
+        const extra: Record<string, string> = {};
         if (requestDate) {
           const m = String(requestDate.getMonth() + 1).padStart(2, "0");
           const d = String(requestDate.getDate()).padStart(2, "0");
           const y = requestDate.getFullYear();
-          body.request_date = `${m}/${d}/${y}`;
+          extra.request_date = `${m}/${d}/${y}`;
         }
 
-        const res = await fetch("/api/synergy/calendar", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data: CalendarData = await res.json();
+        const data = await synergyPost<CalendarData>(
+          "/api/synergy/calendar",
+          creds,
+          extra,
+        );
 
         const eventList = data?.CalendarListing?.EventLists?.EventList || [];
         setEvents(Array.isArray(eventList) ? eventList : [eventList]);
@@ -267,13 +263,7 @@ export default function SchoolCalendarPage() {
     setTempUnit(preferredUnit);
     setWeatherLoading(true);
     try {
-      const res = await fetch("/api/weather", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zip }),
-      });
-      if (!res.ok) throw new Error("Failed to fetch weather");
-      const data: WeatherData = await res.json();
+      const data = await postJson<WeatherData>("/api/weather", { zip });
       setWeather(data);
     } catch (err) {
       console.error("Weather fetch error:", err);

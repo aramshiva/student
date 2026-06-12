@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 interface APIRawClassListing {
   _Period: string;
@@ -92,7 +93,7 @@ export default function SchedulePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const creds = localStorage.getItem("Student.creds");
+    const creds = getStoredCredentials();
     if (!creds) {
       window.location.href = "/";
       return;
@@ -101,17 +102,14 @@ export default function SchedulePage() {
       try {
         setIsLoading(true);
         setError(null);
-        const res = await fetch(`/api/synergy/schedule`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...JSON.parse(creds),
+        const raw = await synergyPost<APIRawStudentClassScheduleRoot>(
+          "/api/synergy/schedule",
+          creds,
+          {
             term_index:
               selectedTerm === TODAY_SENTINEL ? undefined : selectedTerm,
-          }),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const raw: APIRawStudentClassScheduleRoot = await res.json();
+          },
+        );
         const root = raw?.StudentClassSchedule;
         if (!root) {
           setClasses([]);

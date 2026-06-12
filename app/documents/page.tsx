@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileQuestionMark, Check, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 const iconVariants = {
   hidden: { opacity: 0, scale: 0.5 },
@@ -67,23 +68,16 @@ export default function DocumentsPage() {
   };
 
   useEffect(() => {
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) {
+    const creds = getStoredCredentials();
+    if (!creds) {
       window.location.href = "/login";
       return;
     }
-    const creds = JSON.parse(credsRaw);
     setIsLoading(true);
     setError(null);
-    fetch("/api/synergy/documents", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(creds),
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+    synergyPost<{
+      StudentDocumentDatas?: { StudentDocumentData?: unknown };
+    }>("/api/synergy/documents", creds)
       .then((data) => {
         const list = data?.StudentDocumentDatas?.StudentDocumentData || [];
         const arr = Array.isArray(list) ? list : [list];
@@ -111,21 +105,20 @@ export default function DocumentsPage() {
   }, []);
 
   const fetchDocumentBase64 = async (guid: string) => {
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) return null;
-    const creds = JSON.parse(credsRaw);
-    const res = await fetch("/api/synergy/document", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...creds, document_guid: guid }),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const ct = res.headers.get("content-type") || "";
-    if (ct.includes("application/pdf")) {
-      const blob = await res.blob();
-      return { base64: await blobToBase64(blob), fileName: `${guid}.pdf` };
-    }
-    const json = await res.json();
+    const creds = getStoredCredentials();
+    if (!creds) return null;
+    const json = await synergyPost<{
+      StudentAttachedDocumentData?: {
+        DocumentDatas?: {
+          DocumentData?: {
+            Base64Code?: unknown;
+            _DocumentFileName?: unknown;
+            _FileName?: unknown;
+          };
+        };
+      };
+      pdf?: unknown;
+    }>("/api/synergy/document", creds, { document_guid: guid });
     const docNode =
       json?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
     let base64: unknown = docNode?.Base64Code;
@@ -135,12 +128,12 @@ export default function DocumentsPage() {
       base64 !== null &&
       "$" in base64
     ) {
-      base64 = base64.$;
+      base64 = (base64 as { $: unknown }).$;
     }
     const fileName: string = String(
       docNode?._DocumentFileName ?? docNode?._FileName ?? "document.pdf",
     );
-    const fallback = json?.pdf as unknown;
+    const fallback = json?.pdf;
     const b64 =
       typeof base64 === "string" && base64.length > 50
         ? base64
@@ -151,70 +144,25 @@ export default function DocumentsPage() {
     return { base64: b64, fileName };
   };
 
-  const blobToBase64 = (blob: Blob) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () =>
-        resolve(String(reader.result).split(",").pop() || "");
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-
   const openDocument = async (guid: string) => {
     setDownloading(guid);
     try {
-      const credsRaw = localStorage.getItem("Student.creds");
-      if (!credsRaw) return;
-      const creds = JSON.parse(credsRaw);
-      const res = await fetch("/api/synergy/document", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...creds, document_guid: guid }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const ct = res.headers.get("content-type") || "";
-      if (ct.includes("application/pdf")) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        window.open(url, "_blank", "noopener,noreferrer");
-      } else {
-        const json = await res.json();
-        const docNode =
-          json?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
-        let base64: unknown = docNode?.Base64Code;
-        if (
-          base64 &&
-          typeof base64 === "object" &&
-          base64 !== null &&
-          "$" in base64
-        ) {
-          base64 = base64.$;
-        }
-        const fileName: string = String(
-          docNode?._DocumentFileName ?? docNode._FileName ?? "document.pdf",
-        );
-        const fallback = json?.pdf as unknown;
-        const b64 =
-          typeof base64 === "string" && base64.length > 50
-            ? base64
-            : typeof fallback === "string"
-              ? fallback
-              : null;
-        if (b64) {
-          const objectUrl = base64PdfToObjectUrl(b64);
-          const pdfUrl = objectUrl || `data:application/pdf;base64,${b64}`;
-          const w = window.open(pdfUrl, "_blank");
-          if (!w) {
-            const a = document.createElement("a");
-            a.href = pdfUrl;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          }
-        } else {
-          alert("Unable to display document: unexpected response format");
-        }
+      const result = await fetchDocumentBase64(guid);
+      if (!result) {
+        alert("Unable to display document: unexpected response format");
+        return;
+      }
+      const { base64, fileName } = result;
+      const objectUrl = base64PdfToObjectUrl(base64);
+      const pdfUrl = objectUrl || `data:application/pdf;base64,${base64}`;
+      const w = window.open(pdfUrl, "_blank");
+      if (!w) {
+        const a = document.createElement("a");
+        a.href = pdfUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to fetch document";

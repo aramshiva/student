@@ -14,6 +14,11 @@ import {
   loadGradebookCache,
   saveGradebookCache,
 } from "@/utils/gradebook";
+import {
+  getStoredCredentials,
+  clearStoredCredentials,
+  synergyPost,
+} from "@/lib/clientApi";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function GradebookPageContent() {
@@ -208,8 +213,8 @@ function GradebookPageContent() {
     async (reportPeriodIndex: number | null = null, bypassCache = false) => {
       if (inFlightRef.current) return;
       inFlightRef.current = true;
-      const creds = localStorage.getItem("Student.creds");
-      if (!creds) {
+      const credentials = getStoredCredentials();
+      if (!credentials) {
         window.location.href = "/login";
         inFlightRef.current = false;
         return;
@@ -232,23 +237,18 @@ function GradebookPageContent() {
         }
       }
 
-      const credentials = JSON.parse(creds);
       setIsLoading(true);
       setError(null);
       try {
-        const body =
+        const data = await synergyPost<Record<string, unknown>>(
+          "/api/synergy/gradebook",
+          credentials,
           reportPeriodIndex != null
-            ? { ...credentials, reportPeriod: reportPeriodIndex }
-            : credentials;
-        const res = await fetch("/api/synergy/gradebook", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
+            ? { reportPeriod: reportPeriodIndex }
+            : undefined,
+        );
         if (data["@ErrorMessage"]) {
-          throw new Error(data["@ErrorMessage"]);
+          throw new Error(String(data["@ErrorMessage"]));
         }
         saveGradebookCache(reportPeriodIndex, data);
         applyGradebookData(data, reportPeriodIndex, new Date());
@@ -289,28 +289,17 @@ function GradebookPageContent() {
           }
           localStorage.removeItem("Student.cumGPA");
         }
-        const creds = localStorage.getItem("Student.creds");
-        if (!creds) return;
-        const credentials = JSON.parse(creds);
-        const res = await fetch("/api/synergy/history", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            district_url: credentials.district_url,
-            username: credentials.username,
-            password: credentials.password,
-            timeout_ms: 15000,
-          }),
-        });
-        if (!res.ok) return;
-        const json = await res.json();
+        const credentials = getStoredCredentials();
+        if (!credentials) return;
         type HistoryCourse = {
           Mark: string;
           CreditsAttempted: string;
           CHSType: string;
         };
-        const history: Array<{ Terms: Array<{ Courses: HistoryCourse[] }> }> =
-          json?.courseHistory ?? [];
+        const json = await synergyPost<{
+          courseHistory?: Array<{ Terms: Array<{ Courses: HistoryCourse[] }> }>;
+        }>("/api/synergy/history", credentials, { timeout_ms: 15000 });
+        const history = json?.courseHistory ?? [];
 
         const allCourses: HistoryCourse[] = history.flatMap((g) =>
           g.Terms.flatMap((t) => t.Courses),
@@ -450,7 +439,7 @@ function GradebookPageContent() {
       gradebookData={gradebookData}
       onCourseSelect={handleCourseSelect}
       onLogout={() => {
-        localStorage.removeItem("Student.creds");
+        clearStoredCredentials();
         window.location.href = "/login";
       }}
       reportingPeriods={reportingPeriods}

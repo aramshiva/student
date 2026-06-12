@@ -13,6 +13,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 interface ReportingPeriod {
   _ReportingPeriodGU: string;
@@ -53,22 +54,18 @@ export default function ReportCardsPage() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const fetchPeriods = useCallback(async () => {
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) {
+    const creds = getStoredCredentials();
+    if (!creds) {
       router.push("/login");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const body = JSON.parse(credsRaw);
-      const res = await fetch("/api/synergy/reportcard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      const data: ReportCardListResponse = await res.json();
+      const data = await synergyPost<ReportCardListResponse>(
+        "/api/synergy/reportcard",
+        creds,
+      );
       setPeriods(normalizePeriods(data));
     } catch (e) {
       setError((e as Error).message);
@@ -83,21 +80,18 @@ export default function ReportCardsPage() {
 
   const openPdf = useCallback(
     async (documentGuid: string) => {
-      const credsRaw = localStorage.getItem("Student.creds");
-      if (!credsRaw) {
+      const creds = getStoredCredentials();
+      if (!creds) {
         router.push("/login");
         return;
       }
       setDownloadingId(documentGuid);
       try {
-        const body = { ...JSON.parse(credsRaw), document_guid: documentGuid };
-        const res = await fetch("/api/synergy/reportcard/get", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-        const data: ReportCardGetResponse = await res.json();
+        const data = await synergyPost<ReportCardGetResponse>(
+          "/api/synergy/reportcard/get",
+          creds,
+          { document_guid: documentGuid },
+        );
         const base64 = data.Base64Code;
         if (!base64) throw new Error("No PDF returned");
 

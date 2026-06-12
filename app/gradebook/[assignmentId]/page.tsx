@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Assignment, Course, Mark, GradebookData } from "@/types/gradebook";
 import { formatDate, calculatePercentage } from "@/utils/gradebook";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 import Loading from "@/components/loadingfunc";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,12 +56,11 @@ export default function AssignmentDetailPage() {
   const fetchGradebook = useCallback(async () => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
-    const creds = localStorage.getItem("Student.creds");
-    if (!creds) {
+    const credentials = getStoredCredentials();
+    if (!credentials) {
       router.push("/login");
       return;
     }
-    const credentials = JSON.parse(creds);
     let stored: number | null = null;
     try {
       const raw = localStorage.getItem(REPORTING_PERIOD_STORAGE_KEY);
@@ -73,15 +73,11 @@ export default function AssignmentDetailPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const body =
-        stored != null ? { ...credentials, reportPeriod: stored } : credentials;
-      const res = await fetch("/api/synergy/gradebook", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      const data: GradebookData["data"] = await res.json();
+      const data = await synergyPost<GradebookData["data"]>(
+        "/api/synergy/gradebook",
+        credentials,
+        stored != null ? { reportPeriod: stored } : undefined,
+      );
       const maybeErr = (data as Record<string, unknown>)["@ErrorMessage"];
       if (typeof maybeErr === "string" && maybeErr) {
         if (process.env.NODE_ENV === "development") {

@@ -41,6 +41,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 const primaryNav = [
   { name: "Home", href: "/", icon: Home },
@@ -127,26 +128,18 @@ export function AppSidebar() {
     const needsStudentInfo = !permId || !school;
     if (!needsName && !needsStudentInfo) return;
 
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) return;
+    const creds = getStoredCredentials();
+    if (!creds) return;
     let aborted = false;
 
     (async () => {
       try {
-        const creds = JSON.parse(credsRaw);
-
         if (needsName) {
-          const res = await fetch("/api/synergy/name", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: creds.username || creds.user || creds.userId,
-              password: creds.password || creds.pass,
-              district_url: creds.district_url || creds.district || creds.host,
-            }),
-          });
-          if (!aborted && res.ok) {
-            const data = await res.json();
+          const data = await synergyPost<{ name?: string }>(
+            "/api/synergy/name",
+            creds,
+          );
+          if (!aborted) {
             if (data && typeof data.name === "string" && data.name.trim()) {
               const nm = data.name.trim();
               setStudentName(nm);
@@ -156,13 +149,12 @@ export function AppSidebar() {
         }
 
         if (needsStudentInfo) {
-          const res = await fetch("/api/synergy/student", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: credsRaw,
-          });
-          if (!aborted && res.ok) {
-            const data = await res.json();
+          const data = await synergyPost<{
+            PermID?: string | number;
+            CurrentSchool?: string;
+            Photo?: string;
+          }>("/api/synergy/student", creds);
+          if (!aborted) {
             if (data) {
               if (data.PermID && !permId) {
                 const pid = String(data.PermID);
@@ -196,8 +188,8 @@ export function AppSidebar() {
 
     const calculateNextPeriod = async () => {
       try {
-        const credsRaw = localStorage.getItem("Student.creds");
-        if (!credsRaw) {
+        const creds = getStoredCredentials();
+        if (!creds) {
           setNextPeriod(null);
           return;
         }
@@ -211,20 +203,8 @@ export function AppSidebar() {
           return;
         }
 
-        const creds = JSON.parse(credsRaw);
-        const res = await fetch("/api/synergy/schedule", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...creds,
-          }),
-        });
-
-        if (!res.ok) {
-          return;
-        }
-
-        const data = await res.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = await synergyPost<any>("/api/synergy/schedule", creds);
         const todayClasses =
           data?.StudentClassSchedule?.TodayScheduleInfoData?.SchoolInfos
             ?.SchoolInfo?.Classes?.ClassInfo;

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RotateCcw } from "lucide-react";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 interface MailRecipient {
   _RecipientType?: string;
@@ -49,26 +50,16 @@ export default function DeletedMailPage() {
       }
     }
 
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) {
+    const creds = getStoredCredentials();
+    if (!creds) {
       window.location.href = "/login";
       return;
     }
-    const creds = JSON.parse(credsRaw);
     setLoading(true);
-    fetch("/api/synergy/mail", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        district_url: creds.district_url,
-        username: creds.username,
-        password: creds.password,
-      }),
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+    synergyPost<{ InboxItemListings?: { MessageXML?: MailMessage[] } }>(
+      "/api/synergy/mail",
+      creds,
+    )
       .then((json) => {
         const inbox = json?.InboxItemListings?.MessageXML || [];
         setMessages(Array.isArray(inbox) ? inbox : [inbox]);

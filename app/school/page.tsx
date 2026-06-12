@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { columns, type Staff } from "./columns";
 import { DataTable } from "./data-table";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 interface SchoolInfoResponse {
   StudentSchoolInfoListing?: {
@@ -45,22 +46,18 @@ export default function SchoolInfoPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchInfo = useCallback(async () => {
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) {
+    const creds = getStoredCredentials();
+    if (!creds) {
       router.push("/login");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const body = JSON.parse(credsRaw);
-      const res = await fetch("/api/synergy/school-info", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      const data: SchoolInfoResponse = await res.json();
+      const data = await synergyPost<SchoolInfoResponse>(
+        "/api/synergy/school-info",
+        creds,
+      );
       const listing = data?.StudentSchoolInfoListing;
       setInfo(listing ?? null);
       setStaff(normalizeStaff(listing));

@@ -1,46 +1,12 @@
-import { NextResponse } from "next/server";
-import { SynergyClient } from "@/lib/synergy";
+import { synergyRoute, unwrapKey } from "@/lib/synergyRoute";
 
 export const runtime = "nodejs";
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json().catch(() => null);
-    if (!body)
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+export const POST = synergyRoute(async ({ client, body }) => {
+  const params: Record<string, unknown> = {};
+  if (body.term_index != null) params.TermIndex = Number(body.term_index);
+  else if (body.reportPeriod != null) params.ReportPeriod = body.reportPeriod;
 
-    const { district_url, username, password, reportPeriod, term_index } = body;
-
-    if (!district_url || !username || !password) {
-      return NextResponse.json(
-        { error: "district_url, username, and password are required" },
-        { status: 400 },
-      );
-    }
-
-    const client = new SynergyClient(
-      String(district_url),
-      String(username),
-      String(password),
-    );
-
-    const param: Record<string, unknown> = {};
-    if (term_index != null) param.TermIndex = Number(term_index);
-    else if (reportPeriod != null) param.ReportPeriod = reportPeriod;
-    const raw = await client.call("StudentClassList", param);
-
-    const schedule =
-      raw && typeof raw === "object" && "StudentClassList" in raw
-        ? (raw as { StudentClassList: unknown }).StudentClassList
-        : (raw ?? {});
-    return NextResponse.json(schedule, { status: 200 });
-  } catch (e: unknown) {
-    const msg =
-      e instanceof Error
-        ? e.name === "AbortError"
-          ? "Request timed out"
-          : e.message
-        : "Unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
-}
+  const raw = await client.call("StudentClassList", params);
+  return unwrapKey(raw, "StudentClassList");
+});

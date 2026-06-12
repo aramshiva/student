@@ -23,6 +23,37 @@ interface WeatherResponse {
   location?: string;
 }
 
+// WMO weather interpretation codes used by Open-Meteo
+const WEATHER_CODE_MAP: Record<number, string> = {
+  0: "Clear",
+  1: "Mostly Clear",
+  2: "Partly Cloudy",
+  3: "Overcast",
+  45: "Foggy",
+  48: "Foggy",
+  51: "Light Drizzle",
+  53: "Drizzle",
+  55: "Heavy Drizzle",
+  61: "Light Rain",
+  63: "Rain",
+  65: "Heavy Rain",
+  71: "Light Snow",
+  73: "Snow",
+  75: "Heavy Snow",
+  77: "Snow Grains",
+  80: "Light Showers",
+  81: "Showers",
+  82: "Heavy Showers",
+  85: "Snow Showers",
+  86: "Heavy Snow Showers",
+  95: "Thunderstorm",
+  96: "Thunderstorm with Hail",
+  99: "Thunderstorm with Heavy Hail",
+};
+
+const describeWeatherCode = (code: number): string =>
+  WEATHER_CODE_MAP[code] || "Unknown";
+
 async function zipToCoords(zip: string): Promise<{ lat: number; lon: number }> {
   const res = await fetch(
     `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zip)}&country=US&format=json&limit=1`,
@@ -67,54 +98,25 @@ export async function POST(req: Request) {
 
     const weatherData = await weatherRes.json();
     const current = weatherData.current;
-
-    const weatherCodeMap: Record<number, string> = {
-      0: "Clear",
-      1: "Mostly Clear",
-      2: "Partly Cloudy",
-      3: "Overcast",
-      45: "Foggy",
-      48: "Foggy",
-      51: "Light Drizzle",
-      53: "Drizzle",
-      55: "Heavy Drizzle",
-      61: "Light Rain",
-      63: "Rain",
-      65: "Heavy Rain",
-      71: "Light Snow",
-      73: "Snow",
-      75: "Heavy Snow",
-      77: "Snow Grains",
-      80: "Light Showers",
-      81: "Showers",
-      82: "Heavy Showers",
-      85: "Snow Showers",
-      86: "Heavy Snow Showers",
-      95: "Thunderstorm",
-      96: "Thunderstorm with Hail",
-      99: "Thunderstorm with Heavy Hail",
-    };
-
-    const condition = weatherCodeMap[current.weather_code] || "Unknown";
+    const units = weatherData.current_units ?? {};
 
     const tenDay = weatherData.daily.time.map((date: string, idx: number) => ({
       date,
       tempMin: weatherData.daily.temperature_2m_min[idx],
       tempMax: weatherData.daily.temperature_2m_max[idx],
-      condition:
-        weatherCodeMap[weatherData.daily.weather_code[idx]] || "Unknown",
+      condition: describeWeatherCode(weatherData.daily.weather_code[idx]),
       precipitation: weatherData.daily.precipitation_sum[idx] || 0,
     }));
 
     const response: WeatherResponse = {
       current: {
-        time: weatherData.current_time,
+        time: current.time,
         temp: current.temperature_2m,
-        unit: weatherData.current_units.temperature_2m || "°C",
-        condition,
-        windSpeed: `${current.wind_speed_10m} ${weatherData.current_units.wind_speed_10m || "km/h"}`,
+        unit: units.temperature_2m || "°C",
+        condition: describeWeatherCode(current.weather_code),
+        windSpeed: `${current.wind_speed_10m} ${units.wind_speed_10m || "km/h"}`,
         precipitation: current.precipitation || 0,
-        precipitationUnit: weatherData.current_units.precipitation || "mm",
+        precipitationUnit: units.precipitation || "mm",
         uvIndex: current.uv_index || 0,
       },
       ten: tenDay,

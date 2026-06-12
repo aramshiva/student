@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/empty";
 import { BadgeQuestionMark } from "lucide-react";
 import Link from "next/link";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 interface AnalysisTest {
   GU?: string;
@@ -50,20 +51,15 @@ export default function TestsPage() {
     try {
       setLoading(true);
       setError(null);
-      const credsRaw = localStorage.getItem("Student.creds");
-      if (!credsRaw) {
+      const creds = getStoredCredentials();
+      if (!creds) {
         window.location.href = "/login";
         return;
       }
-      const res = await fetch("/api/synergy/tests", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: credsRaw,
-      });
-      if (!res.ok) {
-        throw new Error(`Tests HTTP ${res.status}`);
-      }
-      const json: TestsApiResponse = await res.json();
+      const json = await synergyPost<TestsApiResponse>(
+        "/api/synergy/tests",
+        creds,
+      );
       const tests = json?.analysis?.availableTests || [];
       setData(tests);
 
