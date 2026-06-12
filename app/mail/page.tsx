@@ -274,7 +274,7 @@ export default function MailPage() {
         <Card className="p-4 md:col-span-1 max-h-[70vh] overflow-auto">
           <h2 className="font-medium mb-3 text-sm text-muted-foreground">
             {loading ? (
-              <Skeleton className="h-4 w-25" />
+              <Skeleton className="h-4 w-[100px]" />
             ) : (
               `${folder} (${messages.length})`
             )}
