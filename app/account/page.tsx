@@ -146,7 +146,7 @@ export default function AccountPage() {
                     <span className="text-sm text-muted-foreground whitespace-nowrap">
                       {row.label}
                     </span>
-                    <span className="text-sm font-medium text-right wrap-break-word min-w-0">
+                    <span className="text-sm font-medium text-right break-words min-w-0">
                       {row.value}
                     </span>
                   </div>
