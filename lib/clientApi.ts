@@ -1,4 +1,4 @@
-// server intentionally serverless/sateless: the browser holds the StudentVUE login and sends it with each request).
+// server intentionally serverless/stateless: the browser holds the StudentVUE login and sends it with each request).
 
 export const CREDS_STORAGE_KEY = "Student.creds";
 
