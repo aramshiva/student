@@ -87,6 +87,29 @@ function ScoreEditor({
 }) {
   const [score, setScore] = React.useState(initialScore);
   const [max, setMax] = React.useState(initialMax);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const lastInitial = React.useRef({ score: initialScore, max: initialMax });
+  React.useEffect(() => {
+    const last = lastInitial.current;
+    if (last.score === initialScore && last.max === initialMax) return;
+    lastInitial.current = { score: initialScore, max: initialMax };
+    const active = document.activeElement;
+    if (!containerRef.current?.contains(active)) {
+      setScore(initialScore);
+      setMax(initialMax);
+    }
+  }, [initialScore, initialMax]);
+
+  React.useEffect(() => {
+    const timers = debounceTimers;
+    return () => {
+      if (timers.current[assignmentId]) {
+        clearTimeout(timers.current[assignmentId]);
+        delete timers.current[assignmentId];
+      }
+    };
+  }, [assignmentId, debounceTimers]);
 
   const commit = (nextScore: string, nextMax: string, immediate = false) => {
     setDraftScores((prev) => ({
@@ -106,7 +129,7 @@ function ScoreEditor({
   };
 
   return (
-    <div className="flex gap-1 items-center">
+    <div ref={containerRef} className="flex gap-1 items-center">
       <Input
         type="text"
         inputMode="decimal"
@@ -156,7 +179,23 @@ function NameEditor({
   >;
 }) {
   const [name, setName] = React.useState(initialName);
+  const inputRef = React.useRef<HTMLInputElement>(null);
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const lastInitial = React.useRef(initialName);
+  React.useEffect(() => {
+    if (lastInitial.current === initialName) return;
+    lastInitial.current = initialName;
+    if (document.activeElement !== inputRef.current) {
+      setName(initialName);
+    }
+  }, [initialName]);
+
+  React.useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
 
   const commit = (val: string, immediate = false) => {
     if (timer.current) clearTimeout(timer.current);
@@ -171,6 +210,7 @@ function NameEditor({
 
   return (
     <Input
+      ref={inputRef}
       type="text"
       value={name}
       onChange={(e) => {
@@ -816,7 +856,14 @@ function AssignmentsTableBase({
             <div className="flex items-center gap-3">
               {hypotheticalMode && onResetAll && (
                 <Button
-                  onClick={onResetAll}
+                  onClick={() => {
+                    setDraftScores({});
+                    Object.values(debounceTimers.current).forEach((t) =>
+                      clearTimeout(t),
+                    );
+                    debounceTimers.current = {};
+                    onResetAll?.();
+                  }}
                   size="sm"
                   variant="outline"
                   className="h-8"

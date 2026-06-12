@@ -452,8 +452,8 @@ export default function CourseDetail({
                           : "text-zinc-500"
                     }`}
                   >
-                    GPA {gpaPreview.before.toFixed(2)} →{" "}
-                    {gpaPreview.after.toFixed(2)}
+                    GPA {gpaPreview.before.toFixed(3)} →{" "}
+                    {gpaPreview.after.toFixed(3)}
                   </p>
                 )}
               </div>
