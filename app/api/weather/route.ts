@@ -23,7 +23,6 @@ interface WeatherResponse {
   location?: string;
 }
 
-// WMO weather interpretation codes used by Open-Meteo
 const WEATHER_CODE_MAP: Record<number, string> = {
   0: "Clear",
   1: "Mostly Clear",

@@ -28,8 +28,65 @@ import {
   School,
   MessageCircle,
   HistoryIcon,
+  ClipboardX,
+  GraduationCap,
+  FileCheck,
+  UserCircle,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { loadGradebookCache } from "@/utils/gradebook";
+import type { Course, Mark, Assignment } from "@/types/gradebook";
+
+interface SearchableCourse {
+  id: string;
+  name: string;
+}
+
+interface SearchableAssignment {
+  id: string;
+  name: string;
+  courseName: string;
+}
+
+function currentMarkOf(m: Mark | Mark[] | undefined): Mark | null {
+  if (!m) return null;
+  if (Array.isArray(m)) return m[m.length - 1] || null;
+  return m;
+}
+
+function loadSearchIndex(): {
+  courses: SearchableCourse[];
+  assignments: SearchableAssignment[];
+} {
+  try {
+    const cached = loadGradebookCache(null);
+    const root = (cached?.data ?? {}) as {
+      Gradebook?: { Courses?: { Course?: Course[] } };
+      Courses?: { Course?: Course[] };
+    };
+    const gbRoot = root.Gradebook ?? root;
+    const courseList: Course[] = gbRoot?.Courses?.Course || [];
+    const courses: SearchableCourse[] = [];
+    const assignments: SearchableAssignment[] = [];
+    for (const c of courseList) {
+      if (!c?._CourseID) continue;
+      courses.push({ id: c._CourseID, name: c._CourseName });
+      const mark = currentMarkOf(c?.Marks?.Mark);
+      const list: Assignment[] = mark?.Assignments?.Assignment || [];
+      for (const a of list) {
+        if (!a?._GradebookID) continue;
+        assignments.push({
+          id: a._GradebookID,
+          name: a._Measure,
+          courseName: c._CourseName,
+        });
+      }
+    }
+    return { courses, assignments };
+  } catch {
+    return { courses: [], assignments: [] };
+  }
+}
 
 interface CommandMenuProps {
   open: boolean;
@@ -45,6 +102,14 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
     onOpenChange(false);
     if (pathname !== to) router.push(to);
   };
+
+  const [searchIndex, setSearchIndex] = React.useState<{
+    courses: SearchableCourse[];
+    assignments: SearchableAssignment[];
+  }>({ courses: [], assignments: [] });
+  React.useEffect(() => {
+    if (open) setSearchIndex(loadSearchIndex());
+  }, [open]);
 
   const items: {
     heading: string;
@@ -84,6 +149,11 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           icon: <Table2 className="text-sm" />,
         },
         {
+          label: "Missing Work",
+          action: () => navigate("/missing"),
+          icon: <ClipboardX className="text-sm" />,
+        },
+        {
           label: "Documents",
           action: () => navigate("/documents"),
           icon: <FileText className="text-sm" />,
@@ -102,6 +172,11 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           label: "School Information",
           action: () => navigate("/school"),
           icon: <School className="text-sm" />,
+        },
+        {
+          label: "My Account",
+          action: () => navigate("/account"),
+          icon: <UserCircle className="text-sm" />,
         },
         {
           label: "Settings",
@@ -174,6 +249,39 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
             ))}
           </CommandGroup>
         ))}
+        {searchIndex.courses.length > 0 && (
+          <CommandGroup heading="Courses">
+            {searchIndex.courses.map((c) => (
+              <CommandItem
+                key={`course-${c.id}`}
+                onSelect={() =>
+                  navigate(`/gradebook?course=${encodeURIComponent(c.id)}`)
+                }
+                value={`course ${c.name}`}
+              >
+                <GraduationCap className="text-sm" />
+                <span>{c.name}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+        {searchIndex.assignments.length > 0 && (
+          <CommandGroup heading="Assignments">
+            {searchIndex.assignments.map((a) => (
+              <CommandItem
+                key={`assignment-${a.id}`}
+                onSelect={() => navigate(`/gradebook/${a.id}`)}
+                value={`${a.name} ${a.courseName}`}
+              >
+                <FileCheck className="text-sm" />
+                <span className="truncate">{a.name}</span>
+                <span className="ml-auto text-xs text-muted-foreground truncate max-w-[40%]">
+                  {a.courseName}
+                </span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
         <CommandSeparator />
         {/* <CommandGroup heading="Help">
           <CommandItem onSelect={() => window.open("/privacy", "_blank")}>

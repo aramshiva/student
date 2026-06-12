@@ -425,12 +425,15 @@ function GradebookPageContent() {
   if (!gradebookData) return null;
 
   if (selectedCourse) {
+    const gbRoot = gradebookData.data?.Gradebook || gradebookData.data || {};
+    const allCourses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
     return (
       <CourseDetail
         course={selectedCourse}
         onBack={handleBack}
         initialSticky={initialSticky}
         onStateChange={handleStateChange}
+        allCourses={allCourses}
       />
     );
   }

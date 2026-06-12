@@ -5,6 +5,7 @@ import {
   loadCustomGPAScale,
   numericToLetterGrade,
   loadCalculateGradesEnabled,
+  formatDate,
 } from "@/utils/gradebook";
 import {
   Select,
@@ -134,31 +135,45 @@ export default function Dashboard({
             {!!reportingPeriods.length && (
               <div className="flex items-center gap-2 text-sm">
                 <label className="font-medium">Reporting Period:</label>
-                <Select
-                  disabled={isLoading}
-                  value={
-                    selectedReportingPeriod != null
-                      ? String(selectedReportingPeriod)
-                      : undefined
-                  }
-                  onValueChange={(val) =>
-                    onSelectReportingPeriod?.(Number(val))
-                  }
-                >
-                  <SelectTrigger className="w-60">
-                    <SelectValue
-                      className="text-xs"
-                      placeholder="Select period"
-                    />
-                  </SelectTrigger>
-                  <SelectContent className="p-1">
-                    {reportingPeriods.map((rp) => (
-                      <SelectItem key={rp.index} value={rp.index.toString()}>
-                        {rp.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col gap-0.5">
+                  <Select
+                    disabled={isLoading}
+                    value={
+                      selectedReportingPeriod != null
+                        ? String(selectedReportingPeriod)
+                        : undefined
+                    }
+                    onValueChange={(val) =>
+                      onSelectReportingPeriod?.(Number(val))
+                    }
+                  >
+                    <SelectTrigger className="w-60">
+                      <SelectValue
+                        className="text-xs"
+                        placeholder="Select period"
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="p-1">
+                      {reportingPeriods.map((rp) => (
+                        <SelectItem key={rp.index} value={rp.index.toString()}>
+                          {rp.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {(() => {
+                    const selected = reportingPeriods.find(
+                      (rp) => rp.index === selectedReportingPeriod,
+                    );
+                    if (!selected?.start || !selected?.end) return null;
+                    return (
+                      <p className="text-xs text-zinc-500">
+                        {formatDate(selected.start)} –{" "}
+                        {formatDate(selected.end)}
+                      </p>
+                    );
+                  })()}
+                </div>
               </div>
             )}
           </div>

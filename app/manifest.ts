@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "/",
     name: "Student",
     short_name: "Student",
     description:
@@ -20,6 +21,12 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/brand/favicon/web-app-manifest-512x512.png",
         sizes: "512x512",
         type: "image/png",
+      },
+      {
+        src: "/brand/favicon/web-app-manifest-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
   };

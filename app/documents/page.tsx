@@ -118,7 +118,7 @@ export default function DocumentsPage() {
         };
       };
       pdf?: unknown;
-    }>("/api/synergy/document", creds, { document_guid: guid });
+    }>("/api/synergy/documents/get", creds, { document_guid: guid });
     const docNode =
       json?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
     let base64: unknown = docNode?.Base64Code;

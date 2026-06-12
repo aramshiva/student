@@ -314,7 +314,7 @@ export default function StudentDashboard() {
         } else {
           try {
             const nameJson = await synergyPost<{ name?: string }>(
-              "/api/synergy/name",
+              "/api/synergy/student/name",
               creds,
             );
             if (typeof nameJson?.name === "string" && nameJson.name.trim()) {

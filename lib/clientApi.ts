@@ -1,6 +1,4 @@
-// Client-side helpers for talking to our /api routes. Credentials live in
-// localStorage (this app is intentionally serverless/stateless: the browser
-// holds the StudentVue login and sends it with each request).
+// server intentionally serverless/sateless: the browser holds the StudentVUE login and sends it with each request).
 
 export const CREDS_STORAGE_KEY = "Student.creds";
 
@@ -42,8 +40,6 @@ export function clearStoredCredentials() {
   } catch {}
 }
 
-// POST JSON to one of our API routes; throws with the server's error message
-// (routes respond { error } with a non-2xx status) so callers can show it.
 export async function postJson<T = unknown>(
   path: string,
   body: Record<string, unknown>,
@@ -64,8 +60,6 @@ export async function postJson<T = unknown>(
   return data as T;
 }
 
-// POST to a /api/synergy/* route with the stored credentials plus any
-// route-specific fields.
 export async function synergyPost<T = unknown>(
   path: string,
   creds: StoredCredentials,

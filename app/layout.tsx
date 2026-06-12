@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 
 import ClientLayout from "@/components/ClientLayout";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -50,6 +51,7 @@ export default function RootLayout({
           </ClientLayout>
         </ThemeProvider>
         <SpeedInsights />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

@@ -55,7 +55,7 @@ export default function SchoolInfoPage() {
     setError(null);
     try {
       const data = await synergyPost<SchoolInfoResponse>(
-        "/api/synergy/school-info",
+        "/api/synergy/school/info",
         creds,
       );
       const listing = data?.StudentSchoolInfoListing;

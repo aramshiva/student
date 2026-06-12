@@ -400,7 +400,7 @@ const spec = {
         },
       },
     },
-    "/api/synergy/document": {
+    "/api/synergy/documents/get": {
       post: {
         summary: "Get document content",
         description: "Fetches a specific document's content",
@@ -482,7 +482,7 @@ const spec = {
         },
       },
     },
-    "/api/synergy/school-info": {
+    "/api/synergy/school/info": {
       post: {
         summary: "Get school information",
         description: "Gets school content info and staff information",
@@ -516,7 +516,7 @@ const spec = {
         },
       },
     },
-    "/api/synergy/name": {
+    "/api/synergy/student/name": {
       post: {
         summary: "Get student name",
         description:

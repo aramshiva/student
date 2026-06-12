@@ -22,7 +22,7 @@ const API_ENDPOINTS = [
   "/api/synergy/tests",
   "/api/synergy/documents",
   "/api/synergy/reportcard",
-  "/api/synergy/school-info",
+  "/api/synergy/school/info",
   "/api/weather",
 ];
 
@@ -95,7 +95,7 @@ export default function DebugPage() {
                 size="sm"
                 onClick={() => fetchAndCopyEndpoint(endpoint)}
                 disabled={copiedItem === `loading-${endpoint}`}
-                className="shrink-0 min-w-[100px]"
+                className="shrink-0 min-w-25"
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {copiedItem === `loading-${endpoint}` ? (

@@ -73,7 +73,10 @@ const alwaysArray = new Set<string>([
   "SynergyMailDataXML.InboxItemListings.MessageXML",
   "SynergyMailDataXML.SentItemListings.MessageXML",
   "SynergyMailDataXML.DraftItemListings.MessageXML",
+  "SynergyMailDataXML.ArchiveItemListings.MessageXML",
   "SynergyMailDataXML.InboxItemListings.MessageXML.Attachments.AttachmentXML",
+  "SynergyMailDataXML.ArchiveItemListings.MessageXML.Attachments.AttachmentXML",
+  "SynergyMailMessageBodyXML.MessageListings.MessageBodyXML",
   "RecipientXML",
 
   "Gradebook.Courses.Course",
@@ -327,8 +330,9 @@ export class SynergyClient {
     operation: Operation,
     methodName: string,
     params: unknown,
+    paramRoot: "Params" | "Parms" = "Params",
   ) {
-    const paramXml = builder.build({ Params: params ?? {} });
+    const paramXml = builder.build({ [paramRoot]: params ?? {} });
     const paramStr = escapeXmlText(paramXml);
 
     return `<?xml version="1.0" encoding="utf-8"?>
@@ -351,11 +355,12 @@ export class SynergyClient {
     operation: Operation,
     methodName: string,
     params?: unknown,
+    paramRoot: "Params" | "Parms" = "Params",
   ) {
     const res = await fetchWithTimeout(this.endpoint(), {
       method: "POST",
       headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
-      body: this.buildEnvelope(operation, methodName, params),
+      body: this.buildEnvelope(operation, methodName, params, paramRoot),
     });
 
     const raw = await res.text().catch(() => "");
@@ -388,6 +393,15 @@ export class SynergyClient {
       "ProcessWebServiceRequestMultiWeb",
       methodName,
       params,
+    );
+  }
+
+  private requestMultiWebParms(methodName: string, parms: unknown) {
+    return this.soapRequest(
+      "ProcessWebServiceRequestMultiWeb",
+      methodName,
+      parms,
+      "Parms",
     );
   }
 
@@ -441,6 +455,135 @@ export class SynergyClient {
   async getMailData(): Promise<MailData> {
     const r = await this.request("SynergyMailGetData");
     return r?.SynergyMailDataXML ?? {};
+  }
+
+  async getMailFolderData(folder: string): Promise<MailData> {
+    const r = await this.requestMultiWebParms("SynergyMailGetData", {
+      childIntID: 0,
+      FolderGU: folder,
+      LoadMessageBody: false,
+    });
+    return r?.SynergyMailDataXML ?? {};
+  }
+
+  async getMailBodies(guids: string[]): Promise<Map<string, string>> {
+    const bodyMap = new Map<string, string>();
+    if (guids.length === 0) return bodyMap;
+    const r = await this.requestMultiWebParms("SynergyMailGetMessageBody", {
+      childIntID: 0,
+      SmMessageGUs: guids.join(", "),
+      SupportingMessageTextElement: true,
+    });
+    const rawBodies =
+      r?.SynergyMailMessageBodyXML?.MessageListings?.MessageBodyXML;
+    const bodies: Record<string, unknown>[] = rawBodies
+      ? Array.isArray(rawBodies)
+        ? rawBodies
+        : [rawBodies]
+      : [];
+    for (const b of bodies) {
+      const guid = b._SMMessageGU;
+      const html = b.MessageTextElement;
+      if (typeof guid === "string" && typeof html === "string") {
+        bodyMap.set(guid, html);
+      }
+    }
+    return bodyMap;
+  }
+
+  async markMailRead(
+    smMsgPersonGU: string,
+    markAsUnread: boolean,
+  ): Promise<void> {
+    await this.requestMultiWebParms("SynergyMailReadOrDeleteMsg", {
+      childIntID: 0,
+      SynergyEmailMarkList: {
+        _SmMessagePersonGUList: smMsgPersonGU,
+        _ProcessRead: "true",
+        _MarkAsUnread: markAsUnread ? "true" : "false",
+      },
+    });
+  }
+
+  // archive=3/archive,inbox/restore=0/inbox
+  async moveMailToFolder(
+    smMsgPersonGU: string,
+    folderType: string,
+    folderName: string,
+  ): Promise<void> {
+    const r = await this.requestMultiWebParms(
+      "SynergyMailMoveMessageToFolder",
+      {
+        SynergyEmailMoveToFolder: {
+          _SmMessagePersonGU: smMsgPersonGU,
+          _FolderType: folderType,
+          _SmFolderGU: "",
+          _FolderName: folderName,
+        },
+      },
+    );
+    const err = r?.SynergyEmailSuccessMessage?._error;
+    if (err) throw new Error(String(err));
+  }
+
+  async getMailRecipient(
+    staffGU: string,
+    staffName: string,
+    staffType: string,
+  ): Promise<Record<string, unknown>> {
+    const r = await this.requestMultiWebParms(
+      "SynergyMailGetRecipientAddressing",
+      {
+        childIntID: 0,
+        Recipients: {
+          _StaffGU: staffGU,
+          _StaffName: staffName,
+          _StaffType: staffType,
+        },
+      },
+    );
+    return r ?? {};
+  }
+
+  async getMyAccount(): Promise<Record<string, unknown>> {
+    const r = await this.requestMultiWebParms("GetMyAccountData", {
+      LanguageCode: "00",
+    });
+    return r?.PXPMyAccountData ?? {};
+  }
+
+  async getChildList(): Promise<Record<string, unknown>> {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const syncDate = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const r = await this.requestMultiWebParms("ChildList", {
+      iOSDeviceToken:
+        "5f555d6cf73028d9aee682947ace6dc7425509fd3f98fb18b637bedc8d68ac85",
+      LanguageCode: "00",
+      MobileAppLastSyncDateTime: syncDate,
+    });
+    return r ?? {};
+  }
+
+  async getCalendarDay(date: string): Promise<Record<string, unknown>> {
+    const cookie = await this.getSessionCookie();
+    const res = await fetchWithTimeout(
+      `https://${this.domain}${this.pathPrefix}/Service/PXP2Communication.asmx/AttGetCalendarDay`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json, */*",
+          Cookie: cookie,
+        },
+        body: JSON.stringify({ agu: 0, date }),
+      },
+    );
+    const raw = await res.text().catch(() => "");
+    if (!res.ok) throw upstreamError("AttGetCalendarDay", res.status, raw);
+    const json = JSON.parse(raw);
+    if (json?.d?.Error) throw new Error(String(json.d.Error));
+    return json?.d?.Data ?? {};
   }
 
   async getSchedule(termIndex?: number): Promise<Schedule> {
