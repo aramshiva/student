@@ -16,11 +16,15 @@ interface AccountData {
 
 function htmlToLines(value: string | number | null | undefined): string | null {
   if (value == null || value === "") return null;
-  const cleaned = String(value)
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&amp;/g, "&")
+  let text = String(value).replace(/<br\s*\/?>/gi, "\n");
+  let prev: string;
+  do {
+    prev = text;
+    text = text.replace(/<[^>]*>/g, "");
+  } while (text !== prev);
+  const cleaned = text
     .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
     .trim();
   return cleaned || null;
 }
