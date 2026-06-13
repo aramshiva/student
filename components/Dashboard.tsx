@@ -336,7 +336,6 @@ export default function Dashboard({
                                 : undefined;
                             const override = hypoLetters[id];
                             return (
-                              // keep clicks here from opening the course
                               <div
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-block"

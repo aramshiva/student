@@ -281,11 +281,11 @@ export function GradeChart({
             </defs>
             <CartesianGrid vertical={false} />
             <YAxis
-              hide
-              domain={[yMin, "dataMax + 1"]}
-              allowDecimals={false}
-              allowDataOverflow
-            />
+                hide
+                domain={[yMin, "dataMax + 1"]}
+                allowDecimals={false}
+                allowDataOverflow
+              />
             <XAxis
               dataKey="date"
               tickLine={false}
