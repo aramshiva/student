@@ -77,7 +77,7 @@ export default function AccountPage() {
       <div className="p-8 space-y-5 min-h-screen dark:bg-zinc-900">
         <div className="flex items-center gap-8">
           {loading ? (
-            <Skeleton className="h-22 w-22 rounded-full" />
+            <Skeleton className="h-20 w-20 rounded-full" />
           ) : (
             photoBase64 && (
               <Image
