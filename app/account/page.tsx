@@ -85,7 +85,7 @@ export default function AccountPage() {
                 alt="Student Photo"
                 width={80}
                 height={80}
-                className="rounded-full h-22 w-22 aspect-square object-cover border"
+                className="rounded-full h-20 w-20 aspect-square object-cover border"
               />
             )
           )}
