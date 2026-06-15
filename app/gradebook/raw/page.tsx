@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 export default function GradebookApiTestPage() {
   const [data, setData] = React.useState<unknown | null>(null);
@@ -12,24 +13,13 @@ export default function GradebookApiTestPage() {
       setLoading(true);
       setError(null);
       try {
-        const credsRaw = localStorage.getItem("Student.creds");
-        if (!credsRaw) {
+        const creds = getStoredCredentials();
+        if (!creds) {
           setError("No credentials found in localStorage (Student.creds)");
           setLoading(false);
           return;
         }
-        const creds = JSON.parse(credsRaw || "{}");
-        const res = await fetch("/api/synergy/gradebook", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(creds),
-        });
-        const json = await res.json();
-        if (!res.ok) {
-          setError(json?.error || `HTTP ${res.status}`);
-        } else {
-          setData(json);
-        }
+        setData(await synergyPost("/api/synergy/gradebook", creds));
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         setError(message);

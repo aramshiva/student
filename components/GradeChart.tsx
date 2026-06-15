@@ -111,6 +111,12 @@ export function GradeChart({
     return chartData.filter((d) => new Date(d.date) >= start);
   }, [chartData, timeRange]);
 
+  const yMin = React.useMemo(() => {
+    if (!filteredData.length) return 0;
+    const lowest = Math.min(...filteredData.map((d) => d.grade));
+    return Math.max(0, Math.floor(lowest * 0.5));
+  }, [filteredData]);
+
   const isControlled = typeof sticky === "boolean";
   const [uncontrolledSticky, setUncontrolledSticky] = React.useState(false);
   const effectiveSticky = isControlled
@@ -157,7 +163,12 @@ export function GradeChart({
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} />
-              <YAxis hide domain={[0, "dataMax + 1"]} allowDecimals={false} />
+              <YAxis
+                hide
+                domain={[yMin, "dataMax + 1"]}
+                allowDecimals={false}
+                allowDataOverflow
+              />
               <XAxis
                 dataKey="date"
                 tickLine={false}
@@ -182,7 +193,7 @@ export function GradeChart({
                 type="linear"
                 fill="url(#fillGrade)"
                 stroke="var(--color-grade)"
-                stackId="a"
+                baseValue={yMin}
               />
             </AreaChart>
           </ChartContainer>
@@ -269,7 +280,12 @@ export function GradeChart({
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
-            <YAxis hide domain={[0, "dataMax + 1"]} allowDecimals={false} />
+            <YAxis
+              hide
+              domain={[yMin, "dataMax + 1"]}
+              allowDecimals={false}
+              allowDataOverflow
+            />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -306,7 +322,7 @@ export function GradeChart({
               type="linear"
               fill="url(#fillGrade)"
               stroke="var(--color-grade)"
-              stackId="a"
+              baseValue={yMin}
             />
             <ChartLegend
               content={({ payload, verticalAlign }) => (

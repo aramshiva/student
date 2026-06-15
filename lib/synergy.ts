@@ -73,7 +73,10 @@ const alwaysArray = new Set<string>([
   "SynergyMailDataXML.InboxItemListings.MessageXML",
   "SynergyMailDataXML.SentItemListings.MessageXML",
   "SynergyMailDataXML.DraftItemListings.MessageXML",
+  "SynergyMailDataXML.ArchiveItemListings.MessageXML",
   "SynergyMailDataXML.InboxItemListings.MessageXML.Attachments.AttachmentXML",
+  "SynergyMailDataXML.ArchiveItemListings.MessageXML.Attachments.AttachmentXML",
+  "SynergyMailMessageBodyXML.MessageListings.MessageBodyXML",
   "RecipientXML",
 
   "Gradebook.Courses.Course",
@@ -95,7 +98,7 @@ const builder = new XMLBuilder({
   attributeNamePrefix: "_",
 });
 
-const escapeXmlText = (s: string) =>
+export const escapeXmlText = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const sanitizeDomain = (raw: string): { host: string; pathPrefix: string } => {
@@ -161,6 +164,7 @@ interface MinimalFetchInit {
   body?: string | ArrayBuffer | Uint8Array;
   signal?: AbortSignal;
 }
+
 async function fetchWithTimeout(
   input: RequestInfo,
   init: MinimalFetchInit = {},
@@ -177,18 +181,43 @@ async function fetchWithTimeout(
   const id = setTimeout(() => c.abort(), ms);
   try {
     return await fetch(input, {
-      ...(init as any),
+      ...(init as RequestInit),
       signal: c.signal,
       cache: "no-store" as const,
-    }); // eslint-disable-line @typescript-eslint/no-explicit-any
+    });
   } finally {
     clearTimeout(id);
   }
 }
 
+// only include upstream response bodies in errors during dev,
+// resulting in no logging of user data in production.
+function upstreamError(label: string, status: number, raw: string): Error {
+  return new Error(
+    process.env.NODE_ENV === "development"
+      ? `HTTP ${status} from ${label}: ${raw.slice(0, 400)}`
+      : `HTTP ${status} from ${label}`,
+  );
+}
+
 type Operation =
   | "ProcessWebServiceRequest"
   | "ProcessWebServiceRequestMultiWeb";
+
+interface PxpJsonEnvelope {
+  d?: {
+    Data?: {
+      success?: boolean;
+      data?: unknown;
+      totalCount?: number;
+      refreshSearch?: boolean;
+      mainResults?: unknown;
+      altResults?: unknown;
+      teacherResults?: unknown;
+    };
+    Error?: string;
+  };
+}
 
 export class SynergyClient {
   private domain: string;
@@ -210,10 +239,23 @@ export class SynergyClient {
       throw new Error("Invalid ZIP code (expect 5 digits)");
     }
     const paramStr = `&lt;Parms&gt;&lt;Key&gt;5E4B7859-B805-474B-A833-FDB15D205D40&lt;/Key&gt;&lt;MatchToDistrictZipCode&gt;${zipStr}&lt;/MatchToDistrictZipCode&gt;&lt;/Parms&gt;`;
-    const soapBody = `<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <ProcessWebServiceRequest xmlns=\"http://edupoint.com/webservices/\">\n      <userID>EdupointDistrictInfo</userID>\n      <password>Edup01nt</password>\n      <skipLoginLog>1</skipLoginLog>\n      <parent>0</parent>\n      <webServiceHandleName>HDInfoServices</webServiceHandleName>\n      <methodName>GetMatchingDistrictList</methodName>\n      <paramStr>${paramStr}</paramStr>\n    </ProcessWebServiceRequest>\n  </soap:Body>\n</soap:Envelope>`;
+    const soapBody = `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <ProcessWebServiceRequest xmlns="http://edupoint.com/webservices/">
+      <userID>EdupointDistrictInfo</userID>
+      <password>Edup01nt</password>
+      <skipLoginLog>1</skipLoginLog>
+      <parent>0</parent>
+      <webServiceHandleName>HDInfoServices</webServiceHandleName>
+      <methodName>GetMatchingDistrictList</methodName>
+      <paramStr>${paramStr}</paramStr>
+    </ProcessWebServiceRequest>
+  </soap:Body>
+</soap:Envelope>`;
 
-    // builds a SOAP body to edupoint's support database, which returns all districts using StudentVUE.
-    const res = await fetch(
+    // queries edupoint's support database, which knows every district using StudentVUE
+    const res = await fetchWithTimeout(
       "https://support.edupoint.com/Service/HDInfoCommunication.asmx",
       {
         method: "POST",
@@ -229,67 +271,55 @@ export class SynergyClient {
     if (!res.ok) {
       throw new Error(`District lookup failed HTTP ${res.status}`);
     }
-    const outerParser = new XMLParser({
+
+    const districtParser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: "_",
     });
-    let outer: unknown;
+    let outer: Record<string, unknown>;
     try {
-      outer = outerParser.parse(text);
+      outer = districtParser.parse(text);
     } catch {
       throw new Error("Failed to parse district SOAP response");
     }
-    const resultStr = (
-      (
-        (
-          (outer as Record<string, unknown>)?.["soap:Envelope"] as
-            | Record<string, unknown>
-            | undefined
-        )?.["soap:Body"] as Record<string, unknown> | undefined
-      )?.ProcessWebServiceRequestResponse as Record<string, unknown> | undefined
-    )?.ProcessWebServiceRequestResult as unknown;
-    if (!resultStr || typeof resultStr !== "string") {
+    const resultStr = drill(
+      outer,
+      "soap:Envelope",
+      "soap:Body",
+      "ProcessWebServiceRequestResponse",
+      "ProcessWebServiceRequestResult",
+    );
+    if (typeof resultStr !== "string" || !resultStr) {
       return [];
     }
-    const unescaped = (resultStr as string)
+    const unescaped = resultStr
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
       .replace(/&amp;/g, "&");
-    let inner: unknown;
+    let inner: Record<string, unknown>;
     try {
-      inner = outerParser.parse(unescaped);
+      inner = districtParser.parse(unescaped);
     } catch {
       return [];
     }
-    const districtContainer =
-      (
-        (inner as Record<string, unknown>)?.DistrictLists as
-          | Record<string, unknown>
-          | undefined
-      )?.DistrictList ||
-      (
-        (inner as Record<string, unknown>)?.DistrictLists as
-          | Record<string, unknown>
-          | undefined
-      )?.DistrictInfos;
-    const rawNodes: unknown = (
-      districtContainer as Record<string, unknown> | undefined
-    )?.DistrictInfo;
+    const rawNodes =
+      drill(inner, "DistrictLists", "DistrictList", "DistrictInfo") ??
+      drill(inner, "DistrictLists", "DistrictInfos", "DistrictInfo");
     const districtNodes: unknown[] = Array.isArray(rawNodes)
       ? rawNodes
       : rawNodes
         ? [rawNodes]
         : [];
-    const districts = districtNodes
+    return districtNodes
       .map((d) => {
         const obj = d as Record<string, unknown>;
-        const name = (obj._Name || obj.Name || "") as string;
-        const address = (obj._Address || obj.Address || "") as string;
-        const host = (obj._PvueURL || obj.PvueURL || "") as string;
-        return { name, address, host } satisfies DistrictInfo;
+        return {
+          name: String(obj._Name || obj.Name || ""),
+          address: String(obj._Address || obj.Address || ""),
+          host: String(obj._PvueURL || obj.PvueURL || ""),
+        } satisfies DistrictInfo;
       })
       .filter((d) => d.name && d.host);
-    return districts;
   }
 
   private endpoint() {
@@ -300,20 +330,21 @@ export class SynergyClient {
     operation: Operation,
     methodName: string,
     params: unknown,
+    paramRoot: "Params" | "Parms" = "Params",
   ) {
-    const paramXml = builder.build({ Params: params ?? {} });
+    const paramXml = builder.build({ [paramRoot]: params ?? {} });
     const paramStr = escapeXmlText(paramXml);
 
     return `<?xml version="1.0" encoding="utf-8"?>
 <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
   <soap12:Body>
     <${operation} xmlns="http://edupoint.com/webservices/">
-      <userID>${this.userID}</userID>
-      <password>${this.password}</password>
+      <userID>${escapeXmlText(this.userID)}</userID>
+      <password>${escapeXmlText(this.password)}</password>
       <skipLoginLog>true</skipLoginLog>
       <parent>false</parent>
       <webServiceHandleName>PXPWebServices</webServiceHandleName>
-      <methodName>${methodName}</methodName>
+      <methodName>${escapeXmlText(methodName)}</methodName>
       <paramStr>${paramStr}</paramStr>
     </${operation}>
   </soap12:Body>
@@ -324,20 +355,16 @@ export class SynergyClient {
     operation: Operation,
     methodName: string,
     params?: unknown,
+    paramRoot: "Params" | "Parms" = "Params",
   ) {
     const res = await fetchWithTimeout(this.endpoint(), {
       method: "POST",
       headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
-      body: this.buildEnvelope(operation, methodName, params),
+      body: this.buildEnvelope(operation, methodName, params, paramRoot),
     });
 
     const raw = await res.text().catch(() => "");
-    if (!res.ok)
-      throw new Error(
-        process.env.NODE_ENV === "development" // only log in dev, resuting in no logging of user data.
-          ? `HTTP ${res.status} from Synergy: ${raw.slice(0, 400)}`
-          : `HTTP ${res.status} from Synergy`,
-      );
+    if (!res.ok) throw upstreamError("Synergy", res.status, raw);
 
     const outer = parser.parse(raw);
     const responseNode =
@@ -366,6 +393,15 @@ export class SynergyClient {
       "ProcessWebServiceRequestMultiWeb",
       methodName,
       params,
+    );
+  }
+
+  private requestMultiWebParms(methodName: string, parms: unknown) {
+    return this.soapRequest(
+      "ProcessWebServiceRequestMultiWeb",
+      methodName,
+      parms,
+      "Parms",
     );
   }
 
@@ -421,6 +457,135 @@ export class SynergyClient {
     return r?.SynergyMailDataXML ?? {};
   }
 
+  async getMailFolderData(folder: string): Promise<MailData> {
+    const r = await this.requestMultiWebParms("SynergyMailGetData", {
+      childIntID: 0,
+      FolderGU: folder,
+      LoadMessageBody: false,
+    });
+    return r?.SynergyMailDataXML ?? {};
+  }
+
+  async getMailBodies(guids: string[]): Promise<Map<string, string>> {
+    const bodyMap = new Map<string, string>();
+    if (guids.length === 0) return bodyMap;
+    const r = await this.requestMultiWebParms("SynergyMailGetMessageBody", {
+      childIntID: 0,
+      SmMessageGUs: guids.join(", "),
+      SupportingMessageTextElement: true,
+    });
+    const rawBodies =
+      r?.SynergyMailMessageBodyXML?.MessageListings?.MessageBodyXML;
+    const bodies: Record<string, unknown>[] = rawBodies
+      ? Array.isArray(rawBodies)
+        ? rawBodies
+        : [rawBodies]
+      : [];
+    for (const b of bodies) {
+      const guid = b._SMMessageGU;
+      const html = b.MessageTextElement;
+      if (typeof guid === "string" && typeof html === "string") {
+        bodyMap.set(guid, html);
+      }
+    }
+    return bodyMap;
+  }
+
+  async markMailRead(
+    smMsgPersonGU: string,
+    markAsUnread: boolean,
+  ): Promise<void> {
+    await this.requestMultiWebParms("SynergyMailReadOrDeleteMsg", {
+      childIntID: 0,
+      SynergyEmailMarkList: {
+        _SmMessagePersonGUList: smMsgPersonGU,
+        _ProcessRead: "true",
+        _MarkAsUnread: markAsUnread ? "true" : "false",
+      },
+    });
+  }
+
+  // archive=3/archive,inbox/restore=0/inbox
+  async moveMailToFolder(
+    smMsgPersonGU: string,
+    folderType: string,
+    folderName: string,
+  ): Promise<void> {
+    const r = await this.requestMultiWebParms(
+      "SynergyMailMoveMessageToFolder",
+      {
+        SynergyEmailMoveToFolder: {
+          _SmMessagePersonGU: smMsgPersonGU,
+          _FolderType: folderType,
+          _SmFolderGU: "",
+          _FolderName: folderName,
+        },
+      },
+    );
+    const err = r?.SynergyEmailSuccessMessage?._error;
+    if (err) throw new Error(String(err));
+  }
+
+  async getMailRecipient(
+    staffGU: string,
+    staffName: string,
+    staffType: string,
+  ): Promise<Record<string, unknown>> {
+    const r = await this.requestMultiWebParms(
+      "SynergyMailGetRecipientAddressing",
+      {
+        childIntID: 0,
+        Recipients: {
+          _StaffGU: staffGU,
+          _StaffName: staffName,
+          _StaffType: staffType,
+        },
+      },
+    );
+    return r ?? {};
+  }
+
+  async getMyAccount(): Promise<Record<string, unknown>> {
+    const r = await this.requestMultiWebParms("GetMyAccountData", {
+      LanguageCode: "00",
+    });
+    return r?.PXPMyAccountData ?? {};
+  }
+
+  async getChildList(): Promise<Record<string, unknown>> {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const syncDate = `${pad(now.getMonth() + 1)}/${pad(now.getDate())}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const r = await this.requestMultiWebParms("ChildList", {
+      iOSDeviceToken:
+        "5f555d6cf73028d9aee682947ace6dc7425509fd3f98fb18b637bedc8d68ac85",
+      LanguageCode: "00",
+      MobileAppLastSyncDateTime: syncDate,
+    });
+    return r ?? {};
+  }
+
+  async getCalendarDay(date: string): Promise<Record<string, unknown>> {
+    const cookie = await this.getSessionCookie();
+    const res = await fetchWithTimeout(
+      `https://${this.domain}${this.pathPrefix}/Service/PXP2Communication.asmx/AttGetCalendarDay`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json, */*",
+          Cookie: cookie,
+        },
+        body: JSON.stringify({ agu: 0, date }),
+      },
+    );
+    const raw = await res.text().catch(() => "");
+    if (!res.ok) throw upstreamError("AttGetCalendarDay", res.status, raw);
+    const json = JSON.parse(raw);
+    if (json?.d?.Error) throw new Error(String(json.d.Error));
+    return json?.d?.Data ?? {};
+  }
+
   async getSchedule(termIndex?: number): Promise<Schedule> {
     const r = await this.request(
       "StudentClassList",
@@ -460,6 +625,7 @@ export class SynergyClient {
     });
     return r ?? {};
   }
+
   async getHealthInfo(options?: {
     childIntID?: number;
     healthConditions?: boolean;
@@ -483,181 +649,34 @@ export class SynergyClient {
   }
 
   private async getSessionCookie(): Promise<string> {
-    const c = new AbortController();
-    const id = setTimeout(() => c.abort(), 15000);
-    try {
-      const res = await globalThis.fetch(this.endpoint(), {
-        method: "POST",
-        headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
-        body: this.buildEnvelope("ProcessWebServiceRequest", "StudentInfo", {}),
-        signal: c.signal,
-        cache: "no-store",
-      });
-
-      if (!res.ok) throw new Error(`Session init HTTP ${res.status}`);
-
-      const setCookie =
-        res.headers.getSetCookie?.().join("; ") ||
-        res.headers.get("set-cookie") ||
-        "";
-      const match = setCookie.match(/ASP\.NET_SessionId=([^;\s]+)/i);
-      if (!match) throw new Error("Missing ASP.NET_SessionId");
-      return `ASP.NET_SessionId=${match[1]}`;
-    } finally {
-      clearTimeout(id);
-    }
-  }
-
-  private pxp2Endpoint() {
-    return `https://${this.domain}${this.pathPrefix}/Service/PXP2Communication.asmx/DXDataGridRequest`;
-  }
-
-  async getCourseCatalog(termIndex = 1): Promise<CourseCatalogResponse> {
-    const cookie = await this.getSessionCookie();
-
-    const res = await fetchWithTimeout(this.pxp2Endpoint(), {
+    const res = await fetchWithTimeout(this.endpoint(), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json, */*",
-        Cookie: cookie,
-      },
-      body: JSON.stringify({
-        request: {
-          agu: 0,
-          dataRequestType: "Load",
-          gridParameters: JSON.stringify({
-            AGU: "0",
-            TermIndexForHomeSchool: termIndex,
-          }),
-        },
-      }),
+      headers: { "Content-Type": "application/soap+xml; charset=utf-8" },
+      body: this.buildEnvelope("ProcessWebServiceRequest", "StudentInfo", {}),
     });
 
-    const raw = await res.text().catch(() => "");
-    if (!res.ok)
-      throw new Error(
-        process.env.NODE_ENV === "development"
-          ? `HTTP ${res.status} from DXDataGrid: ${raw.slice(0, 400)}`
-          : `HTTP ${res.status} from DXDataGrid`,
-      );
+    if (!res.ok) throw new Error(`Session init HTTP ${res.status}`);
 
-    const json = JSON.parse(raw);
-    const inner = json?.d?.Data;
-    if (!inner || !inner.success) {
-      throw new Error(json?.d?.Error || "DXDataGrid request failed");
-    }
-
-    return {
-      success: inner.success,
-      data: inner.data ?? [],
-      totalCount: inner.totalCount ?? 0,
-    };
+    const setCookie =
+      res.headers.getSetCookie?.().join("; ") ||
+      res.headers.get("set-cookie") ||
+      "";
+    const match = setCookie.match(/ASP\.NET_SessionId=([^;\s]+)/i);
+    if (!match) throw new Error("Missing ASP.NET_SessionId");
+    return `ASP.NET_SessionId=${match[1]}`;
   }
 
-  async getCourseRequests(
-    termIndex = 1,
-    searchValue: string | null = null,
-  ): Promise<CourseCatalogResponse> {
-    const cookie = await this.getSessionCookie();
-
-    const res = await fetchWithTimeout(this.pxp2Endpoint(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json, */*",
-        Cookie: cookie,
-      },
-      body: JSON.stringify({
-        request: {
-          agu: 0,
-          dataRequestType: "Load",
-          gridParameters: JSON.stringify({
-            AGU: "0",
-            TermIndexForHomeSchool: termIndex,
-          }),
-          dataSourceTypeName: "9D8B759A-CDAF-47D5-9036-085782D785DA",
-          loadOptions: {
-            searchOperation: "contains",
-            searchValue,
-          },
-        },
-      }),
-    });
-
-    const raw = await res.text().catch(() => "");
-    if (!res.ok)
-      throw new Error(
-        process.env.NODE_ENV === "development"
-          ? `HTTP ${res.status} from DXDataGrid: ${raw.slice(0, 400)}`
-          : `HTTP ${res.status} from DXDataGrid`,
-      );
-
-    const json = JSON.parse(raw);
-    const inner = json?.d?.Data;
-    if (!inner || !inner.success) {
-      throw new Error(json?.d?.Error || "DXDataGrid request failed");
-    }
-
-    return {
-      success: inner.success,
-      data: inner.data ?? [],
-      totalCount: inner.totalCount ?? 0,
-    };
-  }
-
-  private courseRequestEndpoint() {
-    return `https://${this.domain}${this.pathPrefix}/PXP2_CourseRequest.aspx/AddCourse`;
-  }
-
-  async addCourse(schoolYearCourseGU: string): Promise<AddCourseResponse> {
-    const cookie = await this.getSessionCookie();
-
-    const res = await fetchWithTimeout(this.courseRequestEndpoint(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json, */*",
-        Cookie: cookie,
-      },
-      body: JSON.stringify({
-        request: {
-          agu: 0,
-          schoolYearCourseGU,
-        },
-      }),
-    });
-
-    const raw = await res.text().catch(() => "");
-    if (!res.ok)
-      throw new Error(
-        process.env.NODE_ENV === "development"
-          ? `HTTP ${res.status} from AddCourse: ${raw.slice(0, 400)}`
-          : `HTTP ${res.status} from AddCourse`,
-      );
-
-    const json = JSON.parse(raw);
-    const inner = json?.d?.Data;
-    if (json?.d?.Error) {
-      throw new Error(json.d.Error);
-    }
-    if (!inner) {
-      throw new Error("AddCourse request failed");
-    }
-
-    return {
-      refreshSearch: inner.refreshSearch ?? false,
-      mainResults: inner.mainResults ?? [],
-      altResults: inner.altResults ?? null,
-      teacherResults: inner.teacherResults ?? [],
-    };
-  }
-
-  async removeCourse(crAccessGU: string): Promise<AddCourseResponse> {
+  // the PXP2 endpoints are JSON-over-HTTP and need the session cookie from a
+  // prior SOAP login rather than per-request credentials
+  private async pxp2Request(
+    path: string,
+    label: string,
+    request: Record<string, unknown>,
+  ): Promise<NonNullable<NonNullable<PxpJsonEnvelope["d"]>["Data"]>> {
     const cookie = await this.getSessionCookie();
 
     const res = await fetchWithTimeout(
-      `https://${this.domain}${this.pathPrefix}/PXP2_CourseRequest.aspx/RemoveCourse`,
+      `https://${this.domain}${this.pathPrefix}${path}`,
       {
         method: "POST",
         headers: {
@@ -665,41 +684,99 @@ export class SynergyClient {
           Accept: "application/json, */*",
           Cookie: cookie,
         },
-        body: JSON.stringify({
-          request: {
-            agu: 0,
-            crAccessGU,
-          },
-        }),
+        body: JSON.stringify({ request: { agu: 0, ...request } }),
       },
     );
 
     const raw = await res.text().catch(() => "");
-    if (!res.ok)
-      throw new Error(
-        process.env.NODE_ENV === "development"
-          ? `HTTP ${res.status} from RemoveCourse: ${raw.slice(0, 400)}`
-          : `HTTP ${res.status} from RemoveCourse`,
-      );
+    if (!res.ok) throw upstreamError(label, res.status, raw);
 
-    const json = JSON.parse(raw);
+    const json: PxpJsonEnvelope = JSON.parse(raw);
+    if (json?.d?.Error) throw new Error(json.d.Error);
     const inner = json?.d?.Data;
-    if (json?.d?.Error) {
-      throw new Error(json.d.Error);
-    }
-    if (!inner) {
-      throw new Error("RemoveCourse request failed");
-    }
+    if (!inner) throw new Error(`${label} request failed`);
+    return inner;
+  }
 
+  private async dxDataGridRequest(
+    request: Record<string, unknown>,
+  ): Promise<CourseCatalogResponse> {
+    const inner = await this.pxp2Request(
+      "/Service/PXP2Communication.asmx/DXDataGridRequest",
+      "DXDataGrid",
+      request,
+    );
+    if (!inner.success) throw new Error("DXDataGrid request failed");
+    return {
+      success: inner.success,
+      data: (inner.data as CourseCatalogEntry[]) ?? [],
+      totalCount: inner.totalCount ?? 0,
+    };
+  }
+
+  async getCourseCatalog(termIndex = 1): Promise<CourseCatalogResponse> {
+    return this.dxDataGridRequest({
+      dataRequestType: "Load",
+      gridParameters: JSON.stringify({
+        AGU: "0",
+        TermIndexForHomeSchool: termIndex,
+      }),
+    });
+  }
+
+  async getCourseRequests(
+    termIndex = 1,
+    searchValue: string | null = null,
+  ): Promise<CourseCatalogResponse> {
+    return this.dxDataGridRequest({
+      dataRequestType: "Load",
+      gridParameters: JSON.stringify({
+        AGU: "0",
+        TermIndexForHomeSchool: termIndex,
+      }),
+      dataSourceTypeName: "9D8B759A-CDAF-47D5-9036-085782D785DA",
+      loadOptions: {
+        searchOperation: "contains",
+        searchValue,
+      },
+    });
+  }
+
+  private async courseRequestAction(
+    action: "AddCourse" | "RemoveCourse",
+    request: Record<string, unknown>,
+  ): Promise<AddCourseResponse> {
+    const inner = await this.pxp2Request(
+      `/PXP2_CourseRequest.aspx/${action}`,
+      action,
+      request,
+    );
     return {
       refreshSearch: inner.refreshSearch ?? false,
-      mainResults: inner.mainResults ?? [],
-      altResults: inner.altResults ?? null,
-      teacherResults: inner.teacherResults ?? [],
+      mainResults: (inner.mainResults as CourseRequestEntry[]) ?? [],
+      altResults: (inner.altResults as CourseRequestEntry[] | null) ?? null,
+      teacherResults: (inner.teacherResults as unknown[]) ?? [],
     };
+  }
+
+  async addCourse(schoolYearCourseGU: string): Promise<AddCourseResponse> {
+    return this.courseRequestAction("AddCourse", { schoolYearCourseGU });
+  }
+
+  async removeCourse(crAccessGU: string): Promise<AddCourseResponse> {
+    return this.courseRequestAction("RemoveCourse", { crAccessGU });
   }
 
   async call<T = unknown>(methodName: string, params?: unknown): Promise<T> {
     return this.request(methodName, params) as Promise<T>;
   }
+}
+
+function drill(obj: unknown, ...keys: string[]): unknown {
+  let cur: unknown = obj;
+  for (const key of keys) {
+    if (!cur || typeof cur !== "object") return undefined;
+    cur = (cur as Record<string, unknown>)[key];
+  }
+  return cur;
 }

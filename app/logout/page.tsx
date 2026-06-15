@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { clearStoredCredentials } from "@/lib/clientApi";
 
 export default function LogoutPage() {
   const router = useRouter();
 
   useEffect(() => {
-    localStorage.removeItem("Student.creds");
+    clearStoredCredentials();
 
     router.push("/login");
   }, [router]);

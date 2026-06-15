@@ -1,10 +1,13 @@
 "use client";
 
+import * as React from "react";
 import { Course, Mark } from "@/types/gradebook";
 import {
   loadCustomGPAScale,
+  loadCustomGradeBounds,
   numericToLetterGrade,
   loadCalculateGradesEnabled,
+  formatDate,
 } from "@/utils/gradebook";
 import {
   Select,
@@ -13,6 +16,9 @@ import {
   SelectItem,
   SelectValue,
 } from "./ui/select";
+import { Checkbox } from "./ui/checkbox";
+import { Button } from "./ui/button";
+import { RotateCcw } from "lucide-react";
 
 function getCurrentMark(marks: Mark | Mark[]): Mark | null {
   if (Array.isArray(marks)) {
@@ -69,6 +75,15 @@ export default function Dashboard({
   const courses: Course[] = gbRoot?.Courses?.Course || [];
   const calcGrades = loadCalculateGradesEnabled();
 
+  const [hypotheticalMode, setHypotheticalMode] = React.useState(false);
+  const [hypoLetters, setHypoLetters] = React.useState<Record<string, string>>(
+    {},
+  );
+  const letterOptions = React.useMemo(
+    () => Array.from(new Set(loadCustomGradeBounds().map((b) => b.letter))),
+    [],
+  );
+
   function recomputeCoursePercent(course: Course): number | null {
     const currentMark = getCurrentMark(course.Marks.Mark);
     if (!currentMark) return null;
@@ -112,6 +127,28 @@ export default function Dashboard({
     ? (totalPoints / validCourses.length).toFixed(2)
     : "N/A";
 
+  const hasOverrides =
+    hypotheticalMode && Object.keys(hypoLetters).length > 0;
+  const hypoBasis = computationBasis.map((c) => {
+    const override = hypotheticalMode
+      ? hypoLetters[c.course._CourseID]
+      : undefined;
+    if (!override) return c;
+    return {
+      ...c,
+      letter: override,
+      isValidForGPA: gpaScale[override] != null,
+    };
+  });
+  const hypoValid = hypoBasis.filter((c) => c.isValidForGPA);
+  const hypoPoints = hypoValid.reduce(
+    (acc, c) => acc + (gpaScale[c.letter] ?? 0),
+    0,
+  );
+  const hypoGPA = hypoValid.length
+    ? (hypoPoints / hypoValid.length).toFixed(2)
+    : "N/A";
+
   const totalGPA = (() => {
     if (!cumGPA || validCourses.length === 0) return null;
     const combinedPoints = cumGPA.rawPoints + totalPoints;
@@ -125,6 +162,20 @@ export default function Dashboard({
     };
   })();
 
+  const hypoTotalGPA = (() => {
+    if (!cumGPA || hypoValid.length === 0) return null;
+    const combinedPoints = cumGPA.rawPoints + hypoPoints;
+    const combinedCredits = cumGPA.rawCredits + hypoValid.length;
+    return (combinedPoints / combinedCredits).toFixed(4);
+  })();
+
+  const arrowClass = (from: string, to: string) =>
+    Number(to) > Number(from)
+      ? "text-green-600 dark:text-green-400"
+      : Number(to) < Number(from)
+        ? "text-red-600 dark:text-red-400"
+        : "text-zinc-500";
+
   return (
     <>
       <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
@@ -134,39 +185,61 @@ export default function Dashboard({
             {!!reportingPeriods.length && (
               <div className="flex items-center gap-2 text-sm">
                 <label className="font-medium">Reporting Period:</label>
-                <Select
-                  disabled={isLoading}
-                  value={
-                    selectedReportingPeriod != null
-                      ? String(selectedReportingPeriod)
-                      : undefined
-                  }
-                  onValueChange={(val) =>
-                    onSelectReportingPeriod?.(Number(val))
-                  }
-                >
-                  <SelectTrigger className="w-60">
-                    <SelectValue
-                      className="text-xs"
-                      placeholder="Select period"
-                    />
-                  </SelectTrigger>
-                  <SelectContent className="p-1">
-                    {reportingPeriods.map((rp) => (
-                      <SelectItem key={rp.index} value={rp.index.toString()}>
-                        {rp.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col gap-0.5">
+                  <Select
+                    disabled={isLoading}
+                    value={
+                      selectedReportingPeriod != null
+                        ? String(selectedReportingPeriod)
+                        : undefined
+                    }
+                    onValueChange={(val) =>
+                      onSelectReportingPeriod?.(Number(val))
+                    }
+                  >
+                    <SelectTrigger className="w-60">
+                      <SelectValue
+                        className="text-xs"
+                        placeholder="Select period"
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="p-1">
+                      {reportingPeriods.map((rp) => (
+                        <SelectItem key={rp.index} value={rp.index.toString()}>
+                          {rp.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {(() => {
+                    const selected = reportingPeriods.find(
+                      (rp) => rp.index === selectedReportingPeriod,
+                    );
+                    if (!selected?.start || !selected?.end) return null;
+                    return (
+                      <p className="text-xs text-zinc-500">
+                        {formatDate(selected.start)} –{" "}
+                        {formatDate(selected.end)}
+                      </p>
+                    );
+                  })()}
+                </div>
               </div>
             )}
           </div>
-          {gpa !== "N/A" && (
+          {(gpa !== "N/A" || (hasOverrides && hypoGPA !== "N/A")) && (
             <div className="flex items-center space-x-8 md:self-start">
               <div className="text-right">
                 <div className="text-sm text-zinc-500">Semester GPA</div>
-                <div className="text-2xl font-bold">{gpa}</div>
+                <div className="text-2xl font-bold">
+                  {gpa}
+                  {hasOverrides && hypoGPA !== gpa && (
+                    <span className={arrowClass(gpa, hypoGPA)}>
+                      {" "}
+                      → {hypoGPA}
+                    </span>
+                  )}
+                </div>
               </div>
               {cumGPA != null && (
                 <div className="text-right">
@@ -177,11 +250,46 @@ export default function Dashboard({
               {totalGPA != null && cumGPA != null && (
                 <div className="text-right">
                   <div className="text-sm text-zinc-500">{totalGPA.label}</div>
-                  <div className="text-2xl font-bold">{totalGPA.value}</div>
+                  <div className="text-2xl font-bold">
+                    {totalGPA.value}
+                    {hasOverrides &&
+                      hypoTotalGPA != null &&
+                      hypoTotalGPA !== totalGPA.value && (
+                        <span
+                          className={arrowClass(totalGPA.value, hypoTotalGPA)}
+                        >
+                          {" "}
+                          → {hypoTotalGPA}
+                        </span>
+                      )}
+                  </div>
                 </div>
               )}
             </div>
           )}
+        </div>
+
+        <div className="flex items-center justify-end gap-3 pb-3">
+          {hasOverrides && (
+            <Button
+              onClick={() => setHypoLetters({})}
+              size="sm"
+              variant="outline"
+              className="h-8"
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Reset All
+            </Button>
+          )}
+          <label className="flex items-center gap-2 text-xs cursor-pointer">
+            <Checkbox
+              checked={hypotheticalMode}
+              onCheckedChange={(checked) =>
+                setHypotheticalMode(checked === true)
+              }
+            />
+            <span>Hypothetical Mode</span>
+          </label>
         </div>
 
         <div>
@@ -216,10 +324,51 @@ export default function Dashboard({
                     </div>
                     <div className="flex items-end justify-between">
                       <div className="ml-4 pt-2">
-                        <div className="text-3xl font-bold text-left">
-                          {displayScore}
-                        </div>
-                        <div className="text-sm text-zinc-500 text-left">
+                        {hypotheticalMode ? (
+                          (() => {
+                            const id = course._CourseID;
+                            const currentLetter = letterOptions.includes(
+                              displayScore,
+                            )
+                              ? displayScore
+                              : letterOptions.includes(letter)
+                                ? letter
+                                : undefined;
+                            const override = hypoLetters[id];
+                            return (
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-block"
+                              >
+                                <Select
+                                  value={override ?? currentLetter}
+                                  onValueChange={(v) =>
+                                    setHypoLetters((prev) => ({
+                                      ...prev,
+                                      [id]: v,
+                                    }))
+                                  }
+                                >
+                                  <SelectTrigger className="py-5 pl-5 w-24 h-11 text-2xl font-bold">
+                                    <SelectValue placeholder="—" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {letterOptions.map((l) => (
+                                      <SelectItem key={l} value={l}>
+                                        {l}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <div className="text-3xl font-bold text-left">
+                            {displayScore}
+                          </div>
+                        )}
+                        <div className="text-sm text-zinc-500 text-left pt-1">
                           {calcGrades
                             ? Number.isFinite(effectivePct)
                               ? `${(effectivePct as number).toFixed(1)}%`
@@ -227,6 +376,10 @@ export default function Dashboard({
                             : portalRaw > 0
                               ? `${portalRaw.toFixed(1)}%`
                               : "No grade"}
+                          {" "}
+                          {hypotheticalMode && (
+                            <span>({letter})</span>
+                          )}
                         </div>
                       </div>
                       {(() => {

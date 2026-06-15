@@ -66,15 +66,15 @@ interface AssignmentsTableProps {
 
 function ScoreEditor({
   assignmentId,
-  draftScoresRef,
+  initialScore,
+  initialMax,
   setDraftScores,
   onEditScoreRef,
   debounceTimers,
 }: {
   assignmentId: string;
-  draftScoresRef: React.MutableRefObject<
-    Record<string, { score: string; max: string }>
-  >;
+  initialScore: string;
+  initialMax: string;
   setDraftScores: React.Dispatch<
     React.SetStateAction<Record<string, { score: string; max: string }>>
   >;
@@ -85,42 +85,65 @@ function ScoreEditor({
     Record<string, ReturnType<typeof setTimeout>>
   >;
 }) {
-  const draft = draftScoresRef.current[assignmentId];
+  const [score, setScore] = React.useState(initialScore);
+  const [max, setMax] = React.useState(initialMax);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
-  if (!draft) return null;
+  const lastInitial = React.useRef({ score: initialScore, max: initialMax });
+  React.useEffect(() => {
+    const last = lastInitial.current;
+    if (last.score === initialScore && last.max === initialMax) return;
+    lastInitial.current = { score: initialScore, max: initialMax };
+    const active = document.activeElement;
+    if (!containerRef.current?.contains(active)) {
+      setScore(initialScore);
+      setMax(initialMax);
+    }
+  }, [initialScore, initialMax]);
+
+  React.useEffect(() => {
+    const timers = debounceTimers;
+    return () => {
+      if (timers.current[assignmentId]) {
+        clearTimeout(timers.current[assignmentId]);
+        delete timers.current[assignmentId];
+      }
+    };
+  }, [assignmentId, debounceTimers]);
+
+  const commit = (nextScore: string, nextMax: string, immediate = false) => {
+    setDraftScores((prev) => ({
+      ...prev,
+      [assignmentId]: { score: nextScore, max: nextMax },
+    }));
+    if (debounceTimers.current[assignmentId]) {
+      clearTimeout(debounceTimers.current[assignmentId]);
+    }
+    if (immediate) {
+      onEditScoreRef.current?.(assignmentId, nextScore, nextMax);
+    } else {
+      debounceTimers.current[assignmentId] = setTimeout(() => {
+        onEditScoreRef.current?.(assignmentId, nextScore, nextMax);
+      }, 500);
+    }
+  };
 
   return (
-    <div className="flex gap-1 items-center">
+    <div ref={containerRef} className="flex gap-1 items-center">
       <Input
         type="text"
         inputMode="decimal"
         pattern="[0-9]*\.?[0-9]*"
-        defaultValue={draft.score}
+        value={score}
         onChange={(e) => {
           const val = e.target.value;
           if (val !== "" && !/^[0-9]*\.?[0-9]*$/.test(val)) {
             return;
           }
-          const currentMax =
-            draftScoresRef.current[assignmentId]?.max || draft.max;
-          setDraftScores((prev) => ({
-            ...prev,
-            [assignmentId]: { ...prev[assignmentId], score: val },
-          }));
-
-          if (debounceTimers.current[assignmentId]) {
-            clearTimeout(debounceTimers.current[assignmentId]);
-          }
-
-          debounceTimers.current[assignmentId] = setTimeout(() => {
-            onEditScoreRef.current?.(assignmentId, val, currentMax);
-          }, 500);
+          setScore(val);
+          commit(val, max);
         }}
-        onFocus={() => {
-          if (debounceTimers.current[assignmentId]) {
-            clearTimeout(debounceTimers.current[assignmentId]);
-          }
-        }}
+        onBlur={() => commit(score, max, true)}
         className="h-7 w-16 text-xs"
       />
       <span className="text-xs text-zinc-500">/</span>
@@ -128,35 +151,76 @@ function ScoreEditor({
         type="text"
         inputMode="decimal"
         pattern="[0-9]*\.?[0-9]*"
-        defaultValue={draft.max}
+        value={max}
         onChange={(e) => {
           const val = e.target.value;
           if (val !== "" && !/^[0-9]*\.?[0-9]*$/.test(val)) {
             return;
           }
-          const currentScore =
-            draftScoresRef.current[assignmentId]?.score || draft.score;
-          setDraftScores((prev) => ({
-            ...prev,
-            [assignmentId]: { ...prev[assignmentId], max: val },
-          }));
-
-          if (debounceTimers.current[assignmentId]) {
-            clearTimeout(debounceTimers.current[assignmentId]);
-          }
-
-          debounceTimers.current[assignmentId] = setTimeout(() => {
-            onEditScoreRef.current?.(assignmentId, currentScore, val);
-          }, 500);
+          setMax(val);
+          commit(score, val);
         }}
-        onFocus={() => {
-          if (debounceTimers.current[assignmentId]) {
-            clearTimeout(debounceTimers.current[assignmentId]);
-          }
-        }}
+        onBlur={() => commit(score, max, true)}
         className="h-7 w-16 text-xs"
       />
     </div>
+  );
+}
+
+function NameEditor({
+  assignmentId,
+  initialName,
+  onEditNameRef,
+}: {
+  assignmentId: string;
+  initialName: string;
+  onEditNameRef: React.MutableRefObject<
+    ((id: string, name: string) => void) | undefined
+  >;
+}) {
+  const [name, setName] = React.useState(initialName);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const lastInitial = React.useRef(initialName);
+  React.useEffect(() => {
+    if (lastInitial.current === initialName) return;
+    lastInitial.current = initialName;
+    if (document.activeElement !== inputRef.current) {
+      setName(initialName);
+    }
+  }, [initialName]);
+
+  React.useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
+
+  const commit = (val: string, immediate = false) => {
+    if (timer.current) clearTimeout(timer.current);
+    if (immediate) {
+      onEditNameRef.current?.(assignmentId, val);
+    } else {
+      timer.current = setTimeout(() => {
+        onEditNameRef.current?.(assignmentId, val);
+      }, 500);
+    }
+  };
+
+  return (
+    <Input
+      ref={inputRef}
+      type="text"
+      value={name}
+      onChange={(e) => {
+        setName(e.target.value);
+        commit(e.target.value);
+      }}
+      onBlur={() => commit(name, true)}
+      placeholder="Assignment name"
+      className="h-7 text-sm font-medium md:max-w-[18rem]"
+    />
   );
 }
 
@@ -203,6 +267,7 @@ function AssignmentsTableBase({
   hypotheticalMode = false,
   onToggleHypothetical,
   onEditCategory,
+  onEditName,
   onCreateAssignment,
   onDeleteAssignment,
   onResetAll,
@@ -260,7 +325,11 @@ function AssignmentsTableBase({
   >({});
   const onEditScoreRef = React.useRef(onEditScore);
   const onEditCategoryRef = React.useRef(onEditCategory);
+  const onEditNameRef = React.useRef(onEditName);
   const onDeleteAssignmentRef = React.useRef(onDeleteAssignment);
+  React.useEffect(() => {
+    onEditNameRef.current = onEditName;
+  }, [onEditName]);
 
   React.useEffect(() => {
     onEditScoreRef.current = onEditScore;
@@ -304,13 +373,9 @@ function AssignmentsTableBase({
   }, [assignments, isRubric]);
 
   const draftScoresRef = React.useRef(draftScores);
-  React.useEffect(() => {
-    draftScoresRef.current = draftScores;
-  }, [draftScores]);
+  draftScoresRef.current = draftScores;
   const draftNamesRef = React.useRef(draftNames);
-  React.useEffect(() => {
-    draftNamesRef.current = draftNames;
-  }, [draftNames]);
+  draftNamesRef.current = draftNames;
   React.useEffect(() => {
     const timersSnapshot = { ...debounceTimers.current };
     return () => {
@@ -405,6 +470,17 @@ function AssignmentsTableBase({
     return map;
   }, [assignments, getScoreAndMax]);
 
+  const getTypeColorRef = React.useRef(getTypeColor);
+  getTypeColorRef.current = getTypeColor;
+  const expandedDescRef = React.useRef(expandedDesc);
+  expandedDescRef.current = expandedDesc;
+  const assignmentPercentsRef = React.useRef(assignmentPercents);
+  assignmentPercentsRef.current = assignmentPercents;
+  const deltasRef = React.useRef(deltas);
+  deltasRef.current = deltas;
+  const availableCategoriesRef = React.useRef(availableCategories);
+  availableCategoriesRef.current = availableCategories;
+
   const columns: ColumnDef<Assignment>[] = React.useMemo(
     () => [
       {
@@ -441,12 +517,20 @@ function AssignmentsTableBase({
           const shouldTruncate =
             desc && desc.length > DESCRIPTION_TRUNCATE_LENGTH;
           const id = a._GradebookID;
-          const isExpanded = expandedDesc[id];
+          const isExpanded = expandedDescRef.current[id];
           return (
             <div className="space-y-1">
-              <div className="font-medium text-zinc-950 dark:text-white break-words whitespace-pre-line leading-snug">
-                {originalMeasure}
-              </div>
+              {hypotheticalMode ? (
+                <NameEditor
+                  assignmentId={id}
+                  initialName={originalMeasure}
+                  onEditNameRef={onEditNameRef}
+                />
+              ) : (
+                <div className="font-medium text-zinc-950 dark:text-white break-words whitespace-pre-line leading-snug">
+                  {originalMeasure}
+                </div>
+              )}
               {desc && desc.trim().length > 0 ? (
                 <div
                   className="hidden md:block text-xs text-zinc-600 dark:text-zinc-400 break-words whitespace-pre-line"
@@ -502,20 +586,22 @@ function AssignmentsTableBase({
           const a = row.original;
           const curType = (a._Type || "").trim();
 
-          if (hypotheticalMode && availableCategories.length > 0) {
+          if (hypotheticalMode && availableCategoriesRef.current.length > 0) {
             return (
               <CategoryEditor
                 assignmentId={a._GradebookID}
                 currentCategory={curType}
-                availableCategories={availableCategories}
+                availableCategories={availableCategoriesRef.current}
                 onEditCategoryRef={onEditCategoryRef}
-                getTypeColor={getTypeColor}
+                getTypeColor={getTypeColorRef.current}
               />
             );
           }
 
           return (
-            <Badge className={`${getTypeColor(curType || "Uncategorized")}`}>
+            <Badge
+              className={`${getTypeColorRef.current(curType || "Uncategorized")}`}
+            >
               {curType || "Uncategorized"}
             </Badge>
           );
@@ -547,10 +633,16 @@ function AssignmentsTableBase({
             );
           }
 
+          const draft = draftScoresRef.current[assignmentId];
+          const initialScore = draft?.score ?? a._Score ?? "";
+          const initialMax =
+            draft?.max ??
+            (isRubric(a) ? "4" : (a._ScoreMaxValue ?? a._PointPossible ?? ""));
           return (
             <ScoreEditor
               assignmentId={assignmentId}
-              draftScoresRef={draftScoresRef}
+              initialScore={initialScore}
+              initialMax={initialMax}
               setDraftScores={setDraftScores}
               onEditScoreRef={onEditScoreRef}
               debounceTimers={debounceTimers}
@@ -561,7 +653,7 @@ function AssignmentsTableBase({
       {
         id: "progress",
         header: "Percentage",
-        accessorFn: (row) => assignmentPercents[row._GradebookID],
+        accessorFn: (row) => assignmentPercentsRef.current[row._GradebookID],
         sortingFn: (
           a: Row<Assignment>,
           b: Row<Assignment>,
@@ -575,7 +667,7 @@ function AssignmentsTableBase({
           return av === bv ? 0 : av < bv ? -1 : 1;
         },
         cell: ({ row }) => {
-          const pct = assignmentPercents[row.original._GradebookID];
+          const pct = assignmentPercentsRef.current[row.original._GradebookID];
           if (pct == null || isNaN(pct)) {
             return <span className="text-sm text-zinc-400">-</span>;
           }
@@ -671,9 +763,9 @@ function AssignmentsTableBase({
           if (isNaN(bv)) return -1;
           return av === bv ? 0 : av < bv ? -1 : 1;
         },
-        accessorFn: (row) => deltas[row._GradebookID],
+        accessorFn: (row) => deltasRef.current[row._GradebookID],
         cell: ({ row }) => {
-          const delta = deltas[row.original._GradebookID];
+          const delta = deltasRef.current[row.original._GradebookID];
           if (delta == null || isNaN(delta)) {
             return (
               <span
@@ -731,15 +823,7 @@ function AssignmentsTableBase({
           ]
         : []),
     ],
-    [
-      decodeEntities,
-      getTypeColor,
-      expandedDesc,
-      deltas,
-      assignmentPercents,
-      hypotheticalMode,
-      availableCategories,
-    ],
+    [decodeEntities, hypotheticalMode, isRubric],
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([
@@ -760,6 +844,7 @@ function AssignmentsTableBase({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getRowId: (row) => String(row._GradebookID),
+    autoResetPageIndex: false,
   });
 
   return (
@@ -771,7 +856,14 @@ function AssignmentsTableBase({
             <div className="flex items-center gap-3">
               {hypotheticalMode && onResetAll && (
                 <Button
-                  onClick={onResetAll}
+                  onClick={() => {
+                    setDraftScores({});
+                    Object.values(debounceTimers.current).forEach((t) =>
+                      clearTimeout(t),
+                    );
+                    debounceTimers.current = {};
+                    onResetAll?.();
+                  }}
                   size="sm"
                   variant="outline"
                   className="h-8"

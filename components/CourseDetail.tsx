@@ -7,6 +7,7 @@ import {
   numericToLetterGrade,
   loadCalculateGradesEnabled,
   isCalculateGradesSet,
+  loadCustomGPAScale,
 } from "@/utils/gradebook";
 import {
   parseSynergyAssignment,
@@ -21,6 +22,7 @@ import * as React from "react";
 import { GradeChart } from "@/components/GradeChart";
 import { GradeBreakdown } from "@/components/GradeBreakdown";
 import { AssignmentsTable } from "@/components/AssignmentsTable";
+// import { TargetGradeCalc } from "@/components/TargetGradeCalc";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
@@ -37,6 +39,7 @@ interface CourseDetailProps {
   initialSticky?: boolean;
   onStateChange?: (sticky: boolean) => void;
   hideGradeCalcWarning?: boolean;
+  allCourses?: Course[];
 }
 
 export default function CourseDetail({
@@ -45,6 +48,7 @@ export default function CourseDetail({
   initialSticky = false,
   onStateChange,
   hideGradeCalcWarning = false,
+  allCourses,
 }: CourseDetailProps) {
   const marks = course.Marks.Mark;
   const currentMark = getCurrentMark(marks);
@@ -65,79 +69,54 @@ export default function CourseDetail({
   const [hypotheticalDeletedIds, setHypotheticalDeletedIds] = React.useState<
     Set<string>
   >(new Set());
+  const [hypotheticalNames, setHypotheticalNames] = React.useState<
+    Record<string, string>
+  >({});
 
   const effectiveAssignments = React.useMemo(() => {
-    let modifiedAssignments =
-      hypotheticalMode && hypotheticalDeletedIds.size > 0
-        ? originalAssignments.filter(
-            (a) => !hypotheticalDeletedIds.has(a._GradebookID),
-          )
-        : originalAssignments;
+    if (!hypotheticalMode) return originalAssignments;
 
-    if (
-      hypotheticalMode &&
-      (Object.keys(hypotheticalScores).length > 0 ||
-        Object.keys(hypotheticalCategories).length > 0)
-    ) {
-      modifiedAssignments = originalAssignments.map((a) => {
-        const hypoScore = hypotheticalScores[a._GradebookID];
-        const hypoCategory = hypotheticalCategories[a._GradebookID];
+    const applyOverrides = (a: Assignment): Assignment => {
+      const hypoScore = hypotheticalScores[a._GradebookID];
+      const hypoCategory = hypotheticalCategories[a._GradebookID];
+      const hypoName = hypotheticalNames[a._GradebookID];
 
-        if (!hypoScore && !hypoCategory) return a;
+      if (!hypoScore && !hypoCategory && !hypoName) return a;
 
-        const result = { ...a };
+      const result = { ...a };
 
-        if (hypoScore) {
-          result._Score = hypoScore.score;
-          result._Point = hypoScore.score;
-          result._ScoreMaxValue = hypoScore.max;
-          result._PointPossible = hypoScore.max;
-          result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
-          result._Points = `${hypoScore.score} / ${hypoScore.max}`;
-        }
+      if (hypoScore) {
+        result._Score = hypoScore.score;
+        result._Point = hypoScore.score;
+        result._ScoreMaxValue = hypoScore.max;
+        result._PointPossible = hypoScore.max;
+        result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
+        result._Points = `${hypoScore.score} / ${hypoScore.max}`;
+      }
 
-        if (hypoCategory) {
-          result._Type = hypoCategory;
-        }
+      if (hypoCategory) {
+        result._Type = hypoCategory;
+      }
 
-        return result;
-      });
-    }
+      if (hypoName) {
+        result._Measure = hypoName;
+      }
 
-    if (hypotheticalMode && hypotheticalNewAssignments.length > 0) {
-      const modifiedNewAssignments = hypotheticalNewAssignments.map((a) => {
-        const hypoScore = hypotheticalScores[a._GradebookID];
-        const hypoCategory = hypotheticalCategories[a._GradebookID];
+      return result;
+    };
 
-        if (!hypoScore && !hypoCategory) return a;
-
-        const result = { ...a };
-
-        if (hypoScore) {
-          result._Score = hypoScore.score;
-          result._Point = hypoScore.score;
-          result._ScoreMaxValue = hypoScore.max;
-          result._PointPossible = hypoScore.max;
-          result._DisplayScore = `${hypoScore.score} out of ${hypoScore.max}`;
-          result._Points = `${hypoScore.score} / ${hypoScore.max}`;
-        }
-
-        if (hypoCategory) {
-          result._Type = hypoCategory;
-        }
-
-        return result;
-      });
-      return [...modifiedAssignments, ...modifiedNewAssignments];
-    }
-
-    return modifiedAssignments;
+    const base = originalAssignments
+      .filter((a) => !hypotheticalDeletedIds.has(a._GradebookID))
+      .map(applyOverrides);
+    const added = hypotheticalNewAssignments.map(applyOverrides);
+    return added.length > 0 ? [...base, ...added] : base;
   }, [
     originalAssignments,
     hypotheticalMode,
     hypotheticalDeletedIds,
     hypotheticalScores,
     hypotheticalCategories,
+    hypotheticalNames,
     hypotheticalNewAssignments,
   ]);
 
@@ -156,6 +135,16 @@ export default function CourseDetail({
       setHypotheticalCategories((prev) => ({
         ...prev,
         [id]: category,
+      }));
+    },
+    [],
+  );
+
+  const handleHypotheticalNameChange = React.useCallback(
+    (id: string, name: string) => {
+      setHypotheticalNames((prev) => ({
+        ...prev,
+        [id]: name,
       }));
     },
     [],
@@ -195,7 +184,7 @@ export default function CourseDetail({
           pointsByCategory,
           categories,
         );
-        return { earned, possible, pct };
+        return { earned, possible, pct, pointsByCategory };
       }
     }
 
@@ -205,6 +194,7 @@ export default function CourseDetail({
       earned: totals.pointsEarned,
       possible: totals.pointsPossible,
       pct,
+      pointsByCategory: undefined,
     };
   }, [effectiveAssignments, course, currentMark]);
 
@@ -213,52 +203,114 @@ export default function CourseDetail({
     [originalAssignments, isRubric],
   );
 
+  const gpaPreview = React.useMemo(() => {
+    if (!hypotheticalMode || !allCourses || allCourses.length === 0) {
+      return null;
+    }
+    const gpaScale = loadCustomGPAScale();
+    const pointsFor = (pct: number): number | null => {
+      if (!Number.isFinite(pct)) return null;
+      const letter = numericToLetterGrade(pct);
+      const points = gpaScale[letter];
+      return letter !== "N/A" && points != null ? points : null;
+    };
+    let beforeSum = 0;
+    let beforeCount = 0;
+    let afterSum = 0;
+    let afterCount = 0;
+    for (const c of allCourses) {
+      const mark = c?.Marks?.Mark ? getCurrentMark(c.Marks.Mark) : null;
+      const raw = mark?._CalculatedScoreRaw;
+      const hasGrade = raw != null && raw !== "" && raw !== "0";
+      const portalPct = hasGrade ? Number(raw) : NaN;
+      const before = pointsFor(portalPct);
+      if (before != null) {
+        beforeSum += before;
+        beforeCount++;
+      }
+      const isThisCourse = c._CourseID === course._CourseID;
+      const afterPct =
+        isThisCourse && Number.isFinite(recalcTotals.pct)
+          ? recalcTotals.pct
+          : portalPct;
+      const after = pointsFor(afterPct);
+      if (after != null) {
+        afterSum += after;
+        afterCount++;
+      }
+    }
+    if (beforeCount === 0 || afterCount === 0) return null;
+    return { before: beforeSum / beforeCount, after: afterSum / afterCount };
+  }, [hypotheticalMode, allCourses, course._CourseID, recalcTotals.pct]);
+
   const courseCategories = React.useMemo(
     () => getSynergyCourseAssignmentCategories(course) || [],
     [course],
   );
 
-  const handleCreateHypotheticalAssignment = React.useCallback(() => {
-    const gradeCalcs =
-      currentMark?.GradeCalculationSummary?.AssignmentGradeCalc || [];
-    const availableCategories =
-      gradeCalcs.length > 0
-        ? gradeCalcs.map((c) => c._Type)
-        : Array.from(new Set(originalAssignments.map((a) => a._Type)));
+  const createHypotheticalAssignment = React.useCallback(
+    (prefill?: {
+      name?: string;
+      score?: number;
+      pointsPossible?: number;
+      category?: string;
+    }) => {
+      const gradeCalcs =
+        currentMark?.GradeCalculationSummary?.AssignmentGradeCalc || [];
+      const availableCategories =
+        gradeCalcs.length > 0
+          ? gradeCalcs.map((c) => c._Type)
+          : Array.from(new Set(originalAssignments.map((a) => a._Type)));
 
-    const defaultCategory = availableCategories[0] || "Assignment";
-    const newId = `hypo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const today = new Date().toISOString().split("T")[0];
+      const category =
+        prefill?.category || availableCategories[0] || "Assignment";
+      const max = prefill?.pointsPossible ?? 100;
+      const score = prefill?.score;
+      const newId = `hypo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const today = new Date().toISOString().split("T")[0];
 
-    const newAssignment: Assignment = {
-      _Date: today,
-      _DisplayScore: " / 100",
-      _DropEndDate: "",
-      _DropStartDate: "",
-      _DueDate: today,
-      _GradebookID: newId,
-      _HasDropBox: "false",
-      _Measure: "Hypothetical Assignment",
-      _MeasureDescription: "",
-      _Notes: "",
-      _Point: "",
-      _PointPossible: "100",
-      _Points: " / 100",
-      _Score: "",
-      _ScoreCalValue: "",
-      _ScoreMaxValue: "100",
-      _ScoreType: "Raw Score",
-      _StudentID: "",
-      _TeacherID: "",
-      _TimeSincePost: "Just now",
-      _TotalSecondsSincePost: "0",
-      _Type: defaultCategory,
-      Resources: {},
-      Standards: {},
-    };
+      const newAssignment: Assignment = {
+        _Date: today,
+        _DisplayScore: score != null ? `${score} / ${max}` : ` / ${max}`,
+        _DropEndDate: "",
+        _DropStartDate: "",
+        _DueDate: today,
+        _GradebookID: newId,
+        _HasDropBox: "false",
+        _Measure: prefill?.name || "Hypothetical Assignment",
+        _MeasureDescription: "",
+        _Notes: "",
+        _Point: "",
+        _PointPossible: String(max),
+        _Points: ` / ${max}`,
+        _Score: score != null ? String(score) : "",
+        _ScoreCalValue: "",
+        _ScoreMaxValue: String(max),
+        _ScoreType: "Raw Score",
+        _StudentID: "",
+        _TeacherID: "",
+        _TimeSincePost: "Just now",
+        _TotalSecondsSincePost: "0",
+        _Type: category,
+        Resources: {},
+        Standards: {},
+      };
 
-    setHypotheticalNewAssignments((prev) => [...prev, newAssignment]);
-  }, [currentMark, originalAssignments]);
+      setHypotheticalNewAssignments((prev) => [...prev, newAssignment]);
+      if (score != null) {
+        setHypotheticalScores((prev) => ({
+          ...prev,
+          [newId]: { score: String(score), max: String(max) },
+        }));
+      }
+    },
+    [currentMark, originalAssignments],
+  );
+
+  const handleCreateHypotheticalAssignment = React.useCallback(
+    () => createHypotheticalAssignment(),
+    [createHypotheticalAssignment],
+  );
 
   const handleDeleteAssignment = React.useCallback((id: string) => {
     setHypotheticalNewAssignments((prev) =>
@@ -275,11 +327,17 @@ export default function CourseDetail({
       delete next[id];
       return next;
     });
+    setHypotheticalNames((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   }, []);
 
   const handleResetAll = React.useCallback(() => {
     setHypotheticalScores({});
     setHypotheticalCategories({});
+    setHypotheticalNames({});
     setHypotheticalNewAssignments([]);
     setHypotheticalDeletedIds(new Set());
   }, []);
@@ -384,6 +442,20 @@ export default function CourseDetail({
                     ? `${effectivePct.toFixed(2)}%`
                     : "N/A"}
                 </p>
+                {gpaPreview && (
+                  <p
+                    className={`text-xs mt-1 ${
+                      gpaPreview.after - gpaPreview.before > 0.0005
+                        ? "text-green-600 dark:text-green-400"
+                        : gpaPreview.after - gpaPreview.before < -0.0005
+                          ? "text-red-600 dark:text-red-400"
+                          : "text-zinc-500"
+                    }`}
+                  >
+                    GPA {gpaPreview.before.toFixed(3)} →{" "}
+                    {gpaPreview.after.toFixed(3)}
+                  </p>
+                )}
               </div>
             </div>
             {!hideGradeCalcWarning &&
@@ -439,6 +511,18 @@ export default function CourseDetail({
           }
           assignments={effectiveAssignments}
         />
+        {/* {hypotheticalMode && (
+          <TargetGradeCalc
+            currentPct={recalcTotals.pct}
+            categories={courseCategories}
+            pointsByCategory={recalcTotals.pointsByCategory}
+            totals={{
+              earned: recalcTotals.earned,
+              possible: recalcTotals.possible,
+            }}
+            onAddAssignment={createHypotheticalAssignment}
+          />
+        )} */}
         <AssignmentsTable
           assignments={effectiveAssignments}
           getTypeColor={getAssignmentTypeColor}
@@ -446,6 +530,7 @@ export default function CourseDetail({
           onToggleHypothetical={setHypotheticalMode}
           onEditScore={handleHypotheticalScoreChange}
           onEditCategory={handleHypotheticalCategoryChange}
+          onEditName={handleHypotheticalNameChange}
           onCreateAssignment={handleCreateHypotheticalAssignment}
           onDeleteAssignment={handleDeleteAssignment}
           onResetAll={handleResetAll}

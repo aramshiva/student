@@ -18,6 +18,8 @@ import {
   School,
   History,
   LogOutIcon,
+  ClipboardX,
+  UserCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,6 +43,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 const primaryNav = [
   { name: "Home", href: "/", icon: Home },
@@ -48,6 +51,8 @@ const primaryNav = [
   { name: "Schedule", href: "/schedule", icon: Table },
   { name: "Calendar", href: "/calendar", icon: CalendarDays },
   { name: "Attendance", href: "/attendance", icon: Table2 },
+  { name: "Mail", href: "/mail", icon: Mail },
+  { name: "Missing Work", href: "/missing", icon: ClipboardX },
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "Course History", href: "/history", icon: History },
   { name: "Test History", href: "/tests", icon: BookCheck },
@@ -127,26 +132,18 @@ export function AppSidebar() {
     const needsStudentInfo = !permId || !school;
     if (!needsName && !needsStudentInfo) return;
 
-    const credsRaw = localStorage.getItem("Student.creds");
-    if (!credsRaw) return;
+    const creds = getStoredCredentials();
+    if (!creds) return;
     let aborted = false;
 
     (async () => {
       try {
-        const creds = JSON.parse(credsRaw);
-
         if (needsName) {
-          const res = await fetch("/api/synergy/name", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              username: creds.username || creds.user || creds.userId,
-              password: creds.password || creds.pass,
-              district_url: creds.district_url || creds.district || creds.host,
-            }),
-          });
-          if (!aborted && res.ok) {
-            const data = await res.json();
+          const data = await synergyPost<{ name?: string }>(
+            "/api/synergy/student/name",
+            creds,
+          );
+          if (!aborted) {
             if (data && typeof data.name === "string" && data.name.trim()) {
               const nm = data.name.trim();
               setStudentName(nm);
@@ -156,13 +153,12 @@ export function AppSidebar() {
         }
 
         if (needsStudentInfo) {
-          const res = await fetch("/api/synergy/student", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: credsRaw,
-          });
-          if (!aborted && res.ok) {
-            const data = await res.json();
+          const data = await synergyPost<{
+            PermID?: string | number;
+            CurrentSchool?: string;
+            Photo?: string;
+          }>("/api/synergy/student", creds);
+          if (!aborted) {
             if (data) {
               if (data.PermID && !permId) {
                 const pid = String(data.PermID);
@@ -196,8 +192,8 @@ export function AppSidebar() {
 
     const calculateNextPeriod = async () => {
       try {
-        const credsRaw = localStorage.getItem("Student.creds");
-        if (!credsRaw) {
+        const creds = getStoredCredentials();
+        if (!creds) {
           setNextPeriod(null);
           return;
         }
@@ -211,20 +207,8 @@ export function AppSidebar() {
           return;
         }
 
-        const creds = JSON.parse(credsRaw);
-        const res = await fetch("/api/synergy/schedule", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...creds,
-          }),
-        });
-
-        if (!res.ok) {
-          return;
-        }
-
-        const data = await res.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = await synergyPost<any>("/api/synergy/schedule", creds);
         const todayClasses =
           data?.StudentClassSchedule?.TodayScheduleInfoData?.SchoolInfos
             ?.SchoolInfo?.Classes?.ClassInfo;
@@ -361,7 +345,17 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {primaryNav.map((item) => {
-                const active = pathname?.startsWith(item.href);
+                // only surface Missing Work when there is missing work
+                if (
+                  item.href === "/missing" &&
+                  (quickStats?.missing ?? 0) <= 0
+                ) {
+                  return null;
+                }
+                const active =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname?.startsWith(item.href);
                 const Icon = item.icon;
                 const isOnMockPage = pathname?.startsWith("/gradebook/mock");
                 const isGradebook = item.href === "/gradebook";
@@ -424,7 +418,10 @@ export function AppSidebar() {
                           </p>
                         </div>
                       )}
-                      <div className="flex items-baseline justify-between">
+                      <Link
+                        href="/missing"
+                        className="flex items-baseline justify-between hover:underline"
+                      >
                         <p className="font-medium tracking-tight">Missing</p>
                         <p
                           className={`text-sm font-semibold ${
@@ -433,7 +430,7 @@ export function AppSidebar() {
                         >
                           {quickStats.missing}
                         </p>
-                      </div>
+                      </Link>
                       <div className="flex items-baseline justify-between text-[10px] pt-1 opacity-70 border-t mt-1">
                         <span>Courses</span>
                         <span>
@@ -560,6 +557,15 @@ export function AppSidebar() {
                 )}
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/account"
+                  className="cursor-pointer flex items-center gap-2"
+                >
+                  <UserCircle className="size-4" />
+                  <span>My Account</span>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
                   href="/install"

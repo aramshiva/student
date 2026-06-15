@@ -22,7 +22,7 @@ const API_ENDPOINTS = [
   "/api/synergy/tests",
   "/api/synergy/documents",
   "/api/synergy/reportcard",
-  "/api/synergy/school-info",
+  "/api/synergy/school/info",
   "/api/weather",
 ];
 

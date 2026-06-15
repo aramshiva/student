@@ -1248,6 +1248,7 @@ function MockGradebookContent() {
         initialSticky={initialSticky}
         onStateChange={handleStateChange}
         hideGradeCalcWarning
+        allCourses={MOCK_COURSES}
       />
     );
   }

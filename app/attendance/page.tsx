@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import AttendanceGraph from "@/components/AttendanceGraph";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 interface APIAbsencePeriod {
   _Number: string;
@@ -110,7 +111,7 @@ export default function AttendancePage() {
   );
 
   useEffect(() => {
-    const creds = localStorage.getItem("Student.creds");
+    const creds = getStoredCredentials();
     if (!creds) {
       window.location.href = "/login";
       return;
@@ -119,13 +120,10 @@ export default function AttendancePage() {
       try {
         setIsLoading(true);
         setError(null);
-        const res = await fetch(`/api/synergy/attendance`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(JSON.parse(creds)),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const root: AttendanceAPIResponseRoot = await res.json();
+        const root = await synergyPost<AttendanceAPIResponseRoot>(
+          "/api/synergy/attendance",
+          creds,
+        );
 
         const normalizeArray = <T,>(val: T | T[] | undefined | null): T[] => {
           if (!val) return [];
@@ -196,51 +194,32 @@ export default function AttendancePage() {
         };
         setDataShape(dataShape);
 
+        const map: Record<number, string> = {};
         try {
-          const schedRes = await fetch(`/api/synergy/schedule`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...JSON.parse(creds), term_index: 0 }),
-          });
-          if (schedRes.ok) {
-            const schedJson = await schedRes.json();
-            const sched = schedJson?.data?.StudentClassSchedule;
-            const classList = sched?.ClassLists?.ClassListing;
-            const arr: ScheduleClassListing[] = Array.isArray(classList)
-              ? classList
-              : classList
-                ? [classList]
-                : [];
-            const map: Record<number, string> = {};
-            for (const c of arr) {
-              const num = Number(c._Period);
-              const title = c._CourseTitle;
-              if (!Number.isNaN(num) && title && !map[num]) map[num] = title;
-            }
-            for (const day of dataShape.absenceDays) {
-              for (const p of day.periods) {
-                if (p.course && !map[p.number]) map[p.number] = p.course;
-              }
-            }
-            setPeriodNameMap(map);
-          } else {
-            const map: Record<number, string> = {};
-            for (const day of dataShape.absenceDays) {
-              for (const p of day.periods) {
-                if (p.course && !map[p.number]) map[p.number] = p.course;
-              }
-            }
-            setPeriodNameMap(map);
+          const schedJson = await synergyPost<{
+            data?: {
+              StudentClassSchedule?: {
+                ClassLists?: {
+                  ClassListing?: ScheduleClassListing | ScheduleClassListing[];
+                };
+              };
+            };
+          }>("/api/synergy/schedule", creds, { term_index: 0 });
+          const classList =
+            schedJson?.data?.StudentClassSchedule?.ClassLists?.ClassListing;
+          for (const c of normalizeArray(classList)) {
+            const num = Number(c._Period);
+            const title = c._CourseTitle;
+            if (!Number.isNaN(num) && title && !map[num]) map[num] = title;
           }
-        } catch {
-          const map: Record<number, string> = {};
-          for (const day of dataShape.absenceDays) {
-            for (const p of day.periods) {
-              if (p.course && !map[p.number]) map[p.number] = p.course;
-            }
+        } catch {}
+        // fall back to course names recorded on the absences themselves
+        for (const day of dataShape.absenceDays) {
+          for (const p of day.periods) {
+            if (p.course && !map[p.number]) map[p.number] = p.course;
           }
-          if (Object.keys(map).length) setPeriodNameMap(map);
         }
+        setPeriodNameMap(map);
 
         // so you may be like "aram, why are you manually calculating 7th period??"
         // for some reason, the synergy api sometimes omits period 7 totals

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import Marks from "@/components/Marks";
 import { Course } from "@/types/gradebook";
 import { loadGradebookCache, loadCacheDuration } from "@/utils/gradebook";
+import { getStoredCredentials, postJson, synergyPost } from "@/lib/clientApi";
 
 const DASHBOARD_CACHE_KEY = "Student.dashboardCache";
 
@@ -193,8 +194,8 @@ export default function StudentDashboard() {
   };
   useEffect(() => {
     (async () => {
-      const credsRaw = localStorage.getItem("Student.creds");
-      if (!credsRaw) {
+      const creds = getStoredCredentials();
+      if (!creds) {
         window.location.href = "/login";
         return;
       }
@@ -219,7 +220,6 @@ export default function StudentDashboard() {
       setLoading(true);
       setError(null);
       try {
-        const creds = JSON.parse(credsRaw);
         let newGradeCourses: Course[] = [];
 
         // Load gradebook from its own cache or API
@@ -237,12 +237,10 @@ export default function StudentDashboard() {
             ? (gbCached!.data as GradebookLike)
             : null;
           if (!gbData) {
-            const gbRes = await fetch("/api/synergy/gradebook", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: credsRaw,
-            });
-            if (gbRes.ok) gbData = (await gbRes.json()) as GradebookLike;
+            gbData = await synergyPost<GradebookLike>(
+              "/api/synergy/gradebook",
+              creds,
+            );
           }
           if (gbData) {
             const root = gbData.Gradebook ?? gbData;
@@ -251,28 +249,22 @@ export default function StudentDashboard() {
           }
         } catch {}
 
-        const [infoRes, messagesRes, scheduleRes] = await Promise.all([
-          fetch("/api/synergy/student", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(creds),
-          }),
-          fetch("/api/synergy/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: credsRaw,
-          }),
-          fetch("/api/synergy/schedule", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: credsRaw,
-          }),
-        ]);
-        if (!infoRes.ok) throw new Error(`Student info HTTP ${infoRes.status}`);
-        if (!messagesRes.ok)
-          throw new Error(`Messages HTTP ${messagesRes.status}`);
-        const infoJson: NewStudentInfoRoot | LegacyStudentInfoWrapper =
-          await infoRes.json();
+        const [infoResult, messagesResult, scheduleResult] =
+          await Promise.allSettled([
+            synergyPost<NewStudentInfoRoot | LegacyStudentInfoWrapper>(
+              "/api/synergy/student",
+              creds,
+            ),
+            synergyPost<PXPMessagesApiResponse>(
+              "/api/synergy/messages",
+              creds,
+            ),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            synergyPost<any>("/api/synergy/schedule", creds),
+          ]);
+        if (infoResult.status === "rejected") throw infoResult.reason;
+        if (messagesResult.status === "rejected") throw messagesResult.reason;
+        const infoJson = infoResult.value;
         let flat: NewStudentInfoRoot | undefined;
         if (infoJson && "PermID" in infoJson) {
           flat = infoJson as NewStudentInfoRoot;
@@ -321,32 +313,19 @@ export default function StudentDashboard() {
           setStudentName(newName);
         } else {
           try {
-            const nameRes = await fetch("/api/synergy/name", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                username: creds.username || creds.user || creds.userId,
-                password: creds.password || creds.pass,
-                district_url:
-                  creds.district_url || creds.district || creds.host,
-              }),
-            });
-            if (nameRes.ok) {
-              const nameJson = await nameRes.json();
-              if (
-                nameJson &&
-                typeof nameJson.name === "string" &&
-                nameJson.name.trim()
-              ) {
-                newName = nameJson.name.trim();
-                setStudentName(newName);
-                localStorage.setItem("Student.studentName", newName);
-              }
+            const nameJson = await synergyPost<{ name?: string }>(
+              "/api/synergy/student/name",
+              creds,
+            );
+            if (typeof nameJson?.name === "string" && nameJson.name.trim()) {
+              newName = nameJson.name.trim();
+              setStudentName(newName);
+              localStorage.setItem("Student.studentName", newName);
             }
           } catch {}
         }
 
-        const messagesJson: PXPMessagesApiResponse = await messagesRes.json();
+        const messagesJson = messagesResult.value;
         const listingsRaw =
           messagesJson?.PXPMessagesData?.SynergyMailMessageListingByStudents
             ?.SynergyMailMessageListingByStudent?.SynergyMailMessageListings
@@ -397,10 +376,13 @@ export default function StudentDashboard() {
         setMessages(parsed);
 
         let newSchedule: TodayScheduleClass[] = [];
-        if (!scheduleRes.ok) {
-          setTodayScheduleError(`Schedule HTTP ${scheduleRes.status}`);
+        if (scheduleResult.status === "rejected") {
+          const reason = scheduleResult.reason;
+          setTodayScheduleError(
+            reason instanceof Error ? reason.message : "Failed to load schedule",
+          );
         } else {
-          const schedJson = await scheduleRes.json();
+          const schedJson = scheduleResult.value;
           const scheduleRoot =
             schedJson?.StudentClassSchedule ??
             schedJson?.StudentClassList ??
@@ -445,23 +427,18 @@ export default function StudentDashboard() {
         try {
           const zip = localStorage.getItem("Student.zip") || "98028";
           setTempUnit(newTempUnit);
-          const weatherRes = await fetch("/api/weather", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ zip }),
+          const weatherJson = await postJson<WeatherData>("/api/weather", {
+            zip,
           });
-          if (weatherRes.ok) {
-            const weatherJson: WeatherData = await weatherRes.json();
-            if (weatherJson?.current?.temp) {
-              const tempC = weatherJson.current.temp;
-              newTemp =
-                newTempUnit === "celsius"
-                  ? Math.round(tempC)
-                  : newTempUnit === "kelvin"
-                    ? Math.round(tempC + 273.15)
-                    : Math.round((tempC * 9) / 5 + 32);
-              setTemp(newTemp);
-            }
+          if (weatherJson?.current?.temp) {
+            const tempC = weatherJson.current.temp;
+            newTemp =
+              newTempUnit === "celsius"
+                ? Math.round(tempC)
+                : newTempUnit === "kelvin"
+                  ? Math.round(tempC + 273.15)
+                  : Math.round((tempC * 9) / 5 + 32);
+            setTemp(newTemp);
           }
         } catch {}
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Login from "@/components/Login";
 import { LoginCredentials } from "@/types/gradebook";
+import { saveStoredCredentials } from "@/lib/clientApi";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -51,8 +52,9 @@ export default function Home() {
       if (errorMessage) {
         throw new Error(String(errorMessage));
       }
-      localStorage.setItem("Student.creds", JSON.stringify(credentials));
-      const selectedDistrictZip = (credentials as any).zipcode || "98028";
+      saveStoredCredentials({ ...credentials });
+      const selectedDistrictZip =
+        (credentials as { zipcode?: string }).zipcode || "98028";
       localStorage.setItem("Student.zip", selectedDistrictZip);
       // saves creds in LOCAL STORAGE (not cloud)
       // redirects to student page

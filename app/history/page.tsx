@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "./data-table";
 import { courseColumns, type CourseHistoryRow } from "./columns";
 import { GraduationChart } from "./graduation-chart";
+import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 interface Term {
   SchoolName: string;
   Year: string;
@@ -40,12 +41,6 @@ interface CourseHistoryResponse {
   courseHistory: GradeLevelData[];
 }
 
-interface StudentCreds {
-  district_url: string;
-  username: string;
-  password: string;
-}
-
 export default function HistoryPage() {
   const [data, setData] = useState<CourseHistoryResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,31 +49,18 @@ export default function HistoryPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const credsJson = localStorage.getItem("Student.creds");
-        if (!credsJson) {
+        const creds = getStoredCredentials();
+        if (!creds) {
           throw new Error(
             "No credentials found in localStorage (Student.creds)",
           );
         }
 
-        const creds: StudentCreds = JSON.parse(credsJson);
-        const res = await fetch("/api/synergy/history", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            district_url: creds.district_url,
-            username: creds.username,
-            password: creds.password,
-            timeout_ms: 15000,
-          }),
-        });
-
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(`${res.status}: ${errText}`);
-        }
-
-        const json = await res.json();
+        const json = await synergyPost<CourseHistoryResponse>(
+          "/api/synergy/history",
+          creds,
+          { timeout_ms: 15000 },
+        );
         setData(json);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Unknown error");

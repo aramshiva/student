@@ -1,5 +1,5 @@
-import fetch from "node-fetch";
 import * as cheerio from "cheerio";
+import { getSessionCookie } from "@/lib/synergySession";
 
 type Input = {
   districtUrl: string;
@@ -9,15 +9,6 @@ type Input = {
 };
 
 const UA = "SynergyClient/CourseHistory";
-
-function extractSessionId(setCookie: string): string | null {
-  const directMatch = setCookie.match(/ASP\.NET_SessionId=([^;\s]+)/i);
-  if (directMatch) return directMatch[1];
-  const idx = setCookie.indexOf("ASP.NET_SessionId=");
-  if (idx === -1) return null;
-  const sub = setCookie.slice(idx + "ASP.NET_SessionId=".length);
-  return sub.split(";")[0]?.trim() || null;
-}
 
 function normalizeDistrictUrl(raw: string): string {
   let s = (raw || "").trim();
@@ -55,30 +46,13 @@ export async function fetchStudentVue({
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const soapBody = `<?xml version="1.0" encoding="utf-8"?>\n<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n                 xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n                 xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">\n  <soap12:Body>\n    <ProcessWebServiceRequest xmlns="http://edupoint.com/webservices/">\n      <userID>${username}</userID>\n      <password>${password}</password>\n      <skipLoginLog>true</skipLoginLog>\n      <parent>false</parent>\n      <webServiceHandleName>PXPWebServices</webServiceHandleName>\n      <methodName>StudentInfo</methodName>\n      <paramStr>&lt;Params/&gt;</paramStr>\n    </ProcessWebServiceRequest>\n  </soap12:Body>\n</soap12:Envelope>`;
-
-    const soapRes = await fetch(`${base}/Service/PXPCommunication.asmx`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/soap+xml; charset=utf-8",
-        Accept: "*/*",
-        "User-Agent": UA,
-      },
-      body: soapBody,
+    const cookieHeader = await getSessionCookie({
+      districtBase: base,
+      userId: username,
+      password,
       signal: controller.signal,
+      userAgent: UA,
     });
-
-    if (!soapRes.ok) {
-      throw new Error(`StudentInfo HTTP ${soapRes.status}`);
-    }
-
-    const setCookie = soapRes.headers.get("set-cookie") || "";
-    const sessionId = extractSessionId(setCookie);
-    if (!sessionId) {
-      throw new Error("Missing ASP.NET_SessionId");
-    }
-
-    const cookieHeader = `ASP.NET_SessionId=${sessionId}`;
 
     async function fetchCourseHistoryPage(baseUrl: string): Promise<string> {
       const resp = await fetch(`${baseUrl}/PXP2_CourseHistory.aspx?AGU=0`, {
@@ -91,6 +65,8 @@ export async function fetchStudentVue({
       return resp.text();
     }
 
+    // some districts serve the portal from student.<domain> but the course
+    // history page only from the bare domain
     let html: string;
     try {
       html = await fetchCourseHistoryPage(base);
