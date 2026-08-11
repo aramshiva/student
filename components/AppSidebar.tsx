@@ -63,7 +63,7 @@ const primaryNav: NavItem[] = [
   { name: "Mail", href: "/mail", icon: Mail, working: true, module: "showSynergyMailModule" },
   { name: "Missing Work", href: "/missing", icon: ClipboardX, working: false, module: "showGradeBookModule" }, // prettier-ignore
   { name: "Documents", href: "/documents", icon: FileText, working: true, module: "showDocumentModule" }, // prettier-ignore
-  { name: "Course History", href: "/history", icon: History, working: false, module: "showCourseHistoryModule" }, // prettier-ignore
+  { name: "Course History", href: "/history", icon: History, working: true, module: "showCourseHistoryModule" }, // prettier-ignore
   { name: "Test History", href: "/tests", icon: BookCheck, working: true, module: "showTestHistoryModule" }, // prettier-ignore
   { name: "School Information", href: "/school", icon: School, working: true, module: "showSchoolInformationModule" }, // prettier-ignore
 ];

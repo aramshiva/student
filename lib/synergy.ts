@@ -354,6 +354,14 @@ export class SynergyClient {
     return (env.data ?? {}) as T;
   }
 
+  async sessionCookieHeader(): Promise<string> {
+    await this.login();
+    if (!this.sessionCookie) {
+      throw new Error("No session cookie available");
+    }
+    return this.sessionCookie;
+  }
+
   async clientSideData<T = unknown>(
     action: string,
     payload: { FriendlyName: string; Method: string; Parameters: string },
