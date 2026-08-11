@@ -140,6 +140,7 @@ export class SynergyClient {
   private userID: string;
   private password: string;
   private tokens?: LoginTokens;
+  private sessionCookie?: string;
 
   constructor(domain: string, userID: string, password: string) {
     const sanitized = sanitizeDomain(domain);
@@ -272,6 +273,18 @@ export class SynergyClient {
       body: JSON.stringify({ arguments: { request } }),
     });
 
+    const setCookies =
+      res.headers.getSetCookie?.() ??
+      (res.headers.get("set-cookie") ? [res.headers.get("set-cookie")!] : []);
+    const jar: string[] = [];
+    for (const c of setCookies) {
+      const pair = c.split(";")[0]?.trim();
+      if (pair && /^(ASP\.NET_SessionId|PVUE|EES_PSV)=/i.test(pair)) {
+        jar.push(pair);
+      }
+    }
+    if (jar.length) this.sessionCookie = jar.join("; ");
+
     const raw = await res.text().catch(() => "");
     if (!res.ok) throw upstreamError("AttemptLogin", res.status, raw);
 
@@ -339,6 +352,44 @@ export class SynergyClient {
       throw new Error(String(msg));
     }
     return (env.data ?? {}) as T;
+  }
+
+  async clientSideData<T = unknown>(
+    action: string,
+    payload: { FriendlyName: string; Method: string; Parameters: string },
+  ): Promise<T> {
+    await this.login();
+    if (!this.sessionCookie) {
+      throw new Error("No session cookie available for ClientSideData");
+    }
+    const res = await fetchWithTimeout(
+      `https://${this.domain}${this.pathPrefix}/api/GB/ClientSideData/Transfer?action=${encodeURIComponent(action)}`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json, */*",
+          "Content-Type": "application/json",
+          Cookie: this.sessionCookie,
+          "User-Agent": "SynergyClient",
+        },
+        body: JSON.stringify(payload),
+      },
+    );
+    const raw = await res.text().catch(() => "");
+    if (!res.ok) throw upstreamError(action, res.status, raw);
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      throw new Error(`Malformed ${action} response`);
+    }
+  }
+
+  async getTestAnalysis(): Promise<Record<string, unknown>> {
+    return this.clientSideData("pxp.test.analysis-get", {
+      FriendlyName: "pxp.test.analysis",
+      Method: "get",
+      Parameters: "{}",
+    });
   }
 
   // for not yet confirmed endpoints, do a softcall so it sends an empty state
