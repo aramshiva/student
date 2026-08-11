@@ -5,12 +5,12 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export type Staff = {
-  _Name: string;
-  _EMail: string;
-  _Title: string;
-  _Phone?: string;
-  _Extn?: string;
-  _StaffGU: string;
+  name: string;
+  eMail: string;
+  title: string;
+  phone?: string;
+  extn?: string;
+  staffGU: string;
 };
 
 const formatPhone = (phone?: string, ext?: string) => {
@@ -21,7 +21,7 @@ const formatPhone = (phone?: string, ext?: string) => {
 
 export const columns: ColumnDef<Staff>[] = [
   {
-    accessorKey: "_Name",
+    accessorKey: "name",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -33,11 +33,11 @@ export const columns: ColumnDef<Staff>[] = [
       </Button>
     ),
     cell: ({ row }) => (
-      <span className="font-medium">{row.original._Name}</span>
+      <span className="font-medium">{row.original.name}</span>
     ),
   },
   {
-    accessorKey: "_Title",
+    accessorKey: "title",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -50,7 +50,7 @@ export const columns: ColumnDef<Staff>[] = [
     ),
   },
   {
-    accessorKey: "_EMail",
+    accessorKey: "eMail",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -62,7 +62,7 @@ export const columns: ColumnDef<Staff>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const email = row.original._EMail || "";
+      const email = row.original.eMail || "";
       return email ? (
         <a className="hover:underline" href={`mailto:${email}`}>
           {email}
@@ -74,7 +74,7 @@ export const columns: ColumnDef<Staff>[] = [
   },
   {
     id: "phone",
-    accessorFn: (row) => formatPhone(row._Phone, row._Extn) || "",
+    accessorFn: (row) => formatPhone(row.phone, row.extn) || "",
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -86,7 +86,7 @@ export const columns: ColumnDef<Staff>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const phone = formatPhone(row.original._Phone, row.original._Extn);
+      const phone = formatPhone(row.original.phone, row.original.extn);
       return phone ? (
         <a href={`tel:${phone}`} className="hover:underline">
           {phone}

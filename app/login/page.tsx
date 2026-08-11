@@ -13,12 +13,11 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/synergy/gradebook`, {
+      const response = await fetch(`/api/synergy/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
-      let responseBody: any;
       if (!response.ok) {
         let serverMessage: string | null = null;
         try {
@@ -29,7 +28,7 @@ export default function Home() {
               "Forbidden: Your StudentVUE access has been denied by Synergy (HTTP error 403)";
           } else {
             try {
-              responseBody = JSON.parse(text);
+              const responseBody = JSON.parse(text);
               if (
                 responseBody &&
                 typeof responseBody === "object" &&
@@ -45,13 +44,6 @@ export default function Home() {
         );
       }
 
-      const raw = responseBody || (await response.json());
-      const gradebookRoot = raw?.Gradebook ?? raw;
-      const errorMessage =
-        gradebookRoot?.["@ErrorMessage"] || gradebookRoot?._ErrorMessage;
-      if (errorMessage) {
-        throw new Error(String(errorMessage));
-      }
       saveStoredCredentials({ ...credentials });
       const selectedDistrictZip =
         (credentials as { zipcode?: string }).zipcode || "98028";

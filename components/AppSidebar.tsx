@@ -45,18 +45,20 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
+// `working: false` marks pages not yet migrated to the new mobile REST API.
+// They're greyed out in the nav so it's clear what still needs work.
 const primaryNav = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Gradebook", href: "/gradebook", icon: BookOpen },
-  { name: "Schedule", href: "/schedule", icon: Table },
-  { name: "Calendar", href: "/calendar", icon: CalendarDays },
-  { name: "Attendance", href: "/attendance", icon: Table2 },
-  { name: "Mail", href: "/mail", icon: Mail },
-  { name: "Missing Work", href: "/missing", icon: ClipboardX },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Course History", href: "/history", icon: History },
-  { name: "Test History", href: "/tests", icon: BookCheck },
-  { name: "School Information", href: "/school", icon: School },
+  { name: "Home", href: "/", icon: Home, working: true },
+  { name: "Gradebook", href: "/gradebook", icon: BookOpen, working: false },
+  { name: "Schedule", href: "/schedule", icon: Table, working: false },
+  { name: "Calendar", href: "/calendar", icon: CalendarDays, working: false },
+  { name: "Attendance", href: "/attendance", icon: Table2, working: false },
+  { name: "Mail", href: "/mail", icon: Mail, working: true },
+  { name: "Missing Work", href: "/missing", icon: ClipboardX, working: false },
+  { name: "Documents", href: "/documents", icon: FileText, working: true },
+  { name: "Course History", href: "/history", icon: History, working: false },
+  { name: "Test History", href: "/tests", icon: BookCheck, working: false },
+  { name: "School Information", href: "/school", icon: School, working: true },
 ];
 
 export function AppSidebar() {
@@ -128,9 +130,7 @@ export function AppSidebar() {
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const needsName = !studentName;
-    const needsStudentInfo = !permId || !school;
-    if (!needsName && !needsStudentInfo) return;
+    if (studentName && permId && school && studentPhoto) return;
 
     const creds = getStoredCredentials();
     if (!creds) return;
@@ -138,46 +138,38 @@ export function AppSidebar() {
 
     (async () => {
       try {
-        if (needsName) {
-          const data = await synergyPost<{ name?: string }>(
-            "/api/synergy/student/name",
-            creds,
-          );
-          if (!aborted) {
-            if (data && typeof data.name === "string" && data.name.trim()) {
-              const nm = data.name.trim();
-              setStudentName(nm);
-              localStorage.setItem("Student.studentName", nm);
-            }
-          }
-        }
+        // GetChildListData returns the student's name, perm ID, school, grade
+        // and photo (base64) in a single call.
+        const res = await synergyPost<{
+          data?: {
+            userFormattedName?: string;
+            childrenList?: Array<{
+              childName?: string;
+              childPermID?: string;
+              organizationName?: string;
+              photo?: string;
+            }>;
+          };
+        }>("/api/synergy/children", creds);
+        if (aborted) return;
 
-        if (needsStudentInfo) {
-          const data = await synergyPost<{
-            PermID?: string | number;
-            CurrentSchool?: string;
-            Photo?: string;
-          }>("/api/synergy/student", creds);
-          if (!aborted) {
-            if (data) {
-              if (data.PermID && !permId) {
-                const pid = String(data.PermID);
-                setPermId(pid);
-                localStorage.setItem("Student.studentPermId", pid);
-              }
-              if (data.CurrentSchool && !school) {
-                setSchool(data.CurrentSchool);
-                localStorage.setItem(
-                  "Student.studentSchool",
-                  data.CurrentSchool,
-                );
-              }
-              if (data.Photo && !studentPhoto) {
-                setStudentPhoto(data.Photo);
-                localStorage.setItem("Student.studentPhoto", data.Photo);
-              }
-            }
-          }
+        const child = res?.data?.childrenList?.[0];
+        const nm = child?.childName || res?.data?.userFormattedName;
+        if (nm && !studentName) {
+          setStudentName(nm);
+          localStorage.setItem("Student.studentName", nm);
+        }
+        if (child?.childPermID && !permId) {
+          setPermId(child.childPermID);
+          localStorage.setItem("Student.studentPermId", child.childPermID);
+        }
+        if (child?.organizationName && !school) {
+          setSchool(child.organizationName);
+          localStorage.setItem("Student.studentSchool", child.organizationName);
+        }
+        if (child?.photo && !studentPhoto) {
+          setStudentPhoto(child.photo);
+          localStorage.setItem("Student.studentPhoto", child.photo);
         }
       } catch {}
     })();
@@ -359,7 +351,8 @@ export function AppSidebar() {
                 const Icon = item.icon;
                 const isOnMockPage = pathname?.startsWith("/gradebook/mock");
                 const isGradebook = item.href === "/gradebook";
-                const isDisabled = isOnMockPage && !isGradebook;
+                const notWorking = item.working === false;
+                const isDisabled = (isOnMockPage && !isGradebook) || notWorking;
 
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -367,9 +360,11 @@ export function AppSidebar() {
                       asChild
                       isActive={!!active}
                       tooltip={
-                        isDisabled
-                          ? `${item.name} is disabled on mock page`
-                          : item.name
+                        notWorking
+                          ? `${item.name} — not available yet (API migration in progress)`
+                          : isOnMockPage && !isGradebook
+                            ? `${item.name} is disabled on mock page`
+                            : item.name
                       }
                       className={
                         isDisabled

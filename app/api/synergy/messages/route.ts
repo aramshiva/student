@@ -2,6 +2,4 @@ import { synergyRoute } from "@/lib/synergyRoute";
 
 export const runtime = "nodejs";
 
-export const POST = synergyRoute(({ client }) =>
-  client.call("GetPXPMessages", { childIntID: 0 }),
-);
+export const POST = synergyRoute(({ client }) => client.getMessages());

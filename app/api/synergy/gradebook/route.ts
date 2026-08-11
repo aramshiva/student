@@ -1,10 +1,9 @@
-import { synergyRoute, unwrapKey } from "@/lib/synergyRoute";
+import { synergyRoute } from "@/lib/synergyRoute";
 
 export const runtime = "nodejs";
 
-export const POST = synergyRoute(async ({ client, body }) => {
-  const params =
-    body.reportPeriod != null ? { ReportPeriod: body.reportPeriod } : {};
-  const raw = await client.call("Gradebook", params);
-  return unwrapKey(raw, "Gradebook");
-});
+export const POST = synergyRoute(({ client, body }) =>
+  client.getGradebook(
+    body.reportPeriod != null ? Number(body.reportPeriod) : undefined,
+  ),
+);

@@ -10,28 +10,22 @@ import { DataTable } from "./data-table";
 import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
 interface SchoolInfoResponse {
-  StudentSchoolInfoListing?: {
-    StaffLists?: {
-      StaffList?: Staff[] | Staff;
-    };
-    _School?: string;
-    _Principal?: string;
-    _SchoolAddress?: string;
-    _SchoolAddress2?: string;
-    _SchoolCity?: string;
-    _SchoolState?: string;
-    _SchoolZip?: string;
-    _Phone?: string;
-    _Phone2?: string;
-    _URL?: string;
-    _PrincipalEmail?: string;
-  };
+  school?: string;
+  principal?: string;
+  schoolAddress?: string;
+  schoolAddress2?: string;
+  schoolCity?: string;
+  schoolState?: string;
+  schoolZip?: string;
+  phone?: string;
+  phone2?: string;
+  URL?: string;
+  principalEmail?: string;
+  staffLists?: Staff[] | Staff;
 }
 
-function normalizeStaff(
-  listing?: SchoolInfoResponse["StudentSchoolInfoListing"],
-): Staff[] {
-  const raw = listing?.StaffLists?.StaffList;
+function normalizeStaff(data?: SchoolInfoResponse | null): Staff[] {
+  const raw = data?.staffLists;
   if (!raw) return [];
   return Array.isArray(raw) ? raw : [raw];
 }
@@ -39,9 +33,7 @@ function normalizeStaff(
 export default function SchoolInfoPage() {
   const router = useRouter();
   const [staff, setStaff] = useState<Staff[]>([]);
-  const [info, setInfo] = useState<
-    SchoolInfoResponse["StudentSchoolInfoListing"] | null
-  >(null);
+  const [info, setInfo] = useState<SchoolInfoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,9 +50,8 @@ export default function SchoolInfoPage() {
         "/api/synergy/school/info",
         creds,
       );
-      const listing = data?.StudentSchoolInfoListing;
-      setInfo(listing ?? null);
-      setStaff(normalizeStaff(listing));
+      setInfo(data ?? null);
+      setStaff(normalizeStaff(data));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -75,9 +66,9 @@ export default function SchoolInfoPage() {
   const address = useMemo(() => {
     if (!info) return "";
     const parts = [
-      info._SchoolAddress,
-      info._SchoolAddress2,
-      [info._SchoolCity, info._SchoolState, info._SchoolZip]
+      info.schoolAddress,
+      info.schoolAddress2,
+      [info.schoolCity, info.schoolState, info.schoolZip]
         .filter(Boolean)
         .join(", "),
     ].filter((p) => p && String(p).trim().length > 0);
@@ -129,19 +120,19 @@ export default function SchoolInfoPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-xl">
-            {info?._School || "School Info"}
+            {info?.school || "School Info"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          {info?._Principal && (
+          {info?.principal && (
             <div>
-              <span className="font-medium">Principal:</span> {info._Principal}
-              {info._PrincipalEmail && (
+              <span className="font-medium">Principal:</span> {info.principal}
+              {info.principalEmail && (
                 <a
                   className="ml-2 underline"
-                  href={`mailto:${info._PrincipalEmail}`}
+                  href={`mailto:${info.principalEmail}`}
                 >
-                  {info._PrincipalEmail}
+                  {info.principalEmail}
                 </a>
               )}
             </div>
@@ -151,25 +142,25 @@ export default function SchoolInfoPage() {
               <span className="font-medium">Address:</span> {address}
             </div>
           )}
-          {(info?._Phone || info?._Phone2) && (
+          {(info?.phone || info?.phone2) && (
             <div>
-              <span className="font-medium">Phone:</span> {info._Phone}
-              {info._Phone2 ? (
+              <span className="font-medium">Phone:</span> {info.phone}
+              {info.phone2 ? (
                 <span className="ml-2">
-                  <span className="font-medium">Fax:</span> {info._Phone2}
+                  <span className="font-medium">Fax:</span> {info.phone2}
                 </span>
               ) : null}
             </div>
           )}
-          {info?._URL && (
+          {info?.URL && (
             <div>
               <a
                 className="underline"
-                href={info._URL}
+                href={info.URL}
                 target="_blank"
                 rel="noreferrer"
               >
-                {info._URL}
+                {info.URL}
               </a>
             </div>
           )}
