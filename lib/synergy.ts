@@ -1,5 +1,4 @@
 // with the introduction of StudentVUE's v2 backend, the old SOAP API is no more!
-// hurrah! the old client is archived in lib/synergySoap.ts for reference.
 
 // the new flow:
 // 1. send a POST to /AttemptLogin with `Authorization: Basic base64(user:pass)`, and recieve an
@@ -17,8 +16,6 @@ export type StudentInfo = Record<string, unknown>;
 export type Gradebook = Record<string, unknown>;
 export type Documents = Record<string, unknown>;
 export type ReportCard = Record<string, unknown>;
-export type Attachment = Record<string, unknown>;
-export type AuthToken = Record<string, unknown>;
 export type Schedule = Record<string, unknown>;
 export type HealthInfo = Record<string, unknown>;
 
@@ -35,9 +32,6 @@ export interface LoginTokens {
   expires_in: number | null;
   scope: string | null;
 }
-
-export const escapeXmlText = (s: string) =>
-  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const sanitizeDomain = (raw: string): { host: string; pathPrefix: string } => {
   let s = (raw || "").trim();
