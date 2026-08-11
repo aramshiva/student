@@ -434,10 +434,10 @@ export class SynergyClient {
   }
 
   async getGradebook(reportPeriod?: number): Promise<Gradebook> {
-    const data = await this.call(
-      "Gradebook",
-      reportPeriod ? { ReportPeriod: reportPeriod } : undefined,
-    );
+    const data = await this.call("Gradebook", {
+      concurrentSchOrgYearGU: "",
+      ...(reportPeriod ? { ReportPeriod: reportPeriod } : {}),
+    });
     return SynergyClient.unwrap(data, "gradebook");
   }
 
