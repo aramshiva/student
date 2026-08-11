@@ -27,36 +27,34 @@ import {
 } from "@/lib/clientApi";
 
 interface MailRecipient {
-  _RecipientType?: string;
-  _GU?: string;
-  _RecipientList?: string;
-  _GroupUserTypes?: string;
-  _Details1?: string;
-  _Details2?: string;
+  recipientType?: number;
+  GU?: string;
+  recipientList?: number;
+  groupUserTypes?: number;
+  details1?: string;
+  details2?: string;
 }
 
 interface MailAttachment {
-  _SmAttachmentGU?: string;
-  _DocumentName?: string;
-  _FileName?: string;
+  smAttachmentGU?: string;
+  documentName?: string;
+  fileName?: string;
 }
 
 interface MailMessage {
-  From?: { RecipientXML?: MailRecipient | MailRecipient[] };
-  To?: string | Record<string, unknown> | null;
-  CC?: string | Record<string, unknown> | null;
-  BCC?: string | Record<string, unknown> | null;
-  Attachments?: {
-    AttachmentXML?: MailAttachment | MailAttachment[];
-  } | null;
-  _SMMessageGU?: string;
-  _SMMsgPersonGU?: string;
-  _SendDateTime?: string;
-  _SendDateTimeFormattedShort?: string;
-  _Subject?: string;
-  _MessageText?: string;
-  _MailRead?: string;
-  _NoReply?: string;
+  from?: MailRecipient[];
+  to?: unknown;
+  CC?: unknown;
+  BCC?: unknown;
+  attachments?: MailAttachment[];
+  smMessageGU?: string;
+  smMsgPersonGU?: string;
+  sendDateTime?: string;
+  sendDateTimeFormattedShort?: string;
+  subject?: string;
+  messageText?: string;
+  mailRead?: boolean;
+  noReply?: boolean;
 }
 
 type Folder = "Inbox" | "Archive";
@@ -82,15 +80,11 @@ function formatDate(dt?: string) {
 }
 
 function senderOf(m: MailMessage): MailRecipient | undefined {
-  return Array.isArray(m.From?.RecipientXML)
-    ? m.From?.RecipientXML[0]
-    : m.From?.RecipientXML;
+  return Array.isArray(m.from) ? m.from[0] : undefined;
 }
 
 function attachmentsOf(m: MailMessage): MailAttachment[] {
-  const raw = m.Attachments?.AttachmentXML;
-  if (!raw) return [];
-  return Array.isArray(raw) ? raw : [raw];
+  return Array.isArray(m.attachments) ? m.attachments : [];
 }
 
 export default function MailPage() {
@@ -145,21 +139,21 @@ export default function MailPage() {
   }, [creds, folder, fetchFolder]);
 
   const isUnread = (m: MailMessage) => {
-    const id = m._SMMessageGU || "";
+    const id = m.smMessageGU || "";
     if (unreadOverrides.has(id)) return unreadOverrides.get(id)!;
-    return m._MailRead === "false";
+    return m.mailRead === false;
   };
 
   const unreadCount = messages.filter(isUnread).length;
 
   const toggleRead = async (m: MailMessage) => {
-    if (!creds || !m._SMMsgPersonGU) return;
-    const id = m._SMMessageGU || "";
+    if (!creds || !m.smMsgPersonGU) return;
+    const id = m.smMessageGU || "";
     const currentlyUnread = isUnread(m);
     setBusy(true);
     try {
       await synergyPost("/api/synergy/mail/read", creds, {
-        sm_msg_person_gu: m._SMMsgPersonGU,
+        sm_msg_person_gu: m.smMsgPersonGU,
         mark_as_unread: !currentlyUnread,
       });
       setUnreadOverrides((prev) => new Map(prev).set(id, !currentlyUnread));
@@ -171,19 +165,19 @@ export default function MailPage() {
   };
 
   const moveMessage = async (m: MailMessage) => {
-    if (!creds || !m._SMMsgPersonGU) return;
+    if (!creds || !m.smMsgPersonGU) return;
     const toArchive = folder === "Inbox";
     setBusy(true);
     try {
       await synergyPost("/api/synergy/mail/move", creds, {
-        sm_msg_person_gu: m._SMMsgPersonGU,
+        sm_msg_person_gu: m.smMsgPersonGU,
         folder_type: toArchive ? "3" : "0",
         folder_name: toArchive ? "Archive" : "Inbox",
       });
       setMessages((prev) =>
-        prev.filter((x) => x._SMMessageGU !== m._SMMessageGU),
+        prev.filter((x) => x.smMessageGU !== m.smMessageGU),
       );
-      if (selected?._SMMessageGU === m._SMMessageGU) {
+      if (selected?.smMessageGU === m.smMessageGU) {
         setSelected(null);
         setReplyEmail(null);
       }
@@ -199,17 +193,17 @@ export default function MailPage() {
 
   const openReply = async (m: MailMessage) => {
     const sender = senderOf(m);
-    const name = sender?._Details1 || "Unknown";
-    const subject = `Re: ${m._Subject || ""}`;
-    if (!creds || !sender?._GU) return;
+    const name = sender?.details1 || "Unknown";
+    const subject = `Re: ${m.subject || ""}`;
+    if (!creds || !sender?.GU) return;
     setReplyLoading(true);
     try {
       const data = await synergyPost<{
         SynergyMailRecipientAddressingXML?: { StaffInfoEmails?: unknown };
       }>("/api/synergy/mail/recipient", creds, {
-        staff_gu: sender._GU,
+        staff_gu: sender.GU,
         staff_name: name,
-        staff_type: sender._RecipientType || "",
+        staff_type: sender.recipientType != null ? String(sender.recipientType) : "",
       });
       const emails = data?.SynergyMailRecipientAddressingXML?.StaffInfoEmails;
       const email =
@@ -313,9 +307,9 @@ export default function MailPage() {
               {messages.map((m) => {
                 const sender = senderOf(m);
                 const unread = isUnread(m);
-                const active = selected?._SMMessageGU === m._SMMessageGU;
+                const active = selected?.smMessageGU === m.smMessageGU;
                 return (
-                  <li key={m._SMMessageGU} className="group relative">
+                  <li key={m.smMessageGU} className="group relative">
                     <button
                       onClick={() => selectMessage(m)}
                       className={`w-full text-left rounded px-2 py-2 border hover:bg-muted/40 transition text-sm ${
@@ -334,16 +328,16 @@ export default function MailPage() {
                             unread ? "font-semibold" : "font-medium"
                           }`}
                         >
-                          {m._Subject || "(No Subject)"}
+                          {m.subject || "(No Subject)"}
                         </span>
                         {attachmentsOf(m).length > 0 && (
                           <Paperclip className="size-3 text-zinc-400 shrink-0 ml-auto" />
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground line-clamp-1">
-                        {sender?._Details1 || "Unknown"} •{" "}
-                        {m._SendDateTimeFormattedShort ||
-                          formatDate(m._SendDateTime)}
+                        {sender?.details1 || "Unknown"} •{" "}
+                        {m.sendDateTimeFormattedShort ||
+                          formatDate(m.sendDateTime)}
                       </div>
                     </button>
                     <Button
@@ -397,12 +391,12 @@ export default function MailPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="text-lg font-semibold break-words">
-                    {selected._Subject || "(No Subject)"}
+                    {selected.subject || "(No Subject)"}
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    From: {selectedSender?._Details1 || "Unknown"}
+                    From: {selectedSender?.details1 || "Unknown"}
                     {replyEmail ? ` <${replyEmail}>` : ""} •{" "}
-                    {formatDate(selected._SendDateTime)}
+                    {formatDate(selected.sendDateTime)}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -422,7 +416,7 @@ export default function MailPage() {
                       <MailIcon className="w-4 h-4" />
                     )}
                   </Button>
-                  {selected._NoReply !== "true" && selectedSender?._GU && (
+                  {!selected.noReply && selectedSender?.GU && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -458,12 +452,12 @@ export default function MailPage() {
                 <div className="flex flex-wrap gap-2">
                   {selectedAttachments.map((a, i) => (
                     <Badge
-                      key={a._SmAttachmentGU || i}
+                      key={a.smAttachmentGU || i}
                       variant="outline"
                       className="gap-1"
                     >
                       <Paperclip className="size-3" />
-                      {a._DocumentName || a._FileName || "Attachment"}
+                      {a.documentName || a.fileName || "Attachment"}
                     </Badge>
                   ))}
                 </div>
@@ -471,7 +465,7 @@ export default function MailPage() {
               <div
                 className="prose max-w-none text-sm dark:prose-invert"
                 dangerouslySetInnerHTML={{
-                  __html: selected._MessageText || "<p>(No content)</p>",
+                  __html: selected.messageText || "<p>(No content)</p>",
                 }}
               />
             </div>

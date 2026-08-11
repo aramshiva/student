@@ -76,21 +76,17 @@ export default function DocumentsPage() {
     setIsLoading(true);
     setError(null);
     synergyPost<{
-      StudentDocumentDatas?: { StudentDocumentData?: unknown };
+      studentDocumentDatas?: Record<string, unknown>[];
     }>("/api/synergy/documents", creds)
       .then((data) => {
-        const list = data?.StudentDocumentDatas?.StudentDocumentData || [];
-        const arr = Array.isArray(list) ? list : [list];
-        let mapped: StudentDocument[] = arr.map((d: unknown) => {
-          const doc = d as Record<string, unknown>;
-          return {
-            comment: String(doc?._DocumentComment ?? ""),
-            date: String(doc?._DocumentDate ?? ""),
-            fileName: String(doc?._DocumentFileName ?? ""),
-            guid: String(doc?._DocumentGU ?? ""),
-            type: String(doc?._DocumentType ?? ""),
-          };
-        });
+        const arr = data?.studentDocumentDatas ?? [];
+        let mapped: StudentDocument[] = arr.map((doc) => ({
+          comment: String(doc?.documentComment ?? ""),
+          date: String(doc?.documentDate ?? ""),
+          fileName: String(doc?.documentFileName ?? ""),
+          guid: String(doc?.documentGU ?? ""),
+          type: String(doc?.documentType ?? ""),
+        }));
         mapped = mapped.sort(
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
         );
@@ -108,40 +104,13 @@ export default function DocumentsPage() {
     const creds = getStoredCredentials();
     if (!creds) return null;
     const json = await synergyPost<{
-      StudentAttachedDocumentData?: {
-        DocumentDatas?: {
-          DocumentData?: {
-            Base64Code?: unknown;
-            _DocumentFileName?: unknown;
-            _FileName?: unknown;
-          };
-        };
-      };
-      pdf?: unknown;
+      documentDatas?: Array<{ base64Code?: string; fileName?: string }>;
     }>("/api/synergy/documents/get", creds, { document_guid: guid });
-    const docNode =
-      json?.StudentAttachedDocumentData?.DocumentDatas?.DocumentData;
-    let base64: unknown = docNode?.Base64Code;
-    if (
-      base64 &&
-      typeof base64 === "object" &&
-      base64 !== null &&
-      "$" in base64
-    ) {
-      base64 = (base64 as { $: unknown }).$;
-    }
-    const fileName: string = String(
-      docNode?._DocumentFileName ?? docNode?._FileName ?? "document.pdf",
-    );
-    const fallback = json?.pdf;
-    const b64 =
-      typeof base64 === "string" && base64.length > 50
-        ? base64
-        : typeof fallback === "string"
-          ? fallback
-          : null;
-    if (!b64) return null;
-    return { base64: b64, fileName };
+    const docNode = json?.documentDatas?.[0];
+    const base64 = docNode?.base64Code;
+    const fileName = docNode?.fileName ?? "document.pdf";
+    if (typeof base64 !== "string" || base64.length < 50) return null;
+    return { base64, fileName };
   };
 
   const openDocument = async (guid: string) => {

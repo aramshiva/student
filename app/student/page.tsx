@@ -92,30 +92,26 @@ interface LegacyStudentInfoWrapper {
 }
 
 interface PXPMessagesApiResponse {
-  PXPMessagesData?: {
-    _SupportingSynergyMail?: string | boolean;
-    MessageListings?: unknown;
-    SynergyMailMessageListingByStudents?: {
-      SynergyMailMessageListingByStudent?: {
-        _StudentGU?: string;
-        SynergyMailMessageListings?: {
-          SynergyMailMessageListing?: MessageListing | MessageListing[];
-        };
-      };
-    };
+  pxpMessagesData?: {
+    supportingSynergyMail?: boolean;
+    messageListings?: unknown;
+    synergyMailMessageListingByStudents?: Array<{
+      studentGU?: string;
+      synergyMailMessageListings?: MessageListing[];
+    }>;
   };
 }
 
 interface MessageListing {
-  _BeginDate?: string;
-  _Deletable?: string | boolean;
-  _IconURL?: string;
-  _Module?: string;
-  _Read?: string | boolean;
-  _Subject?: string;
-  _SubjectNoHTML?: string;
-  _Type?: string;
-  AttachmentDatas?: unknown;
+  beginDate?: string;
+  deletable?: boolean;
+  iconURL?: string;
+  module?: number | string;
+  read?: boolean;
+  subject?: string;
+  subjectNoHTML?: string;
+  type?: number | string;
+  attachmentDatas?: unknown;
 }
 interface ParsedMessage {
   id: string;
@@ -326,10 +322,11 @@ export default function StudentDashboard() {
         }
 
         const messagesJson = messagesResult.value;
-        const listingsRaw =
-          messagesJson?.PXPMessagesData?.SynergyMailMessageListingByStudents
-            ?.SynergyMailMessageListingByStudent?.SynergyMailMessageListings
-            ?.SynergyMailMessageListing;
+        const byStudents =
+          messagesJson?.pxpMessagesData?.synergyMailMessageListingByStudents;
+        const listingsRaw = (
+          Array.isArray(byStudents) ? byStudents[0] : undefined
+        )?.synergyMailMessageListings;
         const list: MessageListing[] = listingsRaw
           ? Array.isArray(listingsRaw)
             ? listingsRaw
@@ -356,19 +353,19 @@ export default function StudentDashboard() {
           return raw;
         };
         const parsed: ParsedMessage[] = list.map((m, i) => {
-          const subj = m._SubjectNoHTML || m._Subject || "(No Subject)";
+          const subj = m.subjectNoHTML || m.subject || "(No Subject)";
           return {
             id: `${i}-${subj.slice(0, 24)}`,
             subject: subj,
-            date: parseDate(m._BeginDate),
-            module: m._Module || "",
-            read: typeof m._Read === "string" ? m._Read === "true" : !!m._Read,
-            type: m._Type || "",
+            date: parseDate(m.beginDate),
+            module: m.module != null ? String(m.module) : "",
+            read: !!m.read,
+            type: m.type != null ? String(m.type) : "",
           };
         });
         parsed.sort((a, b) => {
           const findRaw = (pm: ParsedMessage) =>
-            list[parsed.indexOf(pm)]?._BeginDate || "";
+            list[parsed.indexOf(pm)]?.beginDate || "";
           const ad = new Date(findRaw(a).replace(/ 00:00:00$/, "")).getTime();
           const bd = new Date(findRaw(b).replace(/ 00:00:00$/, "")).getTime();
           return bd - ad;

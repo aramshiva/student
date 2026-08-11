@@ -45,6 +45,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <div className="w-full bg-yellow-300 text-black text-center text-sm font-medium h-fit text-wrap py-1">
+          <p>
+            Student is currently limited due to recent StudentVUE backend changes.
+          </p>
+          <p>
+            Full access will be restored by the end of the month, thank you for
+            your patience.
+          </p>
+        </div>
         <ThemeProvider>
           <ClientLayout>
             <div>{children}</div>

@@ -45,18 +45,40 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
 
-const primaryNav = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Gradebook", href: "/gradebook", icon: BookOpen },
-  { name: "Schedule", href: "/schedule", icon: Table },
-  { name: "Calendar", href: "/calendar", icon: CalendarDays },
-  { name: "Attendance", href: "/attendance", icon: Table2 },
-  { name: "Mail", href: "/mail", icon: Mail },
-  { name: "Missing Work", href: "/missing", icon: ClipboardX },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Course History", href: "/history", icon: History },
-  { name: "Test History", href: "/tests", icon: BookCheck },
-  { name: "School Information", href: "/school", icon: School },
+// `working: false` marks pages not yet migrated to the new api
+type NavItem = {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  working: boolean;
+  module?: string;
+};
+
+const primaryNav: NavItem[] = [
+  { name: "Home", href: "/", icon: Home, working: true },
+  { name: "Gradebook", href: "/gradebook", icon: BookOpen, working: false, module: "showGradeBookModule" }, // prettier-ignore
+  { name: "Schedule", href: "/schedule", icon: Table, working: false, module: "showCurrentScheduleModule" }, // prettier-ignore
+  { name: "Calendar", href: "/calendar", icon: CalendarDays, working: false, module: "showCalenderModule" }, // prettier-ignore
+  { name: "Attendance", href: "/attendance", icon: Table2, working: false, module: "showAttendanceModule" }, // prettier-ignore
+  { name: "Mail", href: "/mail", icon: Mail, working: true, module: "showSynergyMailModule" },
+  { name: "Missing Work", href: "/missing", icon: ClipboardX, working: false, module: "showGradeBookModule" }, // prettier-ignore
+  { name: "Documents", href: "/documents", icon: FileText, working: true, module: "showDocumentModule" }, // prettier-ignore
+  { name: "Course History", href: "/history", icon: History, working: true, module: "showCourseHistoryModule" }, // prettier-ignore
+  { name: "Test History", href: "/tests", icon: BookCheck, working: true, module: "showTestHistoryModule" }, // prettier-ignore
+  { name: "School Information", href: "/school", icon: School, working: true, module: "showSchoolInformationModule" }, // prettier-ignore
+];
+
+// module visibility flags we read out of GetChildListData
+const MODULE_FLAG_KEYS = [
+  "showGradeBookModule",
+  "showCurrentScheduleModule",
+  "showCalenderModule",
+  "showAttendanceModule",
+  "showSynergyMailModule",
+  "showDocumentModule",
+  "showCourseHistoryModule",
+  "showTestHistoryModule",
+  "showSchoolInformationModule",
 ];
 
 export function AppSidebar() {
@@ -65,6 +87,10 @@ export function AppSidebar() {
   const [permId, setPermId] = React.useState<string>("");
   const [studentName, setStudentName] = React.useState<string>("");
   const [school, setSchool] = React.useState<string>("");
+  const [moduleFlags, setModuleFlags] = React.useState<Record<
+    string,
+    boolean
+  > | null>(null);
   const [quickStats, setQuickStats] = React.useState<{
     gpa: string;
     missing: number;
@@ -123,14 +149,14 @@ export function AppSidebar() {
       setSchool(localStorage.getItem("Student.studentSchool") || "");
       const existingName = localStorage.getItem("Student.studentName") || "";
       if (existingName) setStudentName(existingName);
+      const flags = localStorage.getItem("Student.moduleFlags");
+      if (flags) setModuleFlags(JSON.parse(flags));
     } catch {}
   }, []);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const needsName = !studentName;
-    const needsStudentInfo = !permId || !school;
-    if (!needsName && !needsStudentInfo) return;
+    if (studentName && permId && school && studentPhoto && moduleFlags) return;
 
     const creds = getStoredCredentials();
     if (!creds) return;
@@ -138,46 +164,50 @@ export function AppSidebar() {
 
     (async () => {
       try {
-        if (needsName) {
-          const data = await synergyPost<{ name?: string }>(
-            "/api/synergy/student/name",
-            creds,
-          );
-          if (!aborted) {
-            if (data && typeof data.name === "string" && data.name.trim()) {
-              const nm = data.name.trim();
-              setStudentName(nm);
-              localStorage.setItem("Student.studentName", nm);
-            }
+        // GetChildListData returns the student's name, perm ID, school, grade
+        // and photo (base64), plus the district's module visibility flags.
+        const res = await synergyPost<{
+          data?: {
+            userFormattedName?: string;
+            childrenList?: Array<{
+              childName?: string;
+              childPermID?: string;
+              organizationName?: string;
+              photo?: string;
+            }>;
+          } & Record<string, unknown>;
+        }>("/api/synergy/children", creds);
+        if (aborted) return;
+
+        const data = res?.data;
+        if (data) {
+          const flags: Record<string, boolean> = {};
+          for (const k of MODULE_FLAG_KEYS) {
+            if (typeof data[k] === "boolean") flags[k] = data[k] as boolean;
+          }
+          if (Object.keys(flags).length) {
+            setModuleFlags(flags);
+            localStorage.setItem("Student.moduleFlags", JSON.stringify(flags));
           }
         }
 
-        if (needsStudentInfo) {
-          const data = await synergyPost<{
-            PermID?: string | number;
-            CurrentSchool?: string;
-            Photo?: string;
-          }>("/api/synergy/student", creds);
-          if (!aborted) {
-            if (data) {
-              if (data.PermID && !permId) {
-                const pid = String(data.PermID);
-                setPermId(pid);
-                localStorage.setItem("Student.studentPermId", pid);
-              }
-              if (data.CurrentSchool && !school) {
-                setSchool(data.CurrentSchool);
-                localStorage.setItem(
-                  "Student.studentSchool",
-                  data.CurrentSchool,
-                );
-              }
-              if (data.Photo && !studentPhoto) {
-                setStudentPhoto(data.Photo);
-                localStorage.setItem("Student.studentPhoto", data.Photo);
-              }
-            }
-          }
+        const child = res?.data?.childrenList?.[0];
+        const nm = child?.childName || res?.data?.userFormattedName;
+        if (nm && !studentName) {
+          setStudentName(nm);
+          localStorage.setItem("Student.studentName", nm);
+        }
+        if (child?.childPermID && !permId) {
+          setPermId(child.childPermID);
+          localStorage.setItem("Student.studentPermId", child.childPermID);
+        }
+        if (child?.organizationName && !school) {
+          setSchool(child.organizationName);
+          localStorage.setItem("Student.studentSchool", child.organizationName);
+        }
+        if (child?.photo && !studentPhoto) {
+          setStudentPhoto(child.photo);
+          localStorage.setItem("Student.studentPhoto", child.photo);
         }
       } catch {}
     })();
@@ -185,7 +215,7 @@ export function AppSidebar() {
     return () => {
       aborted = true;
     };
-  }, [studentName, permId, school, studentPhoto]);
+  }, [studentName, permId, school, studentPhoto, moduleFlags]);
 
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -359,7 +389,13 @@ export function AppSidebar() {
                 const Icon = item.icon;
                 const isOnMockPage = pathname?.startsWith("/gradebook/mock");
                 const isGradebook = item.href === "/gradebook";
-                const isDisabled = isOnMockPage && !isGradebook;
+                const notWorking = item.working === false;
+                const moduleHidden =
+                  !!item.module &&
+                  !!moduleFlags &&
+                  moduleFlags[item.module] === false;
+                const isDisabled =
+                  (isOnMockPage && !isGradebook) || notWorking || moduleHidden;
 
                 return (
                   <SidebarMenuItem key={item.href}>
@@ -367,9 +403,13 @@ export function AppSidebar() {
                       asChild
                       isActive={!!active}
                       tooltip={
-                        isDisabled
-                          ? `${item.name} is disabled on mock page`
-                          : item.name
+                        moduleHidden
+                          ? `${item.name} — not enabled by your district`
+                          : notWorking
+                            ? `${item.name} — not available yet (API migration in progress)`
+                            : isOnMockPage && !isGradebook
+                              ? `${item.name} is disabled on mock page`
+                              : item.name
                       }
                       className={
                         isDisabled

@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import { getSessionCookie } from "@/lib/synergySession";
+import { SynergyClient } from "@/lib/synergy";
 
 type Input = {
   districtUrl: string;
@@ -46,13 +46,8 @@ export async function fetchStudentVue({
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const cookieHeader = await getSessionCookie({
-      districtBase: base,
-      userId: username,
-      password,
-      signal: controller.signal,
-      userAgent: UA,
-    });
+    const client = new SynergyClient(base, username, password);
+    const cookieHeader = await client.sessionCookieHeader();
 
     async function fetchCourseHistoryPage(baseUrl: string): Promise<string> {
       const resp = await fetch(`${baseUrl}/PXP2_CourseHistory.aspx?AGU=0`, {
