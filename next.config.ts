@@ -13,6 +13,9 @@ const legacyApiPaths: Record<string, string> = {
 };
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    "/privacy": ["./PRIVACY.md"],
+  },
   async rewrites() {
     return Object.entries(legacyApiPaths).map(([source, destination]) => ({
       source,

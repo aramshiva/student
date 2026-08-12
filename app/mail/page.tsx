@@ -240,7 +240,7 @@ export default function MailPage() {
             <Badge variant="secondary">{unreadCount} unread</Badge>
           )}
         </div>
-        <div className="flex items-center gap-1 rounded-md border p-0.5">
+        <div className="flex items-center gap-1 rounded-2xl border p-0.5">
           <Button
             variant={folder === "Inbox" ? "secondary" : "ghost"}
             size="sm"
@@ -335,7 +335,7 @@ export default function MailPage() {
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground line-clamp-1">
-                        {sender?.details1 || "Unknown"} •{" "}
+                        {sender?.details1 || "Unknown"} -{" "}
                         {m.sendDateTimeFormattedShort ||
                           formatDate(m.sendDateTime)}
                       </div>
@@ -395,7 +395,9 @@ export default function MailPage() {
                   </h2>
                   <p className="text-xs text-muted-foreground">
                     From: {selectedSender?.details1 || "Unknown"}
-                    {replyEmail ? ` <${replyEmail}>` : ""} •{" "}
+                    {replyEmail ? ` <${replyEmail}>` : ""}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
                     {formatDate(selected.sendDateTime)}
                   </p>
                 </div>
