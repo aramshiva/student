@@ -252,7 +252,7 @@ export class SynergyClient {
       AttestPlatform: "iOS",
       AttestKeyId: null,
       LoginAssertion: null,
-      edupointkeyversion: null,
+      edupointkeyversion: "NZOUoGVHTZfsgYInXwqkzr3CIQQo7bLXXEyKJ5mt2CI=",
       LoginClientData: `POST:${path}:${Date.now()}:${randomNonce()}`,
       DeviceModel: "Student (web)",
     });
