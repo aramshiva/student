@@ -172,7 +172,7 @@ export default function Login({ onLogin, isLoading, error }: LoginProps) {
               htmlFor="username"
               className="block text-sm font-medium mb-2"
             >
-              Student ID:
+              Username:
             </label>
             <Input
               type="text"

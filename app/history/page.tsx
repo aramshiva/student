@@ -120,17 +120,17 @@ export default function HistoryPage() {
 
         {data && (
           <>
-            <Card className="p-5">
-              <p className="text-lg">Graduation Requirements</p>
+            <div className="p-5">
+              <p className="text-lg pb-2">Graduation Requirements</p>
               <GraduationChart data={data.graduationRequirements} />
-            </Card>
-            <Card className="p-5">
-              <p className="text-lg">Course History</p>
+            </div>
+            <div className="p-5">
+              <p className="text-lg pb-2">Course History</p>
               <DataTable
                 columns={courseColumns}
                 data={flattenCourseHistory(data.courseHistory)}
               />
-            </Card>
+            </div>
           </>
         )}
       </div>
