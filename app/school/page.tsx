@@ -80,16 +80,14 @@ export default function SchoolInfoPage() {
       <div className="min-h-screen bg-white dark:bg-zinc-900 p-9">
         <Skeleton className="h-8 w-48 mb-6" />
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-40" />
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Skeleton className="h-4 w-64" />
-              <Skeleton className="h-4 w-56" />
-              <Skeleton className="h-4 w-48" />
-            </CardContent>
-          </Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-4 w-56" />
+            <Skeleton className="h-4 w-48" />
+          </CardContent>
           <Card>
             <CardHeader>
               <Skeleton className="h-6 w-32" />
@@ -117,64 +115,52 @@ export default function SchoolInfoPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-900 p-9 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">
-            {info?.school || "School Info"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-          {info?.principal && (
-            <div>
-              <span className="font-medium">Principal:</span> {info.principal}
-              {info.principalEmail && (
-                <a
-                  className="ml-2 underline"
-                  href={`mailto:${info.principalEmail}`}
-                >
-                  {info.principalEmail}
-                </a>
-              )}
-            </div>
-          )}
-          {address && (
-            <div className="whitespace-pre-line">
-              <span className="font-medium">Address:</span> {address}
-            </div>
-          )}
-          {(info?.phone || info?.phone2) && (
-            <div>
-              <span className="font-medium">Phone:</span> {info.phone}
-              {info.phone2 ? (
-                <span className="ml-2">
-                  <span className="font-medium">Fax:</span> {info.phone2}
-                </span>
-              ) : null}
-            </div>
-          )}
-          {info?.URL && (
-            <div>
+      <p className="text-xl">{info?.school || "School Info"}</p>
+      <div className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
+        {info?.principal && (
+          <div>
+            <span className="font-medium">Principal:</span> {info.principal}
+            {info.principalEmail && (
               <a
-                className="underline"
-                href={info.URL}
-                target="_blank"
-                rel="noreferrer"
+                className="ml-2 underline"
+                href={`mailto:${info.principalEmail}`}
               >
-                {info.URL}
+                {info.principalEmail}
               </a>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </div>
+        )}
+        {address && (
+          <div className="whitespace-pre-line">
+            <span className="font-medium">Address:</span> {address}
+          </div>
+        )}
+        {(info?.phone || info?.phone2) && (
+          <div>
+            <span className="font-medium">Phone:</span> {info.phone}
+            {info.phone2 ? (
+              <span className="ml-2">
+                <span className="font-medium">Fax:</span> {info.phone2}
+              </span>
+            ) : null}
+          </div>
+        )}
+        {info?.URL && (
+          <div>
+            <a
+              className="underline"
+              href={info.URL}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {info.URL}
+            </a>
+          </div>
+        )}
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Staff Directory</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DataTable columns={columns} data={staff} />
-        </CardContent>
-      </Card>
+      <p className="text-lg pt-2">Staff Directory</p>
+      <DataTable columns={columns} data={staff} />
     </div>
   );
 }

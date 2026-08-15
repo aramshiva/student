@@ -290,8 +290,7 @@ export class SynergyClient {
       throw new Error("Malformed AttemptLogin response");
     }
     if (!parsed.access_token) {
-      // an invalid login returns no token (and usually an error envelope)
-      throw new Error("Login failed: no access token returned");
+      throw new Error(`Login failed: no access token returned: ${raw}`);
     }
     this.tokens = {
       access_token: parsed.access_token,
