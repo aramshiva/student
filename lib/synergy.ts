@@ -239,8 +239,6 @@ export class SynergyClient {
     return `Basic ${b64}`;
   }
 
-  // Attestation is client side, so sent fields are null. Server does not enforce.
-  // called lazily and cached per instance. Returns { access_token, refresh_token }.
   async login(): Promise<LoginTokens> {
     if (this.tokens) return this.tokens;
 
@@ -249,9 +247,6 @@ export class SynergyClient {
       userID: null,
       password: null,
       userType: "Student",
-      AttestPlatform: "iOS",
-      AttestKeyId: null,
-      LoginAssertion: null,
       LoginClientData: `POST:${path}:${Date.now()}:${randomNonce()}`,
       DeviceModel: "Student (web)",
     });
