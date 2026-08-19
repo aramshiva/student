@@ -108,7 +108,7 @@ const spec = {
       post: {
         summary: "Get student info",
         description:
-          "Fetches student profile information, including photo, ID, and school, sometimes may omit name.",
+          "Fetches the student profile (Synergy GetStudentInfoData). Districts populate these fields inconsistently \u2014 anything the district leaves blank comes back as an empty string.",
         tags: ["Synergy"],
         requestBody: {
           required: true,
@@ -126,13 +126,64 @@ const spec = {
                 schema: {
                   type: "object",
                   properties: {
-                    PermID: { type: "string" },
-                    FormattedName: { type: "string" },
-                    CurrentSchool: { type: "string" },
-                    Grade: { type: "string" },
-                    Photo: {
+                    permID: { type: "string" },
+                    formattedName: { type: "string" },
+                    currentSchool: { type: "string" },
+                    grade: { type: "string" },
+                    gender: { type: "string" },
+                    birthDate: { type: "string" },
+                    address: { type: "string" },
+                    phone: { type: "string" },
+                    eMail: { type: "string" },
+                    nickName: { type: "string" },
+                    lastNameGoesBy: { type: "string" },
+                    homeLanguage: { type: "string" },
+                    track: { type: "string" },
+                    homeRoom: { type: "string" },
+                    homeRoomTch: { type: "string" },
+                    homeRoomTchEMail: { type: "string" },
+                    homeRoomTchStaffGU: { type: "string" },
+                    counselorName: { type: "string" },
+                    counselorEmail: { type: "string" },
+                    counselorStaffGU: { type: "string" },
+                    orgYearGU: { type: "string" },
+                    photo: {
                       type: "string",
                       description: "base64 encoded photo",
+                    },
+                    physician: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        hospital: { type: "string" },
+                        phone: { type: "string" },
+                        extn: { type: "string" },
+                      },
+                    },
+                    dentist: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        office: { type: "string" },
+                        phone: { type: "string" },
+                        extn: { type: "string" },
+                      },
+                    },
+                    emergencyContacts: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                    lockerInfoRecords: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                    studentBusAssignments: {
+                      type: "array",
+                      items: { type: "object" },
+                    },
+                    userDefinedGroupBoxes: {
+                      type: "array",
+                      items: { type: "object" },
                     },
                   },
                 },
@@ -497,6 +548,165 @@ const spec = {
         },
         responses: {
           "200": { description: "School information" },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/synergy/student/details": {
+      post: {
+        summary: "Get student info from the portal page",
+        description:
+          "Scrapes PXP2_Student.aspx, the portal's own Student Info page. Districts populate it far more fully than the mobile API \u2014 homeroom teacher, counselor, legal names and grad year typically appear here even when /api/synergy/student returns them blank.",
+        tags: ["Synergy"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/Credentials" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Sections as rendered on the portal page",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    meta: {
+                      type: "object",
+                      description:
+                        "details from the page chrome and PXP.NavigationData rather than the info tables",
+                      properties: {
+                        district: { type: "string" },
+                        fullName: { type: "string" },
+                        studentId: { type: "string" },
+                        school: { type: "string" },
+                        schoolPhone: { type: "string" },
+                        photoPath: { type: "string" },
+                        namePronunciationPath: {
+                          type: "string",
+                          description:
+                            "portal path to an audio clip; fetch via /api/synergy/student/asset",
+                        },
+                        modules: { type: "array", items: { type: "string" } },
+                      },
+                    },
+                    sections: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          title: {
+                            type: "string",
+                            description: 'e.g. "Student School Info"',
+                          },
+                          fields: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                label: { type: "string" },
+                                value: { type: "string" },
+                              },
+                            },
+                          },
+                          table: {
+                            type: "object",
+                            description:
+                              "present instead of fields for grid sections such as phone numbers",
+                            properties: {
+                              headers: {
+                                type: "array",
+                                items: { type: "string" },
+                              },
+                              rows: {
+                                type: "array",
+                                items: {
+                                  type: "array",
+                                  items: { type: "string" },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "400": {
+            description: "Bad request",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+          "500": {
+            description: "Server error",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Error" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/synergy/student/asset": {
+      post: {
+        summary: "Fetch portal-hosted media",
+        description:
+          "Streams a file from the district's Photos/ tree (currently the name pronunciation clip returned in /api/synergy/student/details meta). Requires the Synergy session cookie, so the browser cannot request it directly. Takes a `path` alongside the credentials and responds with the raw bytes.",
+        tags: ["Synergy"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                allOf: [
+                  { $ref: "#/components/schemas/Credentials" },
+                  {
+                    type: "object",
+                    properties: {
+                      path: {
+                        type: "string",
+                        example: "Photos/CC/GUID_NamePronunciation.MP3",
+                      },
+                    },
+                    required: ["path"],
+                  },
+                ],
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "File contents",
+            content: {
+              "*/*": { schema: { type: "string", format: "binary" } },
+            },
+          },
           "400": {
             description: "Bad request",
             content: {

@@ -336,7 +336,8 @@ export class SynergyClient {
       // client surfaced that as an empty payload, so mirror it instead of
       // throwing (keeps the UI on an empty state rather than a 500).
       if (env.error.code === "2100") return {} as T;
-      const msg = env.error.message || env.error.code || "Unknown Synergy error";
+      const msg =
+        env.error.message || env.error.code || "Unknown Synergy error";
       throw new Error(String(msg));
     }
     return (env.data ?? {}) as T;
@@ -348,6 +349,66 @@ export class SynergyClient {
       throw new Error("No session cookie available");
     }
     return this.sessionCookie;
+  }
+
+  // the PXP2 portal pages render fields the mobile API leaves blank, so fetch
+  // them with the same session cookie ClientSideData uses.
+  async getWebPage(page: string): Promise<string> {
+    if (!/^[A-Za-z0-9_]+\.aspx(\?[A-Za-z0-9_=&%.-]*)?$/.test(page)) {
+      throw new Error(`Refusing to fetch unexpected page: ${page}`);
+    }
+    await this.login();
+    if (!this.sessionCookie) {
+      throw new Error("No session cookie available for page fetch");
+    }
+    const res = await fetchWithTimeout(
+      `https://${this.domain}${this.pathPrefix}/${page}`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "text/html,application/xhtml+xml",
+          Cookie: this.sessionCookie,
+          "User-Agent": "SynergyClient",
+        },
+      },
+    );
+    const raw = await res.text().catch(() => "");
+    if (!res.ok) throw upstreamError(page, res.status, raw);
+    return raw;
+  }
+
+  // portal-hosted media (student photo, name pronunciation clip) also needs the
+  // session cookie. restricted to the Photos/ tree the portal links to.
+  async getWebAsset(
+    path: string,
+  ): Promise<{ body: ArrayBuffer; contentType: string }> {
+    if (
+      path.includes("..") ||
+      !/^Photos\/[A-Za-z0-9/_-]+\.(png|jpe?g|mp3|wav|m4a)$/i.test(path)
+    ) {
+      throw new Error(`Refusing to fetch unexpected asset: ${path}`);
+    }
+    await this.login();
+    if (!this.sessionCookie) {
+      throw new Error("No session cookie available for asset fetch");
+    }
+    const res = await fetchWithTimeout(
+      `https://${this.domain}${this.pathPrefix}/${path}`,
+      {
+        method: "GET",
+        headers: {
+          Accept: "*/*",
+          Cookie: this.sessionCookie,
+          "User-Agent": "SynergyClient",
+        },
+      },
+    );
+    if (!res.ok) throw upstreamError(path, res.status, "");
+    return {
+      body: await res.arrayBuffer(),
+      contentType:
+        res.headers.get("content-type") || "application/octet-stream",
+    };
   }
 
   async clientSideData<T = unknown>(
@@ -435,10 +496,15 @@ export class SynergyClient {
     return SynergyClient.unwrap(data, "gradebook");
   }
 
-  // TODO(api): confirm new method name + response wrapper key. softCall until then.
+  // GetStudentInfoData returns { studentInfoXML, studentInfoDetailXML }. the
+  // "Detail" payload is the populated one; studentInfoXML is null on the
+  // districts seen so far, so fall back to it only if Detail is missing.
   async getStudentInfo(): Promise<StudentInfo> {
-    const data = await this.softCall("StudentInfo");
-    return SynergyClient.unwrap(data, "studentInfo");
+    const data = await this.call("GetStudentInfoData");
+    const detail =
+      (data.studentInfoDetailXML as StudentInfo | null) ??
+      (data.studentInfoXML as StudentInfo | null);
+    return detail ?? data;
   }
 
   // TODO(api): confirm new method name + response wrapper key. softCall until then.
@@ -534,7 +600,11 @@ export class SynergyClient {
     for (const item of mail.inboxItemListings ?? []) {
       const guid = item.smMessageGU;
       const html = item.messageText;
-      if (typeof guid === "string" && wanted.has(guid) && typeof html === "string") {
+      if (
+        typeof guid === "string" &&
+        wanted.has(guid) &&
+        typeof html === "string"
+      ) {
         bodyMap.set(guid, html);
       }
     }
@@ -575,7 +645,11 @@ export class SynergyClient {
     staffType: string,
   ): Promise<Record<string, unknown>> {
     return this.softCall("SynergyMailGetRecipientAddressing", {
-      Recipients: { StaffGU: staffGU, StaffName: staffName, StaffType: staffType },
+      Recipients: {
+        StaffGU: staffGU,
+        StaffName: staffName,
+        StaffType: staffType,
+      },
     });
   }
 }

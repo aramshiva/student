@@ -1,17 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Marks from "@/components/Marks";
 import { Course } from "@/types/gradebook";
 import { loadGradebookCache, loadCacheDuration } from "@/utils/gradebook";
 import { getStoredCredentials, postJson, synergyPost } from "@/lib/clientApi";
+import {
+  infoField,
+  unwrapStudentInfo,
+  type StudentInfoRecord,
+} from "@/lib/studentInfo";
 
 const DASHBOARD_CACHE_KEY = "Student.dashboardCache";
 
@@ -44,51 +44,6 @@ function saveDashboardCache(data: Omit<DashboardCache, "timestamp">) {
       JSON.stringify({ ...data, timestamp: Date.now() }),
     );
   } catch {}
-}
-
-interface NewStudentInfoRoot {
-  FormattedName?: string;
-  PermID?: number | string;
-  Gender?: string;
-  Grade?: number | string;
-  Address?: string;
-  LastNameGoesBy?: string;
-  NickName?: string;
-  BirthDate?: string;
-  EMail?: string;
-  Phone?: string;
-  HomeLanguage?: string;
-  CurrentSchool?: string;
-  Track?: string;
-  HomeRoomTch?: string;
-  HomeRoomTchEMail?: string;
-  HomeRoomTchStaffGU?: string;
-  OrgYearGU?: string;
-  HomeRoom?: string;
-  CounselorName?: string;
-  CounselorEmail?: string;
-  CounselorStaffGU?: string;
-  Photo?: string; // base64 png
-  Physician?: {
-    _Name?: string;
-    _Hospital?: string;
-    _Phone?: string;
-    _Extn?: string;
-  };
-  Dentist?: {
-    _Name?: string;
-    _Office?: string;
-    _Phone?: string;
-    _Extn?: string;
-  };
-  _Type?: string;
-  _ShowStudentInfo?: string | boolean;
-}
-
-interface LegacyStudentInfoWrapper {
-  data?: {
-    StudentInfo?: Record<string, unknown>;
-  };
 }
 
 interface PXPMessagesApiResponse {
@@ -247,58 +202,36 @@ export default function StudentDashboard() {
 
         const [infoResult, messagesResult, scheduleResult] =
           await Promise.allSettled([
-            synergyPost<NewStudentInfoRoot | LegacyStudentInfoWrapper>(
-              "/api/synergy/student",
-              creds,
-            ),
-            synergyPost<PXPMessagesApiResponse>(
-              "/api/synergy/messages",
-              creds,
-            ),
+            synergyPost<StudentInfoRecord>("/api/synergy/student", creds),
+            synergyPost<PXPMessagesApiResponse>("/api/synergy/messages", creds),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             synergyPost<any>("/api/synergy/schedule", creds),
           ]);
-        if (infoResult.status === "rejected") throw infoResult.reason;
+        // student info only supplies the photo/perm id here, so a district that
+        // rejects it shouldn't take down the whole dashboard
         if (messagesResult.status === "rejected") throw messagesResult.reason;
-        const infoJson = infoResult.value;
-        let flat: NewStudentInfoRoot | undefined;
-        if (infoJson && "PermID" in infoJson) {
-          flat = infoJson as NewStudentInfoRoot;
-        } else if ((infoJson as LegacyStudentInfoWrapper)?.data?.StudentInfo) {
-          const legacy =
-            (infoJson as LegacyStudentInfoWrapper).data?.StudentInfo ?? {};
-          type DollarObj = { $?: unknown };
-          const hasDollar = (o: unknown): o is DollarObj =>
-            !!o &&
-            typeof o === "object" &&
-            "$" in (o as Record<string, unknown>);
-          const pull = (v: unknown): string => {
-            if (hasDollar(v)) return String(v.$ ?? "");
-            return v == null ? "" : String(v);
-          };
-          flat = {
-            PermID: pull(legacy.PermID),
-            CurrentSchool: pull(legacy.CurrentSchool),
-            Photo: pull(legacy.Photo),
-            FormattedName: pull(legacy.FormattedName),
-            Grade: pull(legacy.Grade),
-          };
-        }
+        const flat =
+          infoResult.status === "fulfilled"
+            ? unwrapStudentInfo(infoResult.value)
+            : null;
         let newPhoto = "";
         let newPermId = "";
         if (flat) {
-          if (flat.Photo) {
-            newPhoto = flat.Photo;
-            setPhotoBase64(flat.Photo);
-            localStorage.setItem("Student.studentPhoto", flat.Photo);
+          const photo = infoField(flat, "Photo");
+          if (photo) {
+            newPhoto = photo;
+            setPhotoBase64(photo);
+            localStorage.setItem("Student.studentPhoto", photo);
           }
-          if (flat.PermID !== undefined) {
-            newPermId = String(flat.PermID);
+          const permIdValue = infoField(flat, "PermID");
+          if (permIdValue) {
+            newPermId = permIdValue;
             setPermId(newPermId);
             localStorage.setItem("Student.studentPermId", newPermId);
           }
-          if (flat.CurrentSchool) {
-            localStorage.setItem("Student.studentSchool", flat.CurrentSchool);
+          const currentSchool = infoField(flat, "CurrentSchool");
+          if (currentSchool) {
+            localStorage.setItem("Student.studentSchool", currentSchool);
           }
         }
 
@@ -376,7 +309,9 @@ export default function StudentDashboard() {
         if (scheduleResult.status === "rejected") {
           const reason = scheduleResult.reason;
           setTodayScheduleError(
-            reason instanceof Error ? reason.message : "Failed to load schedule",
+            reason instanceof Error
+              ? reason.message
+              : "Failed to load schedule",
           );
         } else {
           const schedJson = scheduleResult.value;
