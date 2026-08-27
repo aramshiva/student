@@ -481,19 +481,23 @@ export class SynergyClient {
   }
 
   async getSchedule(termIndex?: number): Promise<Schedule> {
-    const data = await this.call(
-      "StudentClassList",
-      termIndex !== undefined ? { TermIndex: termIndex } : undefined,
-    );
-    return SynergyClient.unwrap(data, "studentClassList");
+    const data = await this.call("StudentClassList", {
+      loadAllTerms: false,
+      conSchOrgYearGU: "",
+      conSchTermIndex: "-1",
+      termIndex: String(termIndex ?? -1),
+    });
+    return SynergyClient.unwrap(data, "studentClassSchedule");
   }
 
   async getGradebook(reportPeriod?: number): Promise<Gradebook> {
     const data = await this.call("Gradebook", {
       concurrentSchOrgYearGU: "",
-      ...(reportPeriod ? { ReportPeriod: reportPeriod } : {}),
+      ...(reportPeriod != null
+        ? { ReportPeriod: reportPeriod, reportPeriod }
+        : {}),
     });
-    return SynergyClient.unwrap(data, "gradebook");
+    return SynergyClient.unwrap(data, "traditionalGradebook");
   }
 
   // GetStudentInfoData returns { studentInfoXML, studentInfoDetailXML }. the

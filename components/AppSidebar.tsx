@@ -56,12 +56,12 @@ type NavItem = {
 
 const primaryNav: NavItem[] = [
   { name: "Home", href: "/", icon: Home, working: true },
-  { name: "Gradebook", href: "/gradebook", icon: BookOpen, working: false, module: "showGradeBookModule" }, // prettier-ignore
-  { name: "Schedule", href: "/schedule", icon: Table, working: false, module: "showCurrentScheduleModule" }, // prettier-ignore
+  { name: "Gradebook", href: "/gradebook", icon: BookOpen, working: true, module: "showGradeBookModule" }, // prettier-ignore
+  { name: "Schedule", href: "/schedule", icon: Table, working: true, module: "showCurrentScheduleModule" }, // prettier-ignore
   { name: "Calendar", href: "/calendar", icon: CalendarDays, working: false, module: "showCalenderModule" }, // prettier-ignore
   { name: "Attendance", href: "/attendance", icon: Table2, working: false, module: "showAttendanceModule" }, // prettier-ignore
-  { name: "Mail", href: "/mail", icon: Mail, working: true, module: "showSynergyMailModule" },
-  { name: "Missing Work", href: "/missing", icon: ClipboardX, working: false, module: "showGradeBookModule" }, // prettier-ignore
+  { name: "Mail", href: "/mail", icon: Mail, working: true, module: "showSynergyMailModule" }, // prettier-ignore
+  { name: "Missing Work", href: "/missing", icon: ClipboardX, working: true, module: "showGradeBookModule" }, // prettier-ignore
   { name: "Documents", href: "/documents", icon: FileText, working: true, module: "showDocumentModule" }, // prettier-ignore
   { name: "Course History", href: "/history", icon: History, working: true, module: "showCourseHistoryModule" }, // prettier-ignore
   { name: "Test History", href: "/tests", icon: BookCheck, working: true, module: "showTestHistoryModule" }, // prettier-ignore
