@@ -18,54 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getStoredCredentials, synergyPost } from "@/lib/clientApi";
-
-interface APIRawClassListing {
-  _Period: string;
-  _CourseTitle: string;
-  _RoomName?: string;
-  _Teacher?: string;
-  _TeacherEmail?: string;
-  _SectionGU?: string;
-  _TeacherStaffGU?: string;
-  _ExcludePVUE?: string;
-}
-
-interface APIRawTermDefCode {
-  _TermDefName: string;
-}
-interface APIRawTermListing {
-  _TermIndex: string;
-  _TermCode: string;
-  _TermName: string;
-  _BeginDate: string;
-  _EndDate: string;
-  TermDefCodes?: { TermDefCode: APIRawTermDefCode | APIRawTermDefCode[] };
-}
-
-interface APIRawStudentClassScheduleRoot {
-  StudentClassSchedule: {
-    ClassLists?: { ClassListing: APIRawClassListing | APIRawClassListing[] };
-    TermLists?: { TermListing: APIRawTermListing | APIRawTermListing[] };
-    _TermIndex?: string;
-    _TermIndexName?: string;
-    _ErrorMessage?: string;
-    TodayScheduleInfoData?: {
-      SchoolInfos?: {
-        SchoolInfo?: {
-          Classes?: { ClassInfo: TodayClassInfo | TodayClassInfo[] };
-        };
-      };
-    };
-  };
-}
-
-interface TodayClassInfo {
-  _Period?: string;
-  _ClassName?: string;
-  _RoomName?: string;
-  _TeacherName?: string;
-  _TeacherEmail?: string;
-}
+import type { ScheduleRoot } from "@/types/schedule";
 
 interface Term {
   termIndex: number;
@@ -75,17 +28,19 @@ interface Term {
   codes: string[];
 }
 
-interface ClassListing {
+interface ScheduleEntry {
   period: number;
   courseTitle: string;
   room?: string;
   teacher?: string;
   teacherEmail?: string;
+  startTime?: string;
+  endTime?: string;
   excludePortal?: boolean;
 }
 
 export default function SchedulePage() {
-  const [classes, setClasses] = useState<ClassListing[]>([]);
+  const [classes, setClasses] = useState<ScheduleEntry[]>([]);
   const [terms, setTerms] = useState<Term[]>([]);
   const TODAY_SENTINEL = -1;
   const [selectedTerm, setSelectedTerm] = useState<number>(TODAY_SENTINEL);
@@ -102,7 +57,7 @@ export default function SchedulePage() {
       try {
         setIsLoading(true);
         setError(null);
-        const raw = await synergyPost<APIRawStudentClassScheduleRoot>(
+        const raw = await synergyPost<ScheduleRoot>(
           "/api/synergy/schedule",
           creds,
           {
@@ -116,44 +71,46 @@ export default function SchedulePage() {
           setTerms([]);
           return;
         }
-        const normalize = <T,>(v: T | T[] | undefined | null): T[] =>
-          !v ? [] : Array.isArray(v) ? v : [v];
-        let classArr: ClassListing[] = [];
+        const termClasses = (root.ClassLists?.ClassListing ?? [])
+          .map((c) => ({
+            period: Number(c._Period || 0),
+            courseTitle: c._CourseTitle,
+            room: c._RoomName,
+            teacher: c._Teacher,
+            teacherEmail: c._TeacherEmail,
+            excludePortal: (c._ExcludePVUE || "false").toLowerCase() === "true",
+          }))
+          .sort((a, b) => a.period - b.period);
+
+        let classArr: ScheduleEntry[] = termClasses;
         if (selectedTerm === TODAY_SENTINEL) {
-          const todayClasses = normalize<TodayClassInfo>(
-            root?.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes
-              ?.ClassInfo,
-          );
-          classArr = todayClasses
+          const todayClasses = (
+            root.TodayScheduleInfoData?.SchoolInfos?.SchoolInfo?.Classes
+              ?.ClassInfo ?? []
+          )
             .map((c) => ({
               period: Number(c._Period || 0),
               courseTitle: c._ClassName || "",
               room: c._RoomName || "",
               teacher: c._TeacherName || "",
               teacherEmail: c._TeacherEmail || "",
+              startTime: c._StartTime,
+              endTime: c._EndTime,
               excludePortal: false,
             }))
             .sort((a, b) => a.period - b.period);
-        } else {
-          classArr = normalize(root.ClassLists?.ClassListing)
-            .map((c) => ({
-              period: Number(c._Period || 0),
-              courseTitle: c._CourseTitle,
-              room: c._RoomName,
-              teacher: c._Teacher,
-              teacherEmail: c._TeacherEmail,
-              excludePortal:
-                (c._ExcludePVUE || "false").toLowerCase() === "true",
-            }))
-            .sort((a, b) => a.period - b.period);
+          // the bell schedule is empty on non-school days and outside the
+          // school year; fall back to the current term's classes
+          if (todayClasses.length) classArr = todayClasses;
         }
-        const termArr = normalize(root.TermLists?.TermListing)
+
+        const termArr = (root.TermLists?.TermListing ?? [])
           .map((t) => ({
             termIndex: Number(t._TermIndex || 0),
             termName: t._TermName,
             beginDate: t._BeginDate,
             endDate: t._EndDate,
-            codes: normalize(t.TermDefCodes?.TermDefCode).map(
+            codes: (t.TermDefCodes?.TermDefCode ?? []).map(
               (cd) => cd._TermDefName,
             ),
           }))
@@ -167,6 +124,9 @@ export default function SchedulePage() {
       }
     })();
   }, [selectedTerm, TODAY_SENTINEL]);
+
+  // only today's bell schedule carries start/end times
+  const showTimes = classes.some((c) => c.startTime || c.endTime);
 
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
@@ -218,6 +178,7 @@ export default function SchedulePage() {
               <TableHead>
                 {isLoading ? <Skeleton className="h-4 w-20" /> : "Course"}
               </TableHead>
+              {showTimes && <TableHead>Time</TableHead>}
               <TableHead>
                 {isLoading ? <Skeleton className="h-4 w-16" /> : "Room"}
               </TableHead>
@@ -258,6 +219,13 @@ export default function SchedulePage() {
                   <TableRow key={c.period}>
                     <TableCell>{c.period}</TableCell>
                     <TableCell>{c.courseTitle}</TableCell>
+                    {showTimes && (
+                      <TableCell>
+                        {c.startTime && c.endTime
+                          ? `${c.startTime} - ${c.endTime}`
+                          : c.startTime || ""}
+                      </TableCell>
+                    )}
                     <TableCell>{c.room}</TableCell>
                     <TableCell>{c.teacher}</TableCell>
                     <TableCell>{c.teacherEmail || ""}</TableCell>

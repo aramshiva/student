@@ -4,7 +4,14 @@ import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Dashboard from "@/components/Dashboard";
 import CourseDetail from "@/components/CourseDetail";
-import { GradebookData, Course, Mark, Assignment } from "@/types/gradebook";
+import {
+  GradebookData,
+  GradebookRoot,
+  Course,
+  Mark,
+  Assignment,
+  ReportPeriod,
+} from "@/types/gradebook";
 import {
   loadCustomGPAScale,
   numericToLetterGrade,
@@ -20,6 +27,12 @@ import {
   synergyPost,
 } from "@/lib/clientApi";
 import { Skeleton } from "@/components/ui/skeleton";
+
+function isParsedGradebook(data: unknown): data is GradebookRoot {
+  if (!data || typeof data !== "object") return false;
+  const root = (data as GradebookRoot).Gradebook ?? (data as GradebookRoot);
+  return !!root?.Courses;
+}
 
 function GradebookPageContent() {
   const router = useRouter();
@@ -85,21 +98,10 @@ function GradebookPageContent() {
     return m;
   }
 
-  interface GradebookLike {
-    Gradebook?: {
-      Courses?: { Course?: Course[] };
-      [k: string]: unknown;
-    };
-    Courses?: { Course?: Course[] };
-    [k: string]: unknown;
-  }
-
-  const computeAndStoreQuickStats = useCallback((root: GradebookLike) => {
+  const computeAndStoreQuickStats = useCallback((root: GradebookRoot) => {
     try {
-      const gbRoot: GradebookLike = root?.Gradebook
-        ? (root as GradebookLike).Gradebook!
-        : root || {}; // tf is this
-      const courses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
+      const gbRoot = root?.Gradebook ?? root;
+      const courses: Course[] = gbRoot?.Courses?.Course ?? [];
       const gpaScale = loadCustomGPAScale();
       const calcFlag = loadCalculateGradesEnabled();
       let gradedCourses = 0;
@@ -165,18 +167,15 @@ function GradebookPageContent() {
 
   const inFlightRef = useRef(false);
 
-  type RawRP = {
-    _Index?: string;
-    _GradePeriod?: string;
-    _StartDate?: string;
-    _EndDate?: string;
-  };
-
   const applyGradebookData = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (data: any, reportPeriodIndex: number | null, refreshedAt: Date) => {
-      const periodArrayRaw = data?.ReportingPeriods?.ReportPeriod;
-      const periodsRaw: RawRP[] = periodArrayRaw
+    (
+      data: GradebookRoot,
+      reportPeriodIndex: number | null,
+      refreshedAt: Date,
+    ) => {
+      const gbRoot = data?.Gradebook ?? data;
+      const periodArrayRaw = gbRoot?.ReportingPeriods?.ReportPeriod;
+      const periodsRaw: ReportPeriod[] = periodArrayRaw
         ? Array.isArray(periodArrayRaw)
           ? periodArrayRaw
           : [periodArrayRaw]
@@ -191,8 +190,8 @@ function GradebookPageContent() {
       const currentIndex =
         reportPeriodIndex != null
           ? reportPeriodIndex
-          : data?.ReportingPeriod?._Index != null
-            ? Number(data.ReportingPeriod._Index)
+          : gbRoot?.ReportingPeriod?._Index != null
+            ? Number(gbRoot.ReportingPeriod._Index)
             : (mapped[0]?.index ?? 0);
       setSelectedReportingPeriod(currentIndex);
       try {
@@ -202,7 +201,7 @@ function GradebookPageContent() {
         );
       } catch {}
       setGradebookData({ data });
-      computeAndStoreQuickStats(data);
+      computeAndStoreQuickStats(gbRoot);
       setSelectedCourse(null);
       setLastRefreshed(refreshedAt);
     },
@@ -224,7 +223,11 @@ function GradebookPageContent() {
         const cacheDurationMs = loadCacheDuration() * 60 * 1000;
         if (cacheDurationMs > 0) {
           const cached = loadGradebookCache(reportPeriodIndex);
-          if (cached && Date.now() - cached.timestamp < cacheDurationMs) {
+          if (
+            cached &&
+            Date.now() - cached.timestamp < cacheDurationMs &&
+            isParsedGradebook(cached.data)
+          ) {
             applyGradebookData(
               cached.data,
               reportPeriodIndex,
@@ -240,7 +243,7 @@ function GradebookPageContent() {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await synergyPost<Record<string, unknown>>(
+        const data = await synergyPost<GradebookRoot>(
           "/api/synergy/gradebook",
           credentials,
           reportPeriodIndex != null
@@ -350,8 +353,8 @@ function GradebookPageContent() {
   useEffect(() => {
     if (!gradebookData || !initialCourseId) return;
 
-    const gbRoot = gradebookData.data?.Gradebook || gradebookData.data || {};
-    const courses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
+    const gbRoot = gradebookData.data?.Gradebook ?? gradebookData.data;
+    const courses: Course[] = gbRoot?.Courses?.Course ?? [];
     const course = courses.find((c) => c?._CourseID === initialCourseId);
 
     if (course && !selectedCourse) {
@@ -425,8 +428,8 @@ function GradebookPageContent() {
   if (!gradebookData) return null;
 
   if (selectedCourse) {
-    const gbRoot = gradebookData.data?.Gradebook || gradebookData.data || {};
-    const allCourses: Course[] = (gbRoot?.Courses?.Course as Course[]) || [];
+    const gbRoot = gradebookData.data?.Gradebook ?? gradebookData.data;
+    const allCourses: Course[] = gbRoot?.Courses?.Course ?? [];
     return (
       <CourseDetail
         course={selectedCourse}

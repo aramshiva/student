@@ -66,22 +66,31 @@ export interface Course {
   };
 }
 
+export interface ReportPeriod {
+  _Index: string;
+  _GradePeriod: string;
+  _StartDate: string;
+  _EndDate: string;
+}
+
+export interface GradebookRoot {
+  "@DisplayStandardsData"?: boolean;
+  "@ErrorMessage"?: string;
+  "@GBStandardsTabDefault"?: boolean;
+  "@HideMarksColumnElementary"?: boolean;
+  "@HidePercentSecondary"?: boolean;
+  "@HidePointsColumnElementary"?: boolean;
+  "@HideStandardGraphInd"?: boolean;
+  "@Type"?: string;
+  ReportingPeriods?: { ReportPeriod?: ReportPeriod | ReportPeriod[] };
+  ReportingPeriod?: ReportPeriod;
+  Courses?: { Course?: Course[] };
+  Gradebook?: GradebookRoot;
+  [k: string]: unknown;
+}
+
 export interface GradebookData {
-  data: {
-    Gradebook: {
-      "@DisplayStandardsData": boolean;
-      "@ErrorMessage": string;
-      "@GBStandardsTabDefault": boolean;
-      "@HideMarksColumnElementary": boolean;
-      "@HidePercentSecondary": boolean;
-      "@HidePointsColumnElementary": boolean;
-      "@HideStandardGraphInd": boolean;
-      "@Type": string;
-      Courses: {
-        Course: Course[];
-      };
-    };
-  };
+  data: GradebookRoot;
 }
 
 export interface LoginCredentials {
