@@ -1,5 +1,6 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import DOMPurify from "dompurify";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,20 @@ interface MailMessage {
 }
 
 type Folder = "Inbox" | "Archive";
+
+DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+  if (node.tagName === "A") {
+    node.setAttribute("target", "_blank");
+    node.setAttribute("rel", "noopener noreferrer");
+  }
+});
+
+function sanitizeMailHtml(html: string): string {
+  if (!DOMPurify.isSupported) return "";
+  return DOMPurify.sanitize(html, {
+    FORBID_TAGS: ["style", "form", "input", "button", "select", "textarea"],
+  });
+}
 
 function formatDate(dt?: string) {
   if (!dt) return "";
@@ -225,6 +240,11 @@ export default function MailPage() {
     setSelected(m);
     setReplyEmail(null);
   };
+
+  const selectedHtml = useMemo(
+    () => sanitizeMailHtml(selected?.messageText ?? ""),
+    [selected?.messageText],
+  );
 
   if (error) return <div className="p-8 text-red-600">{error}</div>;
 
@@ -465,9 +485,9 @@ export default function MailPage() {
                 </div>
               )}
               <div
-                className="prose max-w-none text-sm dark:prose-invert"
+                className="prose max-w-none overflow-x-auto text-sm [contain:layout] dark:prose-invert"
                 dangerouslySetInnerHTML={{
-                  __html: selected.messageText || "<p>(No content)</p>",
+                  __html: selectedHtml || "<p>(No content)</p>",
                 }}
               />
             </div>
