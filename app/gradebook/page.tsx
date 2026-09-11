@@ -23,7 +23,6 @@ import {
 } from "@/utils/gradebook";
 import {
   getStoredCredentials,
-  clearStoredCredentials,
   synergyPost,
 } from "@/lib/clientApi";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -445,8 +444,7 @@ function GradebookPageContent() {
       gradebookData={gradebookData}
       onCourseSelect={handleCourseSelect}
       onLogout={() => {
-        clearStoredCredentials();
-        window.location.href = "/login";
+        window.location.href = "/logout";
       }}
       reportingPeriods={reportingPeriods}
       selectedReportingPeriod={selectedReportingPeriod}

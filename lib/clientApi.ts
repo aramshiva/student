@@ -33,10 +33,25 @@ export function saveStoredCredentials(creds: StoredCredentials) {
   } catch {}
 }
 
-export function clearStoredCredentials() {
+export async function clearAllStoredData() {
   if (typeof window === "undefined") return;
   try {
-    localStorage.removeItem(CREDS_STORAGE_KEY);
+    localStorage.clear();
+  } catch {}
+  try {
+    sessionStorage.clear();
+  } catch {}
+  try {
+    if (!("caches" in window)) return;
+    for (const name of await caches.keys()) {
+      if (!name.startsWith("pages-")) continue;
+      const cache = await caches.open(name);
+      for (const request of await cache.keys()) {
+        if (new URL(request.url).pathname !== "/offline") {
+          await cache.delete(request);
+        }
+      }
+    }
   } catch {}
 }
 
